@@ -3,7 +3,7 @@
 
   const AVATARS=['😎','🤓','🦊','🐼','🐸','🦁','🐯','🐵','🦄','🤠','🥸','👾','🧙','🦸','🐙'];
   const $=id=>document.getElementById(id);
-  let verifiedUser=null;
+  let lastAppliedKey='';
 
   function getSession(){
     try{return JSON.parse(localStorage.getItem('mol.session')||'null')}catch{return null}
@@ -20,36 +20,23 @@
     if(!user)return;
     const name=String(user.name||'').trim();
     const role=String(user.role||'').trim();
+    if(!name)return;
     const avatar=avatarFor(user.employee_id,name);
-    if(name){
-      if($('workerName')&&$('workerName').textContent!==name) $('workerName').textContent=name;
-      if($('leaderName')&&$('leaderName').textContent!==name) $('leaderName').textContent=name;
-    }
-    if(role){
-      if($('workerRole')&&$('workerRole').textContent!==role) $('workerRole').textContent=role;
-      if($('leaderRole')&&$('leaderRole').textContent!==role) $('leaderRole').textContent=role;
-    }
-    if($('userAvatar')&&$('userAvatar').textContent!==avatar) $('userAvatar').textContent=avatar;
-    if($('leaderAvatar')&&$('leaderAvatar').textContent!==avatar) $('leaderAvatar').textContent=avatar;
+    const key=`${user.employee_id||''}|${name}|${role}|${avatar}`;
+    if(key===lastAppliedKey)return;
+    lastAppliedKey=key;
+    if($('workerName')) $('workerName').textContent=name;
+    if($('leaderName')) $('leaderName').textContent=name;
+    if($('workerRole')) $('workerRole').textContent=role;
+    if($('leaderRole')) $('leaderRole').textContent=role;
+    if($('userAvatar')) $('userAvatar').textContent=avatar;
+    if($('leaderAvatar')) $('leaderAvatar').textContent=avatar;
   }
 
-  async function clearLegacyPwa(){
-    try{
-      if('serviceWorker' in navigator){
-        const regs=await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r=>r.unregister()));
-      }
-      if('caches' in window){
-        const keys=await caches.keys();
-        await Promise.all(keys.filter(k=>k.startsWith('mol-worker-app-')).map(k=>caches.delete(k)));
-      }
-    }catch(_){/* cleanup best effort */}
-  }
-
-  async function refreshProfile(){
+  async function hydrateProfile(){
     const session=getSession();
     if(!session?.token)return;
-    if(session.user) applyUser(session.user);
+    if(session.user?.name) applyUser(session.user);
 
     const C=window.MOL_APP_CONFIG;
     if(!C?.apiBase||!C?.endpoints?.config)return;
@@ -61,25 +48,32 @@
       });
       if(!response.ok)return;
       const data=await response.json();
-      if(!data?.user)return;
-      verifiedUser={...(session.user||{}),...data.user};
-      applyUser(verifiedUser);
-      localStorage.setItem('mol.session',JSON.stringify({...session,user:verifiedUser}));
-    }catch(_){/* zachowaj ostatni poprawny profil */}
+      if(!data?.user?.name)return;
+      const user={...(session.user||{}),...data.user};
+      applyUser(user);
+      localStorage.setItem('mol.session',JSON.stringify({...session,user}));
+    }catch(_){/* zachowaj dane z sesji */}
   }
 
-  function guardIdentity(){
-    if(verifiedUser) applyUser(verifiedUser);
+  function watchLoginTransition(){
+    const shell=$('appShell');
+    if(!shell)return;
+    const observer=new MutationObserver(mutations=>{
+      for(const mutation of mutations){
+        if(mutation.type==='attributes'&&mutation.attributeName==='hidden'&&!shell.hidden){
+          hydrateProfile();
+        }
+      }
+    });
+    observer.observe(shell,{attributes:true,attributeFilter:['hidden']});
   }
 
   function start(){
-    clearLegacyPwa();
-    refreshProfile();
-    setTimeout(refreshProfile,350);
-    setTimeout(refreshProfile,1200);
-    setTimeout(refreshProfile,3000);
-    setInterval(guardIdentity,1500);
-    document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshProfile()});
+    const session=getSession();
+    if(session?.user?.name) applyUser(session.user);
+    watchLoginTransition();
+    if(session?.token) hydrateProfile();
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden&&getSession()?.token)hydrateProfile()});
   }
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start,{once:true});
