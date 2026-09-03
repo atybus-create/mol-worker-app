@@ -29,3 +29,11 @@ jobs:
       - name: Check no test tokens or chat secrets
         run: |
           ! grep -R -E 'ETAP7FRONTENDTESTTOKEN|ETAP7WORKERROLETESTTOKEN|PHPSESSID|CHAT_ALERT_WEBHOOK' --exclude-dir=.git --exclude=validate.yml .
+      - name: Check browser CORS to n8n
+        run: |
+          curl -sS -X OPTIONS -D cors-headers.txt -o /dev/null 'https://n8n.estyl.team/webhook/mol-app-config' \
+            -H 'Origin: https://atybus-create.github.io' \
+            -H 'Access-Control-Request-Method: GET' \
+            -H 'Access-Control-Request-Headers: authorization'
+          cat cors-headers.txt
+          grep -qi '^access-control-allow-origin:' cors-headers.txt
