@@ -1,5 +1,5 @@
 window.MOL_APP_CONFIG = Object.freeze({
-  version: '0.7.13',
+  version: '0.7.14',
   apiBase: 'https://n8n.estyl.team/webhook',
   endpoints: {
     auth: 'mol-app-auth-login',
@@ -15,8 +15,9 @@ window.MOL_APP_CONFIG = Object.freeze({
     batchReader: 'https://atybus-create.github.io/mol-magazyn-terminy-pwa/batch-reader/'
   },
   polling: {
-    workdayMs: 60000,
+    workdayMs: 300000,
+    dailyMs: 300000,
     alertsMs: 30000,
-    leaderMs: 60000
+    leaderMs: 300000
   }
 });
