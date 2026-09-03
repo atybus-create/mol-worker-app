@@ -27,8 +27,25 @@ jobs:
           grep -q 'Terminy – aplikacja magazynowa' index.html
           grep -q 'Batch reader' index.html
           grep -q 'ESTYL_LOGO' logo.js
-          grep -q 'refreshProfile' profile-ui.js
-          grep -q "version: '0.7.3'" config.js
+          grep -q 'MutationObserver' profile-ui.js
+          grep -q 'hydrateProfile' profile-ui.js
+          ! grep -q 'setTimeout' profile-ui.js
+          ! grep -q 'setInterval' profile-ui.js
+          grep -q 'profile-ui.js?v=0.7.4' index.html
+          grep -q "version: '0.7.4'" config.js
+      - name: Verify exact ESTYL logo source
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const crypto=require('crypto');
+          const src=fs.readFileSync('logo.js','utf8');
+          const m=src.match(/base64,([^']+)'/);
+          if(!m) throw new Error('ESTYL logo data URI not found');
+          const hash=crypto.createHash('sha256').update(Buffer.from(m[1],'base64')).digest('hex');
+          const expected='d2b22088cd9fc62e9251afc02485a7644ff57c6ff1350e3c391f745b4c91a7e0';
+          if(hash!==expected) throw new Error(`Logo hash mismatch: ${hash}`);
+          console.log('ESTYL logo SHA-256 OK:',hash);
+          NODE
       - name: Check no test tokens or chat secrets
         run: |
           ! grep -R -E 'ETAP7FRONTENDTESTTOKEN|ETAP7WORKERROLETESTTOKEN|PHPSESSID|CHAT_ALERT_WEBHOOK' --exclude-dir=.git --exclude=validate.yml .
