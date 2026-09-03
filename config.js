@@ -1,5 +1,5 @@
 window.MOL_APP_CONFIG = Object.freeze({
-  version: '0.7.0',
+  version: '0.7.2',
   apiBase: 'https://n8n.estyl.team/webhook',
   endpoints: {
     auth: 'mol-app-auth-login',
@@ -20,3 +20,10 @@ window.MOL_APP_CONFIG = Object.freeze({
     leaderMs: 60000
   }
 });
+
+(()=>{
+  const script=document.createElement('script');
+  script.src=`./profile-ui.js?v=${window.MOL_APP_CONFIG.version}`;
+  script.defer=true;
+  document.head.appendChild(script);
+})();
