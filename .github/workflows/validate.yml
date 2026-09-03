@@ -31,7 +31,7 @@ jobs:
           grep -q 'hydrateProfile' profile-ui.js
           ! grep -q 'setTimeout' profile-ui.js
           ! grep -q 'setInterval' profile-ui.js
-          grep -q 'profile-ui.js?v=0.7.12' index.html
+          grep -q 'profile-ui.js?v=0.7.13' index.html
           grep -q 'logoutProcessButton' index.html
           grep -q 'warehouseLogoutProcessButton' index.html
           grep -q 'warehouseChangeProcessButton' index.html
@@ -46,7 +46,7 @@ jobs:
           grep -q "action:'logout_process'" app.js
           grep -q "MONITI_FINISHED" app.js
           grep -q "blocked('FINISHED')" app.js
-          grep -q "version: '0.7.12'" config.js
+          grep -q "version: '0.7.13'" config.js
           grep -q "Logowanie…" app.js
           grep -q "timeoutMs=30000" app.js
           grep -q "loginInFlight" app.js
@@ -55,6 +55,10 @@ jobs:
           grep -q "message_history" app.js
           grep -q "leaderMessageHistory" app.js
           grep -q "request_id" app.js
+          grep -q "action:'shown'" app.js
+          grep -q "action:'history'" app.js
+          grep -q "loadOlderMessages" index.html
+          grep -q "loadOlderLeaderMessages" index.html
       - name: Verify exact ESTYL logo source
         run: |
           node - <<'NODE'
