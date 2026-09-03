@@ -33,26 +33,9 @@
     if($('leaderAvatar')) $('leaderAvatar').textContent=avatar;
   }
 
-  async function hydrateProfile(){
+  function hydrateProfile(){
     const session=getSession();
-    if(!session?.token)return;
-    if(session.user?.name) applyUser(session.user);
-
-    const C=window.MOL_APP_CONFIG;
-    if(!C?.apiBase||!C?.endpoints?.config)return;
-    try{
-      const response=await fetch(`${C.apiBase}/${C.endpoints.config}`,{
-        method:'GET',
-        headers:{Accept:'application/json',Authorization:`Bearer ${session.token}`},
-        cache:'no-store'
-      });
-      if(!response.ok)return;
-      const data=await response.json();
-      if(!data?.user?.name)return;
-      const user={...(session.user||{}),...data.user};
-      applyUser(user);
-      localStorage.setItem('mol.session',JSON.stringify({...session,user}));
-    }catch(_){/* zachowaj dane z sesji */}
+    if(session?.user?.name) applyUser(session.user);
   }
 
   function watchLoginTransition(){
