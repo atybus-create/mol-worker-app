@@ -16,6 +16,8 @@ Frontend Etapu 7 dla ESTYL.PL. Jedna baza kodu obsługuje widok pracownika oraz 
 - logowanie i obsługa blokady Moniti,
 - wybór i zmiana procesu,
 - lokalny timer aktywnego procesu,
+- automatyczne zamknięcie aktywnego procesu dokładnym czasem FINISH z Moniti,
+- blokada rozpoczęcia kolejnego procesu po zakończeniu obecności w Moniti,
 - KPI PAK/PICK i norma dzienna/miesięczna,
 - alerty z acknowledge,
 - zakończenie części aplikacyjnej dnia,
