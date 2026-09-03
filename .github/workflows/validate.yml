@@ -1,0 +1,31 @@
+name: Validate frontend
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check config.js
+          node --check logo.js
+          node --check sw.js
+      - name: Check required UI and integrations
+        run: |
+          grep -q 'MAGAZYN' app.js
+          grep -q 'mol-app-leader' config.js
+          grep -q 'mol-magazyn-terminy-pwa/' config.js
+          grep -q 'batch-reader/' config.js
+          grep -q 'Terminy – aplikacja magazynowa' index.html
+          grep -q 'Batch reader' index.html
+          grep -q 'ESTYL_LOGO' logo.js
+      - name: Check no test tokens or chat secrets
+        run: |
+          ! grep -R -E 'ETAP7FRONTENDTESTTOKEN|ETAP7WORKERROLETESTTOKEN|PHPSESSID|CHAT_ALERT_WEBHOOK' --exclude-dir=.git .
