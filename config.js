@@ -1,5 +1,5 @@
 window.MOL_APP_CONFIG = Object.freeze({
-  version: '0.7.4',
+  version: '0.7.5',
   apiBase: 'https://n8n.estyl.team/webhook',
   endpoints: {
     auth: 'mol-app-auth-login',

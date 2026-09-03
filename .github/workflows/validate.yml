@@ -31,8 +31,11 @@ jobs:
           grep -q 'hydrateProfile' profile-ui.js
           ! grep -q 'setTimeout' profile-ui.js
           ! grep -q 'setInterval' profile-ui.js
-          grep -q 'profile-ui.js?v=0.7.4' index.html
-          grep -q "version: '0.7.4'" config.js
+          grep -q 'profile-ui.js?v=0.7.5' index.html
+          grep -q 'logoutProcessButton' index.html
+          grep -q 'warehouseLogoutProcessButton' index.html
+          grep -q "action:'logout_process'" app.js
+          grep -q "version: '0.7.5'" config.js
       - name: Verify exact ESTYL logo source
         run: |
           node - <<'NODE'
