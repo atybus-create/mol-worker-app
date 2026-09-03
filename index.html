@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#071b3d">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>ESTYL.PL — MOL System Pracy</title>
-  <link rel="stylesheet" href="./styles.css?v=0.7.7">
-  <link rel="stylesheet" href="./brand.css?v=0.7.7">
+  <link rel="stylesheet" href="./styles.css?v=0.7.8">
+  <link rel="stylesheet" href="./brand.css?v=0.7.8">
 </head>
 <body>
   <div id="offlineBar" class="offline-bar" hidden>Brak połączenia z internetem. Dane mogą być nieaktualne.</div>
@@ -22,7 +22,7 @@
         <label>Hasło<div class="password-wrap"><input id="passwordInput" type="password" autocomplete="current-password"><button id="togglePassword" type="button" aria-label="Pokaż lub ukryj hasło">◉</button></div></label>
         <button id="loginButton" class="btn btn-primary" type="submit">Zaloguj się</button><p id="loginError" class="form-error" role="alert" hidden></p>
       </form>
-      <div class="login-foot"><span>Bezpieczna sesja</span><span>Backend ESTYL</span><span id="appVersion">v0.7.4</span></div>
+      <div class="login-foot"><span>Bezpieczna sesja</span><span>Backend ESTYL</span><span id="appVersion">v0.7.8</span></div>
     </section>
   </main>
 
@@ -44,7 +44,7 @@
         <div id="workerHomeView" class="worker-view">
           <div id="processPicker"><div class="section-head"><div><p class="eyebrow">Rozpoczęcie pracy <span id="pickerStart">—</span></p><h2>Wybierz proces</h2><p>Wybierz proces dopiero w momencie, w którym faktycznie zaczynasz go wykonywać.</p></div><span class="live-dot">Dane na żywo</span></div><div id="processGrid" class="process-grid"></div></div>
           <div id="activeProcessView" class="active-process" hidden><button id="backToPicker" class="back-link">← Zmień proces</button><div id="processHero" class="process-hero"><p class="eyebrow">Aktywny proces</p><h2 id="activeProcessName">—</h2><p>Rozpoczęcie procesu <strong id="activeProcessStart">—</strong></p><div id="processTimer" class="process-timer">00:00:00</div><small>Czas w procesie</small><div class="process-kpi"><span id="processKpiLabel">Wykonanie</span><strong id="processKpiValue">—</strong></div><p class="refresh-note">Wynik odświeżany z backendu co minutę. Timer działa lokalnie.</p><div class="hero-actions"><button id="changeProcessButton" class="btn btn-primary">Zmień proces</button><button id="showNormButton" class="btn btn-outline">Podgląd normy</button><button id="logoutProcessButton" class="btn btn-danger-soft">Wyloguj z procesu</button></div></div></div>
-          <div id="warehouseView" class="warehouse-view" hidden><button id="warehouseBack" class="back-link">← Wróć do wyboru procesu</button><div class="warehouse-process-status"><div><p class="eyebrow">Aktywny proces</p><h2>Magazyn</h2><p>Rozpoczęcie procesu <strong id="warehouseProcessStart">—</strong></p></div><div class="warehouse-timer-block"><div id="warehouseProcessTimer" class="process-timer">00:00:00</div><small>Czas w procesie</small></div></div><div class="section-head"><div><p class="eyebrow">Proces aktywny: Magazyn</p><h2>Narzędzia magazynowe</h2><p>Proces MAGAZYN pozostaje aktywny, gdy przechodzisz do jednej z poniższych aplikacji.</p></div></div><div class="warehouse-actions"><button id="warehouseLogoutProcessButton" class="btn btn-danger-soft">Wyloguj z procesu</button></div><div class="warehouse-links"><a id="expiryAppLink" class="warehouse-card" target="_blank" rel="noopener"><span class="warehouse-icon">▣</span><div><strong>Terminy – aplikacja magazynowa</strong><small>Dekodowanie partii, terminów i rejestracja spisu</small></div><span>→</span></a><a id="batchReaderLink" class="warehouse-card" target="_blank" rel="noopener"><span class="warehouse-icon barcode">||||</span><div><strong>Batch reader</strong><small>Szybki odczyt i dekodowanie partii</small></div><span>→</span></a></div></div>
+          <div id="warehouseView" class="warehouse-view" hidden><button id="warehouseBack" class="back-link">← Zmień proces</button><div class="warehouse-process-status"><div><p class="eyebrow">Aktywny proces</p><h2>Magazyn</h2><p>Rozpoczęcie procesu <strong id="warehouseProcessStart">—</strong></p></div><div class="warehouse-timer-block"><div id="warehouseProcessTimer" class="process-timer">00:00:00</div><small>Czas w procesie</small></div></div><div class="section-head"><div><p class="eyebrow">Proces aktywny: Magazyn</p><h2>Narzędzia magazynowe</h2><p>Proces MAGAZYN pozostaje aktywny, gdy przechodzisz do jednej z poniższych aplikacji.</p></div></div><div class="warehouse-actions"><button id="warehouseChangeProcessButton" class="btn btn-primary">Zmień proces</button><button id="warehouseShowNormButton" class="btn btn-outline">Podgląd normy</button><button id="warehouseLogoutProcessButton" class="btn btn-danger-soft">Wyloguj z procesu</button></div><div class="warehouse-links"><a id="expiryAppLink" class="warehouse-card" target="_blank" rel="noopener"><span class="warehouse-icon">▣</span><div><strong>Terminy – aplikacja magazynowa</strong><small>Dekodowanie partii, terminów i rejestracja spisu</small></div><span>→</span></a><a id="batchReaderLink" class="warehouse-card" target="_blank" rel="noopener"><span class="warehouse-icon barcode">||||</span><div><strong>Batch reader</strong><small>Szybki odczyt i dekodowanie partii</small></div><span>→</span></a></div></div>
         </div>
         <div id="workerNormView" class="worker-view" hidden><div class="section-head"><div><p class="eyebrow">Wydajność</p><h2>Podgląd normy</h2></div><div class="segmented"><button class="segment active" data-norm="daily">Dzienna</button><button class="segment" data-norm="monthly">Miesięczna</button></div></div><div id="normSummary" class="norm-summary"></div><div id="processTimeList" class="process-time-list"></div></div>
         <div id="workerMessagesView" class="worker-view" hidden><div class="section-head"><div><p class="eyebrow">Powiadomienia</p><h2>Komunikaty i alerty</h2><p>Potwierdzenie komunikatu nie zamyka trwającego problemu biznesowego.</p></div></div><div id="messagesList" class="message-list"></div></div>
@@ -65,9 +65,9 @@
   <div id="toast" class="toast" role="status" hidden></div>
   <div id="alertModal" class="modal" hidden><div class="modal-card alert-modal-card"><span class="alert-symbol">!</span><p class="eyebrow">Ważny komunikat</p><h2 id="alertModalTitle">Alert</h2><p id="alertModalText"></p><button id="ackAlertButton" class="btn btn-danger">Rozumiem</button></div></div>
   <div id="confirmModal" class="modal" hidden><div class="modal-card"><h2 id="confirmTitle">Potwierdź</h2><p id="confirmText"></p><div class="modal-actions"><button id="confirmCancel" class="btn btn-outline">Anuluj</button><button id="confirmAccept" class="btn btn-danger">Potwierdź</button></div></div></div>
-  <script src="./config.js?v=0.7.7"></script>
-  <script src="./logo.js?v=0.7.7"></script>
-  <script src="./profile-ui.js?v=0.7.7" defer></script>
-  <script src="./app.js?v=0.7.7" defer></script>
+  <script src="./config.js?v=0.7.8"></script>
+  <script src="./logo.js?v=0.7.8"></script>
+  <script src="./profile-ui.js?v=0.7.8" defer></script>
+  <script src="./app.js?v=0.7.8" defer></script>
 </body>
 </html>
