@@ -1,40 +1,30 @@
 .brand-logo{
   display:block;
+  width:auto;
   height:auto;
   max-width:100%;
   object-fit:contain;
   object-position:center;
-}
-
-.loader-logo,
-.login-logo{
-  filter:none !important;
-  mix-blend-mode:normal !important;
-  background:#fff;
-  border:1px solid rgba(255,255,255,.28);
-  border-radius:14px;
-  box-shadow:0 12px 32px rgba(0,0,0,.16);
-  box-sizing:border-box;
-  object-fit:contain;
-  object-position:center;
+  filter:none!important;
+  mix-blend-mode:normal!important;
 }
 
 .loader-logo{
-  width:min(245px,78vw) !important;
-  padding:12px 16px;
-  margin:0 auto 30px !important;
+  width:min(213px,72vw)!important;
+  aspect-ratio:213/52;
+  margin:0 auto 30px!important;
 }
 
 .login-logo{
-  width:min(225px,100%) !important;
-  padding:10px 14px;
-  margin:0 0 32px !important;
+  width:min(213px,100%)!important;
+  aspect-ratio:213/52;
+  margin:0 0 32px!important;
 }
 
 .topbar-brand .brand-logo{
-  max-height:38px;
-  width:auto;
-  max-width:132px;
+  width:118px;
+  aspect-ratio:213/52;
+  max-height:none;
 }
 
 .avatar{
@@ -55,6 +45,6 @@
 }
 
 @media(max-width:520px){
-  .loader-logo{width:min(220px,76vw) !important}
-  .login-logo{width:min(205px,100%) !important}
+  .loader-logo{width:min(213px,72vw)!important}
+  .login-logo{width:min(205px,100%)!important}
 }
