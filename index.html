@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#071b3d">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>ESTYL.PL — MOL System Pracy</title>
-  <link rel="stylesheet" href="./styles.css?v=0.8.0">
-  <link rel="stylesheet" href="./brand.css?v=0.8.0">
+  <link rel="stylesheet" href="./styles.css?v=0.7.9">
+  <link rel="stylesheet" href="./brand.css?v=0.7.9">
 </head>
 <body>
   <div id="offlineBar" class="offline-bar" hidden>Brak połączenia z internetem. Dane mogą być nieaktualne.</div>
@@ -22,7 +22,7 @@
         <label>Hasło<div class="password-wrap"><input id="passwordInput" type="password" autocomplete="current-password"><button id="togglePassword" type="button" aria-label="Pokaż lub ukryj hasło">◉</button></div></label>
         <button id="loginButton" class="btn btn-primary" type="submit">Zaloguj się</button><p id="loginError" class="form-error" role="alert" hidden></p>
       </form>
-      <div class="login-foot"><span>Bezpieczna sesja</span><span>Backend ESTYL</span><span id="appVersion">v0.8.0</span></div>
+      <div class="login-foot"><span>Bezpieczna sesja</span><span>Backend ESTYL</span><span id="appVersion">v0.7.9</span></div>
     </section>
   </main>
 
@@ -54,7 +54,7 @@
     <section id="leaderApp" class="leader-layout" hidden>
       <aside class="leader-sidebar"><div class="leader-user"><span class="avatar" id="leaderAvatar">🙂</span><div><strong id="leaderName">Lider</strong><small id="leaderRole">LEADER</small></div></div><nav class="leader-nav"><button class="leader-nav-item active" data-leader-view="monitoring">Monitoring</button><button class="leader-nav-item" data-leader-view="alerts">Alerty</button><button class="leader-nav-item" data-leader-view="message">Komunikacja</button><button class="leader-nav-item" data-leader-view="reports">Normy i raporty</button></nav><button id="workerSwitch" class="btn btn-outline-light">Widok pracownika</button></aside>
       <section class="leader-stage">
-        <div id="leaderMonitoringView" class="leader-view"><div class="leader-head"><div><p class="eyebrow">Dane na żywo</p><h1>Monitoring czasu pracy i normy</h1><p id="leaderUpdated">Ostatnia aktualizacja —</p></div><button id="refreshLeader" class="btn btn-outline">Odśwież</button></div><div class="leader-kpis"><div><small>Aktywni w Moniti</small><strong id="kpiActiveMoniti">0</strong></div><div><small>Z procesem</small><strong id="kpiWithProcess">0</strong></div><div><small>Aktywne alerty</small><strong id="kpiAlerts">0</strong></div></div><div class="table-wrap"><table><thead><tr><th>Pracownik</th><th>Moniti</th><th>Aplikacja</th><th>Aktywny proces</th><th>Czas procesu</th><th>Czas międzyprocesowy</th><th>PAK</th><th>PIK</th><th>Norma dnia</th><th>Alerty</th></tr></thead><tbody id="teamTableBody"></tbody></table></div><div id="employeeDrawer" class="employee-drawer" hidden><button id="closeEmployeeDrawer" class="drawer-close">×</button><div id="employeeDrawerContent"></div></div></div>
+        <div id="leaderMonitoringView" class="leader-view"><div class="leader-head"><div><p class="eyebrow">Dane na żywo</p><h1>Monitoring czasu pracy i normy</h1><p id="leaderUpdated">Ostatnia aktualizacja —</p></div><button id="refreshLeader" class="btn btn-outline">Odśwież</button></div><div class="leader-kpis"><div><small>Aktywni w Moniti</small><strong id="kpiActiveMoniti">0</strong></div><div><small>Z procesem</small><strong id="kpiWithProcess">0</strong></div><div><small>Aktywne alerty</small><strong id="kpiAlerts">0</strong></div></div><div class="table-wrap"><table><thead><tr><th>Pracownik</th><th>Moniti</th><th>Aktywny proces</th><th>Czas procesu</th><th>Czas międzyprocesowy</th><th>PAK</th><th>PIK</th><th>Norma dnia</th><th>Alerty</th></tr></thead><tbody id="teamTableBody"></tbody></table></div><div id="employeeDrawer" class="employee-drawer" hidden><button id="closeEmployeeDrawer" class="drawer-close">×</button><div id="employeeDrawerContent"></div></div></div>
         <div id="leaderAlertsView" class="leader-view" hidden><div class="leader-head"><div><p class="eyebrow">Wyjątki</p><h1>Centrum alertów</h1></div><button id="refreshLeaderAlerts" class="btn btn-outline">Odśwież</button></div><div id="leaderAlertsList" class="leader-alert-list"></div></div>
         <div id="leaderMessageView" class="leader-view" hidden><div class="leader-head"><div><p class="eyebrow">Komunikacja</p><h1>Wyślij komunikat</h1><p>Komunikat trafia do aplikacji pracownika.</p></div></div><form id="leaderMessageForm" class="message-form"><label>Pracownik<select id="messageEmployee" required></select></label><label>Treść komunikatu<textarea id="messageText" maxlength="500" rows="6" required></textarea></label><fieldset><legend>Priorytet</legend><label><input type="radio" name="priority" value="LOW"> Niski</label><label><input type="radio" name="priority" value="NORMAL" checked> Średni</label><label><input type="radio" name="priority" value="HIGH"> Wysoki</label></fieldset><button class="btn btn-primary">Wyślij komunikat</button><p id="messageSendStatus" class="form-status"></p></form></div>
         <div id="leaderReportsView" class="leader-view" hidden><div class="leader-head"><div><p class="eyebrow">Raportowanie</p><h1>Normy i czas pracy</h1></div></div><div class="report-controls"><label>Pracownik<select id="reportEmployee"></select></label><label>Widok<select id="reportMode"><option value="daily">Dzienny</option><option value="monthly">Miesięczny</option></select></label><label id="reportDateWrap">Data<input id="reportDate" type="date"></label><label id="reportMonthWrap" hidden>Miesiąc<input id="reportMonth" type="month"></label><button id="loadLeaderReport" class="btn btn-primary">Pokaż raport</button></div><div id="leaderReportContent" class="report-content"></div></div>
@@ -65,9 +65,9 @@
   <div id="toast" class="toast" role="status" hidden></div>
   <div id="alertModal" class="modal" hidden><div class="modal-card alert-modal-card"><span class="alert-symbol">!</span><p class="eyebrow">Ważny komunikat</p><h2 id="alertModalTitle">Alert</h2><p id="alertModalText"></p><button id="ackAlertButton" class="btn btn-danger">Rozumiem</button></div></div>
   <div id="confirmModal" class="modal" hidden><div class="modal-card"><h2 id="confirmTitle">Potwierdź</h2><p id="confirmText"></p><div class="modal-actions"><button id="confirmCancel" class="btn btn-outline">Anuluj</button><button id="confirmAccept" class="btn btn-danger">Potwierdź</button></div></div></div>
-  <script src="./config.js?v=0.8.0"></script>
-  <script src="./logo.js?v=0.8.0"></script>
-  <script src="./profile-ui.js?v=0.8.0" defer></script>
-  <script src="./app.js?v=0.8.0" defer></script>
+  <script src="./config.js?v=0.7.9"></script>
+  <script src="./logo.js?v=0.7.9"></script>
+  <script src="./profile-ui.js?v=0.7.9" defer></script>
+  <script src="./app.js?v=0.7.9" defer></script>
 </body>
 </html>

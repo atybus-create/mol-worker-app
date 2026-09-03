@@ -25,9 +25,8 @@ Frontend Etapu 7 dla ESTYL.PL. Jedna baza kodu obsługuje widok pracownika oraz 
 
 ## Funkcje lidera
 
-- lista wszystkich osób aktywnych w Moniti, z wykluczeniem kont ADMIN,
-- status aplikacji, brak procesu, aktywny proces, normy i alerty,
-- widoczny błąd brakującego mapowania Moniti–aplikacja,
+- live status zespołu,
+- Moniti / aktywny proces / normy / alerty,
 - lista aktywnych alertów,
 - ręczny komunikat do pracownika,
 - raport dzienny i miesięczny pracownika.
