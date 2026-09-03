@@ -8,6 +8,7 @@
   <title>ESTYL.PL — MOL System Pracy</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./brand.css">
 </head>
 <body>
   <div id="offlineBar" class="offline-bar" hidden>Brak połączenia z internetem. Dane mogą być nieaktualne.</div>
@@ -34,7 +35,7 @@
 
     <section id="workerApp" class="worker-layout">
       <aside class="worker-rail">
-        <div class="rail-user"><span id="userAvatar" class="avatar">A</span><div><strong id="workerName">Pracownik</strong><small id="workerRole">WORKER</small></div></div>
+        <div class="rail-user"><span id="userAvatar" class="avatar" aria-label="Avatar pracownika">🙂</span><div><strong id="workerName">Pracownik</strong><small id="workerRole">WORKER</small></div></div>
         <div class="rail-live"><small>Start Moniti</small><strong id="monitiStart">—</strong><span id="monitiStatus" class="status-pill">—</span></div>
         <nav class="worker-nav"><button class="worker-nav-item active" data-worker-view="home">Proces</button><button class="worker-nav-item" data-worker-view="norm">Norma</button><button class="worker-nav-item" data-worker-view="messages">Komunikaty <span id="alertCountBadge" class="nav-badge" hidden>0</span></button></nav>
         <button id="endDayButton" class="btn btn-danger-soft" type="button">Zakończ pracę w aplikacji</button>
@@ -52,7 +53,7 @@
     </section>
 
     <section id="leaderApp" class="leader-layout" hidden>
-      <aside class="leader-sidebar"><div class="leader-user"><span class="avatar" id="leaderAvatar">A</span><div><strong id="leaderName">Lider</strong><small id="leaderRole">LEADER</small></div></div><nav class="leader-nav"><button class="leader-nav-item active" data-leader-view="monitoring">Monitoring</button><button class="leader-nav-item" data-leader-view="alerts">Alerty</button><button class="leader-nav-item" data-leader-view="message">Komunikacja</button><button class="leader-nav-item" data-leader-view="reports">Normy i raporty</button></nav><button id="workerSwitch" class="btn btn-outline-light">Widok pracownika</button></aside>
+      <aside class="leader-sidebar"><div class="leader-user"><span class="avatar" id="leaderAvatar">🙂</span><div><strong id="leaderName">Lider</strong><small id="leaderRole">LEADER</small></div></div><nav class="leader-nav"><button class="leader-nav-item active" data-leader-view="monitoring">Monitoring</button><button class="leader-nav-item" data-leader-view="alerts">Alerty</button><button class="leader-nav-item" data-leader-view="message">Komunikacja</button><button class="leader-nav-item" data-leader-view="reports">Normy i raporty</button></nav><button id="workerSwitch" class="btn btn-outline-light">Widok pracownika</button></aside>
       <section class="leader-stage">
         <div id="leaderMonitoringView" class="leader-view"><div class="leader-head"><div><p class="eyebrow">Dane na żywo</p><h1>Monitoring czasu pracy i normy</h1><p id="leaderUpdated">Ostatnia aktualizacja —</p></div><button id="refreshLeader" class="btn btn-outline">Odśwież</button></div><div class="leader-kpis"><div><small>Aktywni w Moniti</small><strong id="kpiActiveMoniti">0</strong></div><div><small>Z procesem</small><strong id="kpiWithProcess">0</strong></div><div><small>Aktywne alerty</small><strong id="kpiAlerts">0</strong></div></div><div class="table-wrap"><table><thead><tr><th>Pracownik</th><th>Moniti</th><th>Aktywny proces</th><th>Czas procesu</th><th>PAK</th><th>PIK</th><th>Norma dnia</th><th>Alerty</th></tr></thead><tbody id="teamTableBody"></tbody></table></div><div id="employeeDrawer" class="employee-drawer" hidden><button id="closeEmployeeDrawer" class="drawer-close">×</button><div id="employeeDrawerContent"></div></div></div>
         <div id="leaderAlertsView" class="leader-view" hidden><div class="leader-head"><div><p class="eyebrow">Wyjątki</p><h1>Centrum alertów</h1></div><button id="refreshLeaderAlerts" class="btn btn-outline">Odśwież</button></div><div id="leaderAlertsList" class="leader-alert-list"></div></div>
