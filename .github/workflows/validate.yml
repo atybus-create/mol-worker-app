@@ -16,6 +16,7 @@ jobs:
           node --check app.js
           node --check config.js
           node --check logo.js
+          node --check profile-ui.js
           node --check sw.js
       - name: Check required UI and integrations
         run: |
@@ -26,6 +27,8 @@ jobs:
           grep -q 'Terminy – aplikacja magazynowa' index.html
           grep -q 'Batch reader' index.html
           grep -q 'ESTYL_LOGO' logo.js
+          grep -q 'refreshProfile' profile-ui.js
+          grep -q "version: '0.7.3'" config.js
       - name: Check no test tokens or chat secrets
         run: |
           ! grep -R -E 'ETAP7FRONTENDTESTTOKEN|ETAP7WORKERROLETESTTOKEN|PHPSESSID|CHAT_ALERT_WEBHOOK' --exclude-dir=.git --exclude=validate.yml .
