@@ -28,4 +28,4 @@ jobs:
           grep -q 'ESTYL_LOGO' logo.js
       - name: Check no test tokens or chat secrets
         run: |
-          ! grep -R -E 'ETAP7FRONTENDTESTTOKEN|ETAP7WORKERROLETESTTOKEN|PHPSESSID|CHAT_ALERT_WEBHOOK' --exclude-dir=.git .
+          ! grep -R -E 'ETAP7FRONTENDTESTTOKEN|ETAP7WORKERROLETESTTOKEN|PHPSESSID|CHAT_ALERT_WEBHOOK' --exclude-dir=.git --exclude=validate.yml .
