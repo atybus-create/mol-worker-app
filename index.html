@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#071b3d">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>ESTYL.PL — MOL System Pracy</title>
-  <link rel="stylesheet" href="./styles.css?v=0.7.20">
-  <link rel="stylesheet" href="./brand.css?v=0.7.20">
+  <link rel="stylesheet" href="./styles.css?v=0.7.21">
+  <link rel="stylesheet" href="./brand.css?v=0.7.21">
 </head>
 <body>
   <div id="offlineBar" class="offline-bar" hidden>Brak połączenia z internetem. Dane mogą być nieaktualne.</div><div id="dataWarningBar" class="offline-bar" style="top:34px" hidden></div>
@@ -22,7 +22,7 @@
         <label>Hasło<div class="password-wrap"><input id="passwordInput" type="password" autocomplete="current-password"><button id="togglePassword" type="button" aria-label="Pokaż lub ukryj hasło">◉</button></div></label>
         <button id="loginButton" class="btn btn-primary" type="submit">Zaloguj się</button><p id="loginError" class="form-error" role="alert" hidden></p>
       </form>
-      <div class="login-foot"><span>Bezpieczna sesja</span><span>Backend ESTYL</span><span id="appVersion">v0.7.20</span></div>
+      <div class="login-foot"><span>Bezpieczna sesja</span><span>Backend ESTYL</span><span id="appVersion">v0.7.21</span></div>
     </section>
   </main>
 
@@ -41,7 +41,7 @@
       <section class="worker-stage">
         <section id="attendancePanel" class="attendance-panel" aria-live="polite">
           <div><p class="eyebrow">Rejestr czasu pracy</p><h2 id="attendanceTitle">Dzień pracy</h2><p id="attendanceDescription">Sprawdzanie statusu…</p></div>
-          <div class="attendance-actions"><button id="attendanceStartButton" class="btn btn-primary" type="button">MONITI Rozpocznij pracę</button><button id="attendanceFinishButton" class="btn btn-danger-soft" type="button">MONITI Zakończ pracę</button><button id="attendanceCorrectionButton" class="btn btn-outline attendance-correction-button" type="button">Zmień godziny pracy</button></div><p id="attendanceCorrectionHint" class="attendance-correction-hint"></p>
+          <div class="attendance-actions"><button id="attendanceStartButton" class="btn btn-primary" type="button">MONITI Rozpocznij pracę</button><button id="attendanceFinishButton" class="btn btn-danger-soft" type="button">MONITI Zakończ pracę</button><button id="attendanceReopenButton" class="btn btn-outline" type="button" hidden>Cofnij zakończenie dnia</button><button id="attendanceCorrectionButton" class="btn btn-outline attendance-correction-button" type="button">Zmień godziny pracy</button></div><p id="attendanceCorrectionHint" class="attendance-correction-hint"></p>
         </section>
         <div id="workerBlocked" class="block-card" hidden><span class="block-icon">!</span><p class="eyebrow">Czas pracy</p><h2>Rozpocznij pracę</h2><p>Użyj przycisku „MONITI Rozpocznij pracę” powyżej.</p><button id="retryWorkday" class="btn btn-primary">Sprawdź ponownie</button></div>
         <div id="workerHomeView" class="worker-view">
@@ -69,9 +69,9 @@
   <div id="alertModal" class="modal" hidden><div class="modal-card alert-modal-card"><span class="alert-symbol">!</span><p class="eyebrow">Ważny komunikat</p><h2 id="alertModalTitle">Alert</h2><p id="alertModalText"></p><button id="ackAlertButton" class="btn btn-danger">Rozumiem</button></div></div>
   <div id="correctionModal" class="modal" hidden><div class="modal-card correction-modal-card"><p class="eyebrow">Korekta czasu pracy</p><h2>Zmień godziny pracy</h2><p class="correction-explainer">Podaj poprawne godziny i powód. Zgłoszenie trafi do lidera i administratora do weryfikacji.</p><form id="correctionForm" class="correction-form"><label>Dzień pracy<input id="correctionDate" type="date" required></label><div class="correction-times"><label>Rozpoczęcie<input id="correctionStart" type="time"></label><label>Zakończenie<input id="correctionFinish" type="time"></label></div><label>Powód zmiany<textarea id="correctionReason" rows="3" minlength="5" maxlength="500" required placeholder="Np. zapomniałem rozpocząć pracę"></textarea></label><p id="correctionError" class="form-error" role="alert" hidden></p><div class="modal-actions"><button id="correctionCancel" class="btn btn-outline" type="button">Anuluj</button><button id="correctionSubmit" class="btn btn-primary" type="submit">Wyślij zgłoszenie</button></div></form></div></div>
   <div id="confirmModal" class="modal" hidden><div class="modal-card"><h2 id="confirmTitle">Potwierdź</h2><p id="confirmText"></p><div class="modal-actions"><button id="confirmCancel" class="btn btn-outline">Anuluj</button><button id="confirmAccept" class="btn btn-danger">Potwierdź</button></div></div></div>
-  <script src="./config.js?v=0.7.20"></script>
-  <script src="./logo.js?v=0.7.20"></script>
-  <script src="./profile-ui.js?v=0.7.20" defer></script>
-  <script src="./app.js?v=0.7.20" defer></script>
+  <script src="./config.js?v=0.7.21"></script>
+  <script src="./logo.js?v=0.7.21"></script>
+  <script src="./profile-ui.js?v=0.7.21" defer></script>
+  <script src="./app.js?v=0.7.21" defer></script>
 </body>
 </html>
