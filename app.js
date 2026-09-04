@@ -66,11 +66,12 @@ async function refreshStatus(){
   try{
     const r=await api('status',{timeoutMs:15000});
     S.status=r;
+    S.attendance={...(S.attendance||{}),ok:Boolean(r.ok),status:r.attendance?.status||r.status,attendance:r.attendance||null};
     S.wd={ok:Boolean(r.ok),status:r.status,work_day:r.work_day||null,active_process:r.active_process||null};
     S.daily=r.kpi?{ok:true,report:r.kpi}:{ok:false,report:null};
     S.alerts=Array.isArray(r.alerts)?r.alerts:[];
     clearWarning('backend');clearWarning('alerts');applyFreshness(r.freshness||{});
-    renderWd();badge();if(S.workerView==='messages')messages();modal();
+    renderAttendance();renderWd();badge();if(S.workerView==='messages')messages();modal();
     if(S.active)kpi();if(S.workerView==='norm'&&S.norm==='daily')renderNorm();
     if(r.freshness?.moniti?.state!=='OK'&&S.wd?.ok)$('monitiStatus').textContent='DANE NIEAKTUALNE';
   }catch(e){
