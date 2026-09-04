@@ -37,7 +37,7 @@ jobs:
           grep -q 'hydrateProfile' profile-ui.js
           ! grep -q 'setTimeout' profile-ui.js
           ! grep -q 'setInterval' profile-ui.js
-          grep -q 'profile-ui.js?v=0.7.18' index.html
+          grep -q 'profile-ui.js?v=0.7.19' index.html
           grep -q 'logoutProcessButton' index.html
           grep -q 'warehouseLogoutProcessButton' index.html
           grep -q 'warehouseChangeProcessButton' index.html
@@ -52,7 +52,7 @@ jobs:
           grep -q "action:'logout_process'" app.js
           grep -q "MONITI_FINISHED" app.js
           grep -q "blocked('FINISHED')" app.js
-          grep -q "version: '0.7.18'" config.js
+          grep -q "version: '0.7.19'" config.js
           grep -q 'PAK (szt.)' index.html
           grep -q 'PIK (szt.)' index.html
           grep -q 'production(e.eligible_pak,e.outside_pak)' app.js
