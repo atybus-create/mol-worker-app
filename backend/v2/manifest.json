@@ -47,7 +47,7 @@
     "process_logout": "e4hP8VJMocZBcGAd"
   },
   "active_versions": {
-    "health": "0443b2df-834a-4efe-98bd-6698e6741e78",
+    "health": "c1d0d26e-5e25-41ba-88d6-5a5175740947",
     "command": "6f348eb6-f8b3-4d07-ae61-903fcb17d5c6",
     "error_handler": "27b35770-ed05-4b35-abb4-ecb12a3f8367",
     "outbox": "a8906fe3-c6c2-4a58-88c3-acf1f2d074d4",
@@ -55,7 +55,7 @@
     "auth_login": "872fb11a-00bd-4163-a056-04b4d92940d0",
     "auth_session": "d0075043-950f-45b1-99e3-39207707ad62",
     "auth_logout": "0630e472-9b5d-4593-a171-f8ee119377d5",
-    "attendance_service": "04ad8ea3-fbb9-4934-bec1-10bc3dfa6590",
+    "attendance_service": "8a8a7d2b-f41a-472a-a7ab-78237dbac7a9",
     "attendance_moniti": "56ff0be6-3265-41a2-b0b9-7234c957d6e0",
     "attendance_drive": "902ff676-6619-4b20-97ba-023d3ec7c5fc",
     "attendance_recovery": "10976a73-c4e2-4df0-8582-5cef75ac94a0",
@@ -80,15 +80,22 @@
   },
   "attendance": {
     "moniti_test_date": "2026-09-05",
-    "moniti_test_worker_ids": [
-      99191,
-      99186,
-      99185
-    ],
+    "moniti_test_worker_ids": [99191, 99186, 99185],
     "moniti_precision_seconds": 60,
     "report_spreadsheet_id": "1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4",
     "report_url": "https://docs.google.com/spreadsheets/d/1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4/edit?ouid=113962701124300298502",
     "harness_id": "f9IXrykYauu9FVfi",
     "harness_active": false
+  },
+  "process_permissions": {
+    "storage_table": "MOL_V2_CONFIG",
+    "scope": "process_permissions",
+    "role_key_prefix": "ALLOWED_PROCESSES_ROLE_",
+    "employee_key_prefix": "ALLOWED_PROCESSES_EMPLOYEE_",
+    "precedence": "explicit employee entry replaces role entry, including an empty array",
+    "office_roles": ["LEADER", "ADMIN"],
+    "employee_column_created": false,
+    "configuration_snapshot": "processes/permissions-config.json",
+    "revision": "stage6-closeout-20260905"
   }
 }
