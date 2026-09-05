@@ -1,0 +1,14 @@
+{
+  "description": "Reviewed configuration snapshot for stage 6. Not an automatic overwrite of later permission edits.",
+  "table": "MOL_V2_CONFIG",
+  "scope": "process_permissions",
+  "version": 1,
+  "rows": [
+    {"key":"ALLOWED_PROCESSES_ROLE_WORKER","value_json":"[\"PAKOWANIE\",\"KOMPLETACJA\",\"DYZUR\",\"ZWROTY\",\"PORZADKI_KARTONY\",\"PRZYGOTOWANIE_STANOWISKA\",\"MAGAZYN\",\"PRZERWA\",\"INNE\"]","scope":"process_permissions","version":1},
+    {"key":"ALLOWED_PROCESSES_ROLE_LEADER","value_json":"[\"PAKOWANIE\",\"KOMPLETACJA\",\"DYZUR\",\"ZWROTY\",\"BIURO\",\"PORZADKI_KARTONY\",\"PRZYGOTOWANIE_STANOWISKA\",\"MAGAZYN\",\"PRZERWA\",\"INNE\"]","scope":"process_permissions","version":1},
+    {"key":"ALLOWED_PROCESSES_ROLE_ADMIN","value_json":"[\"PAKOWANIE\",\"KOMPLETACJA\",\"DYZUR\",\"ZWROTY\",\"BIURO\",\"PORZADKI_KARTONY\",\"PRZYGOTOWANIE_STANOWISKA\",\"MAGAZYN\",\"PRZERWA\",\"INNE\"]","scope":"process_permissions","version":1},
+    {"key":"ALLOWED_PROCESSES_EMPLOYEE_MOL004","value_json":"[\"PAKOWANIE\",\"KOMPLETACJA\",\"DYZUR\",\"ZWROTY\",\"PORZADKI_KARTONY\",\"PRZYGOTOWANIE_STANOWISKA\",\"MAGAZYN\",\"PRZERWA\",\"INNE\"]","scope":"process_permissions","version":1},
+    {"key":"ALLOWED_PROCESSES_EMPLOYEE_MOL014","value_json":"[\"PAKOWANIE\",\"KOMPLETACJA\",\"DYZUR\",\"ZWROTY\",\"BIURO\",\"PORZADKI_KARTONY\",\"PRZYGOTOWANIE_STANOWISKA\",\"MAGAZYN\",\"PRZERWA\",\"INNE\"]","scope":"process_permissions","version":1},
+    {"key":"ALLOWED_PROCESSES_EMPLOYEE_MOL015","value_json":"[\"PAKOWANIE\",\"KOMPLETACJA\",\"DYZUR\",\"ZWROTY\",\"BIURO\",\"PORZADKI_KARTONY\",\"PRZYGOTOWANIE_STANOWISKA\",\"MAGAZYN\",\"PRZERWA\",\"INNE\"]","scope":"process_permissions","version":1}
+  ]
+}
