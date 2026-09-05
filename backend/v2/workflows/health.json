@@ -1,0 +1,123 @@
+{
+  "name": "MOL // APP V2 // API HEALTH",
+  "nodes": [
+    {
+      "id": "mol-v2-health-webhook",
+      "name": "V2 // HEALTH // GET",
+      "webhookId": "ceeb1232-e155-4748-99df-ec2ac9d107f4",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "mol-app-v2-health",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "mol-v2-health-respond",
+      "name": "V2 // HEALTH // 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {ok:$json.ok,service:$json.service,version:$json.version,environment:$json.environment,writes_enabled:$json.writes_enabled,stage:$json.stage,core_status:$json.core_status,database:$json.database} }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}"
+        }
+      }
+    },
+    {
+      "id": "read-v2-config",
+      "name": "Read V2 Config",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "x66LbXe5CSpdMIkv"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": []
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 50
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "build-health",
+      "name": "Build Health",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const rows=$input.all().map(i=>i.json).filter(r=>r.key);const cfg={};let valid=true;for(const r of rows){if(Object.hasOwn(cfg,r.key)) valid=false;try{cfg[r.key]=JSON.parse(r.value_json);}catch{valid=false;}}valid=valid&&cfg.SCHEMA_VERSION===1&&cfg.ENVIRONMENT==='test'&&typeof cfg.WRITES_ENABLED==='boolean'&&cfg.WORKER_CORRECTION_DAYS===31;return [{json:{ok:valid,service:'MOL_APP_V2',version:'0.3.0',environment:cfg.ENVIRONMENT||'unknown',writes_enabled:cfg.WRITES_ENABLED===true,stage:3,core_status:valid?'READY':'CONFIG_ERROR',database:valid?'ONLINE':'ERROR',http_status:valid?200:503}}];"
+      }
+    }
+  ],
+  "connections": {
+    "V2 // HEALTH // GET": {
+      "main": [
+        [
+          {
+            "node": "Read V2 Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read V2 Config": {
+      "main": [
+        [
+          {
+            "node": "Build Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Health": {
+      "main": [
+        [
+          {
+            "node": "V2 // HEALTH // 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "timezone": "Europe/Warsaw",
+    "executionOrder": "v1",
+    "errorWorkflow": "rnELTCKClbzY8lxZ"
+  }
+}

@@ -3,8 +3,8 @@
 | Etap | Zakres | Test techniczny | Odbiór użytkownika | Status |
 |---:|---|---|---|---|
 | 1 | Zamrożenie V1, inwentaryzacja, izolowany szkielet V2 | Backend 200; 0 błędów; 0 ostrzeżeń; `writes_enabled=false` | Potwierdzony 2026-09-05 | ODEBRANY |
-| 2 | Finalny model działania i kontrakty API | PASS: OpenAPI 3.1; 21 endpointów; 21 unikalnych operacji; idempotencja i stany sprawdzone | Oczekuje | GOTOWE DO ODBIORU |
-| 3 | Rdzeń backendu V2 | — | — | NIE ROZPOCZĘTO |
+| 2 | Finalny model działania i kontrakty API | PASS: kontrola kontraktu; uwzględnione korekty z Drive | Zatwierdzony przez użytkownika 2026-09-05 | ODEBRANY |
+| 3 | Rdzeń backendu V2 | PASS: 17 schematów; 5 workflowów bez błędów/ostrzeżeń; testy idempotencji, konfliktów, współbieżności i recovery | Oczekuje | GOTOWE DO ODBIORU |
 | 4 | Logowanie i sesja | — | — | NIE ROZPOCZĘTO |
 | 5 | Czas pracy | — | — | NIE ROZPOCZĘTO |
 | 6 | Procesy pracownika | — | — | NIE ROZPOCZĘTO |

@@ -18,6 +18,11 @@ jobs:
           node --check logo.js
           node --check profile-ui.js
           node --check sw.js
+          node --check v2/app.js
+      - name: Validate V2 contract and backend isolation
+        run: |
+          node scripts/validate-v2-contract.js
+          node scripts/validate-v2-backend.js
       - name: Check required UI and integrations
         run: |
           grep -q 'MAGAZYN' app.js

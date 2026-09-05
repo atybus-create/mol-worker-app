@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "project_id": "2QU4nSVpDVPvyHyw",
+  "tables": {
+    "MOL_V2_EMPLOYEES": "npCr4h1LjhVL205w",
+    "MOL_V2_SESSIONS": "JXNEIdijeKfhuwYD",
+    "MOL_V2_ATTENDANCE": "HmJugmYliWT0ERn4",
+    "MOL_V2_PROCESSES": "ex0nanHboSqhceIB",
+    "MOL_V2_PROCESS_SESSIONS": "4di5yA4jpe0ZEmPL",
+    "MOL_V2_COMMANDS": "Oz0NtvJ9SRaVFMc8",
+    "MOL_V2_WORK_EVENTS": "SsKw8JJaizeIRoS5",
+    "MOL_V2_PRODUCTION_DELTAS": "GT4Ritsrue5U57NA",
+    "MOL_V2_MESSAGES": "oVEulwPQCL9NOMjV",
+    "MOL_V2_ALERTS": "W5wg5lF0BwjbQQ4g",
+    "MOL_V2_DAILY_SUMMARY": "GSpPhENUjWor7bqE",
+    "MOL_V2_MONTHLY_SUMMARY": "mbmyKatUZSKd4HgX",
+    "MOL_V2_OUTBOX": "gYdo04L9BIuWc40C",
+    "MOL_V2_CONFIG": "x66LbXe5CSpdMIkv",
+    "MOL_V2_SHEET_CORRECTIONS": "89iFEkyiyUaThLjU",
+    "MOL_V2_LOCKS": "uKfyrOkB2zoSEuBH",
+    "MOL_V2_ERRORS": "QMyDe52h9QiRlsOp"
+  },
+  "workflows": {
+    "health": "sfoWeuiJBN2qvCRF",
+    "command": "tsyGl8RnqKipKDx1",
+    "error_handler": "rnELTCKClbzY8lxZ",
+    "outbox": "BC5qZVnvzpMaXfp4",
+    "test_harness": "XgHKTS7EmpMi0xz1"
+  },
+  "active_versions": {
+    "health": "d09a6b85-e619-4714-b50b-afcb44c05d26",
+    "command": "6f348eb6-f8b3-4d07-ae61-903fcb17d5c6",
+    "error_handler": "49347107-24ba-4b15-b273-2c10e6bb6197",
+    "outbox": "a8906fe3-c6c2-4a58-88c3-acf1f2d074d4",
+    "test_harness": null
+  }
+}

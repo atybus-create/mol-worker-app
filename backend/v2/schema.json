@@ -1,0 +1,720 @@
+{
+  "schema_version": 1,
+  "environment": "test",
+  "project_id": "2QU4nSVpDVPvyHyw",
+  "tables": [
+    {
+      "name": "MOL_V2_EMPLOYEES",
+      "columns": [
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "login",
+          "type": "string"
+        },
+        {
+          "name": "display_name",
+          "type": "string"
+        },
+        {
+          "name": "password_hash",
+          "type": "string"
+        },
+        {
+          "name": "role",
+          "type": "string"
+        },
+        {
+          "name": "leader_id",
+          "type": "string"
+        },
+        {
+          "name": "active",
+          "type": "boolean"
+        },
+        {
+          "name": "moniti_worker_id",
+          "type": "string"
+        },
+        {
+          "name": "es_worker_id",
+          "type": "string"
+        },
+        {
+          "name": "version",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_SESSIONS",
+      "columns": [
+        {
+          "name": "session_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "token_hash",
+          "type": "string"
+        },
+        {
+          "name": "expires_at",
+          "type": "date"
+        },
+        {
+          "name": "revoked_at",
+          "type": "date"
+        },
+        {
+          "name": "last_seen_at",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_ATTENDANCE",
+      "columns": [
+        {
+          "name": "attendance_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "work_date",
+          "type": "string"
+        },
+        {
+          "name": "state",
+          "type": "string"
+        },
+        {
+          "name": "start_at",
+          "type": "date"
+        },
+        {
+          "name": "stop_at",
+          "type": "date"
+        },
+        {
+          "name": "version",
+          "type": "number"
+        },
+        {
+          "name": "last_request_id",
+          "type": "string"
+        },
+        {
+          "name": "moniti_sync",
+          "type": "string"
+        },
+        {
+          "name": "drive_sync",
+          "type": "string"
+        },
+        {
+          "name": "correction_required",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_PROCESSES",
+      "columns": [
+        {
+          "name": "process_code",
+          "type": "string"
+        },
+        {
+          "name": "display_name",
+          "type": "string"
+        },
+        {
+          "name": "active",
+          "type": "boolean"
+        },
+        {
+          "name": "norm_units_per_hour",
+          "type": "number"
+        },
+        {
+          "name": "version",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_PROCESS_SESSIONS",
+      "columns": [
+        {
+          "name": "process_session_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "attendance_id",
+          "type": "string"
+        },
+        {
+          "name": "process_code",
+          "type": "string"
+        },
+        {
+          "name": "start_at",
+          "type": "date"
+        },
+        {
+          "name": "stop_at",
+          "type": "date"
+        },
+        {
+          "name": "version",
+          "type": "number"
+        },
+        {
+          "name": "last_request_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_COMMANDS",
+      "columns": [
+        {
+          "name": "request_id",
+          "type": "string"
+        },
+        {
+          "name": "actor_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "aggregate_id",
+          "type": "string"
+        },
+        {
+          "name": "operation",
+          "type": "string"
+        },
+        {
+          "name": "source",
+          "type": "string"
+        },
+        {
+          "name": "payload_hash",
+          "type": "string"
+        },
+        {
+          "name": "payload_json",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "response_json",
+          "type": "string"
+        },
+        {
+          "name": "expected_version",
+          "type": "number"
+        },
+        {
+          "name": "attempts",
+          "type": "number"
+        },
+        {
+          "name": "error_code",
+          "type": "string"
+        },
+        {
+          "name": "lease_owner",
+          "type": "string"
+        },
+        {
+          "name": "lease_until",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_WORK_EVENTS",
+      "columns": [
+        {
+          "name": "event_id",
+          "type": "string"
+        },
+        {
+          "name": "aggregate_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "event_type",
+          "type": "string"
+        },
+        {
+          "name": "request_id",
+          "type": "string"
+        },
+        {
+          "name": "actor_id",
+          "type": "string"
+        },
+        {
+          "name": "source",
+          "type": "string"
+        },
+        {
+          "name": "before_json",
+          "type": "string"
+        },
+        {
+          "name": "after_json",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "occurred_at",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_PRODUCTION_DELTAS",
+      "columns": [
+        {
+          "name": "delta_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "source_time",
+          "type": "date"
+        },
+        {
+          "name": "captured_at",
+          "type": "date"
+        },
+        {
+          "name": "pak_count",
+          "type": "number"
+        },
+        {
+          "name": "pick_count",
+          "type": "number"
+        },
+        {
+          "name": "classification",
+          "type": "string"
+        },
+        {
+          "name": "process_session_id",
+          "type": "string"
+        },
+        {
+          "name": "attendance_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_MESSAGES",
+      "columns": [
+        {
+          "name": "message_id",
+          "type": "string"
+        },
+        {
+          "name": "sender_id",
+          "type": "string"
+        },
+        {
+          "name": "recipient_id",
+          "type": "string"
+        },
+        {
+          "name": "content",
+          "type": "string"
+        },
+        {
+          "name": "ack_required",
+          "type": "boolean"
+        },
+        {
+          "name": "ack_at",
+          "type": "date"
+        },
+        {
+          "name": "valid_until",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_ALERTS",
+      "columns": [
+        {
+          "name": "alert_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "dedup_key",
+          "type": "string"
+        },
+        {
+          "name": "opened_at",
+          "type": "date"
+        },
+        {
+          "name": "closed_at",
+          "type": "date"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "details_json",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_DAILY_SUMMARY",
+      "columns": [
+        {
+          "name": "summary_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "work_date",
+          "type": "string"
+        },
+        {
+          "name": "presence_seconds",
+          "type": "number"
+        },
+        {
+          "name": "process_seconds",
+          "type": "number"
+        },
+        {
+          "name": "between_process_seconds",
+          "type": "number"
+        },
+        {
+          "name": "pak_seconds",
+          "type": "number"
+        },
+        {
+          "name": "pick_seconds",
+          "type": "number"
+        },
+        {
+          "name": "eligible_pak",
+          "type": "number"
+        },
+        {
+          "name": "eligible_pick",
+          "type": "number"
+        },
+        {
+          "name": "pak_percent",
+          "type": "number"
+        },
+        {
+          "name": "pick_percent",
+          "type": "number"
+        },
+        {
+          "name": "combined_percent",
+          "type": "number"
+        },
+        {
+          "name": "freshness",
+          "type": "string"
+        },
+        {
+          "name": "calculated_at",
+          "type": "date"
+        },
+        {
+          "name": "version",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_MONTHLY_SUMMARY",
+      "columns": [
+        {
+          "name": "summary_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "month",
+          "type": "string"
+        },
+        {
+          "name": "pak_seconds",
+          "type": "number"
+        },
+        {
+          "name": "pick_seconds",
+          "type": "number"
+        },
+        {
+          "name": "eligible_pak",
+          "type": "number"
+        },
+        {
+          "name": "eligible_pick",
+          "type": "number"
+        },
+        {
+          "name": "combined_percent",
+          "type": "number"
+        },
+        {
+          "name": "freshness",
+          "type": "string"
+        },
+        {
+          "name": "calculated_at",
+          "type": "date"
+        },
+        {
+          "name": "version",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_OUTBOX",
+      "columns": [
+        {
+          "name": "outbox_id",
+          "type": "string"
+        },
+        {
+          "name": "request_id",
+          "type": "string"
+        },
+        {
+          "name": "aggregate_id",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "payload_json",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "attempts",
+          "type": "number"
+        },
+        {
+          "name": "next_attempt_at",
+          "type": "date"
+        },
+        {
+          "name": "lease_owner",
+          "type": "string"
+        },
+        {
+          "name": "lease_until",
+          "type": "date"
+        },
+        {
+          "name": "last_error",
+          "type": "string"
+        },
+        {
+          "name": "completed_at",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_CONFIG",
+      "columns": [
+        {
+          "name": "key",
+          "type": "string"
+        },
+        {
+          "name": "value_json",
+          "type": "string"
+        },
+        {
+          "name": "scope",
+          "type": "string"
+        },
+        {
+          "name": "version",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_SHEET_CORRECTIONS",
+      "columns": [
+        {
+          "name": "correction_id",
+          "type": "string"
+        },
+        {
+          "name": "request_id",
+          "type": "string"
+        },
+        {
+          "name": "spreadsheet_id",
+          "type": "string"
+        },
+        {
+          "name": "sheet_id",
+          "type": "string"
+        },
+        {
+          "name": "row_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "expected_version",
+          "type": "number"
+        },
+        {
+          "name": "approved_by",
+          "type": "string"
+        },
+        {
+          "name": "approved_at",
+          "type": "date"
+        },
+        {
+          "name": "payload_hash",
+          "type": "string"
+        },
+        {
+          "name": "payload_json",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "error_code",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_LOCKS",
+      "columns": [
+        {
+          "name": "lock_key",
+          "type": "string"
+        },
+        {
+          "name": "owner",
+          "type": "string"
+        },
+        {
+          "name": "version",
+          "type": "number"
+        },
+        {
+          "name": "lease_until",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_ERRORS",
+      "columns": [
+        {
+          "name": "error_id",
+          "type": "string"
+        },
+        {
+          "name": "request_id",
+          "type": "string"
+        },
+        {
+          "name": "workflow_id",
+          "type": "string"
+        },
+        {
+          "name": "execution_id",
+          "type": "string"
+        },
+        {
+          "name": "code",
+          "type": "string"
+        },
+        {
+          "name": "message",
+          "type": "string"
+        },
+        {
+          "name": "occurred_at",
+          "type": "date"
+        }
+      ]
+    }
+  ]
+}

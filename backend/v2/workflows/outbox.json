@@ -1,0 +1,461 @@
+{
+  "name": "MOL // APP V2 // CORE OUTBOX",
+  "nodes": [
+    {
+      "id": "internal-input",
+      "name": "Internal Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "read-outbox",
+      "name": "Read Outbox",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "outbox_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.outbox_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      }
+    },
+    {
+      "id": "read-source-command",
+      "name": "Read Source Command",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "request_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.request_id || 'NONE' }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      }
+    },
+    {
+      "id": "prepare-job",
+      "name": "Prepare Job",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const input=$('Internal Input').first().json;const rows=$('Read Outbox').all().map(i=>i.json).filter(r=>r.outbox_id);const commands=$input.all().map(i=>i.json).filter(r=>r.request_id);const row=rows[0];let reason='';if(rows.length!==1) reason='OUTBOX_NOT_FOUND_OR_DUPLICATE';else if(row.type!=='CORE_PROBE') reason='ADAPTER_NOT_IMPLEMENTED';else if(commands.length!==1||commands[0].status!=='COMMITTED') reason='COMMAND_NOT_COMMITTED';else if(row.status==='COMPLETED') reason='ALREADY_COMPLETED';else if(!['PENDING','RETRY_PENDING'].includes(row.status)) reason='NOT_READY';else if(new Date(row.next_attempt_at).getTime()>Date.now()) reason='NOT_DUE';return [{json:{execute:!reason,reason,row:row||{},owner:String($execution.id),simulate_failure:input.simulate_failure===true,lease_until:new Date(Date.now()+120000).toISOString()}}];"
+      }
+    },
+    {
+      "id": "ready",
+      "name": "Ready",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Ready",
+              "leftValue": "={{ $json.execute }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "claim-job",
+      "name": "Claim Job",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "outbox_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.row.outbox_id }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "={{ $json.row.status }}"
+            },
+            {
+              "keyName": "attempts",
+              "condition": "eq",
+              "keyValue": "={{ $json.row.attempts }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "PROCESSING",
+            "lease_owner": "={{ $json.owner }}",
+            "lease_until": "={{ $json.lease_until }}",
+            "attempts": "={{ $json.row.attempts + 1 }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "check-claim",
+      "name": "Check Claim",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p=$('Prepare Job').first().json;return [{json:{owned:$input.all().some(i=>i.json.lease_owner===p.owner),reason:'JOB_BUSY'}}];"
+      }
+    },
+    {
+      "id": "owned",
+      "name": "Owned",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Owned",
+              "leftValue": "={{ $json.owned }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "probe-adapter",
+      "name": "Probe Adapter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p=$('Prepare Job').first().json;const attempts=p.row.attempts+1;const failure=p.simulate_failure;const dead=failure&&attempts>=8;return [{json:{outbox_id:p.row.outbox_id,owner:p.owner,status:failure?(dead?'DEAD_LETTER':'RETRY_PENDING'):'COMPLETED',attempts,next_attempt_at:failure&&!dead?new Date(Date.now()+Math.min(3600,Math.pow(2,attempts)*5)*1000).toISOString():null,completed_at:failure?null:new Date().toISOString(),last_error:failure?'SIMULATED_DELIVERY_FAILURE':''}}];"
+      }
+    },
+    {
+      "id": "save-outcome",
+      "name": "Save Outcome",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        1980,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "outbox_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.outbox_id }}"
+            },
+            {
+              "keyName": "lease_owner",
+              "condition": "eq",
+              "keyValue": "={{ $json.owner }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $json.status }}",
+            "next_attempt_at": "={{ $json.next_attempt_at }}",
+            "completed_at": "={{ $json.completed_at }}",
+            "last_error": "={{ $json.last_error }}",
+            "lease_owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "return-outcome",
+      "name": "Return Outcome",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const rows=$input.all().map(i=>i.json);const r=rows.find(r=>r.outbox_id);return [{json:{ok:!!r,status:r?.status||'WRITE_NOT_CONFIRMED',attempts:r?.attempts||0,outbox_id:r?.outbox_id||''}}];"
+      }
+    },
+    {
+      "id": "skipped",
+      "name": "Skipped",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2420,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{ok:false,status:'SKIPPED',reason:$input.first().json.reason}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Internal Input": {
+      "main": [
+        [
+          {
+            "node": "Read Outbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Outbox": {
+      "main": [
+        [
+          {
+            "node": "Read Source Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Source Command": {
+      "main": [
+        [
+          {
+            "node": "Prepare Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Job": {
+      "main": [
+        [
+          {
+            "node": "Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ready": {
+      "main": [
+        [
+          {
+            "node": "Claim Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim Job": {
+      "main": [
+        [
+          {
+            "node": "Check Claim",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Claim": {
+      "main": [
+        [
+          {
+            "node": "Owned",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owned": {
+      "main": [
+        [
+          {
+            "node": "Probe Adapter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Probe Adapter": {
+      "main": [
+        [
+          {
+            "node": "Save Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Outcome": {
+      "main": [
+        [
+          {
+            "node": "Return Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 60,
+    "errorWorkflow": "rnELTCKClbzY8lxZ",
+    "timezone": "Europe/Warsaw",
+    "executionOrder": "v1"
+  }
+}

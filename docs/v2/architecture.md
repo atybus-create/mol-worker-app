@@ -49,8 +49,8 @@ Każdy publiczny workflow jest cienki: uwierzytelnia, waliduje kontrakt, wywołu
 5. Jeśli Moniti jest włączone: wywołanie i potwierdzenie zapisu/read-back. Brak potwierdzenia zatrzymuje lokalny commit.
 6. Zapis niezmiennego zdarzenia domenowego ze statusem `COMMITTING`.
 7. Aktualizacja bieżącego stanu w Data Tables.
-8. Oznaczenie zdarzenia i komendy jako `COMMITTED`.
-9. Dodanie zadań do outboxa: Drive, podsumowania, alerty i powiadomienia.
+8. Dodanie zadań do outboxa: Drive, podsumowania, alerty i powiadomienia. Konsument może wykonać je dopiero po commicie komendy.
+9. Oznaczenie zdarzenia i komendy jako `COMMITTED`. Outbox musi już istnieć, aby awaria po commicie nie zgubiła synchronizacji.
 10. Zwrot potwierdzonego snapshotu do klienta.
 
 Jeśli Moniti potwierdzi zapis, a lokalny commit ulegnie awarii, komenda otrzymuje `RECOVERY_REQUIRED`. Automat odtwarza stan z dziennika komend; frontend nie dostaje fałszywego sukcesu.
@@ -89,3 +89,9 @@ Jeśli Moniti potwierdzi zapis, a lokalny commit ulegnie awarii, komenda otrzymu
 ## 8. Granica etapu 2
 
 Ten dokument zatwierdza architekturę i nie uruchamia jeszcze zapisów produkcyjnych. Utworzenie tabel i workflowów domenowych nastąpi dopiero w etapie 3 po odbiorze użytkownika.
+
+## 9. Realizacja fundamentu w etapie 3
+
+Tabele i mechanizmy rdzenia są wdrożone; szczegółowy zakres oraz ograniczenia opisuje `stage-3-acceptance.md`. Handlery logowania, czasu pracy, procesów i integracji są wdrażane w przypisanych im kolejnych etapach. Rdzeń jest sprawdzany przez techniczną komendę CORE_PROBE, która nie modyfikuje danych pracowników.
+
+Data Tables nie zapewniają transakcji obejmującej cały workflow. Dlatego rdzeń używa jednego wcześniej utworzonego wiersza blokady, warunkowego przejęcia po pustym owner, dziennika intencji i odtwarzalnych zapisów pod stabilnymi identyfikatorami. Blokada serializuje krótkie zapisy. Upsert sam w sobie nie stanowi gwarancji unikalności. Blokady nie są przejmowane wyłącznie z powodu upływu czasu: po awarii procesu n8n operator musi potwierdzić zatrzymanie właściciela przed zwolnieniem. Error Handler zwalnia blokadę znanego zakończonego błędem wykonania.

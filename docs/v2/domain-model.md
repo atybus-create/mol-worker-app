@@ -71,6 +71,11 @@ Wszystkie tabele mają osobny prefiks V2; V1 nie jest współdzielonym magazynem
 | `MOL_V2_MONTHLY_SUMMARY` | employee_id+month, sums, weighted_norm, version | Wynik miesięczny |
 | `MOL_V2_OUTBOX` | outbox_id, type, payload, attempts, next_attempt_at, status | Mirror/retry |
 | `MOL_V2_CONFIG` | key, value, scope, version | Konfiguracja bez redeployu |
+| `MOL_V2_PROCESSES` | process_code, display_name, active, norm_units_per_hour, version | Słownik procesów |
+| `MOL_V2_LOCKS` | lock_key, owner, version, lease_until | Kontrola równoczesnych zapisów |
+| `MOL_V2_ERRORS` | error_id, request_id, workflow_id, execution_id, code, message | Rejestr błędów bez sekretów |
+
+Dokładne wdrożone nazwy kolumn i typy są zapisane w `backend/v2/schema.json`, a identyfikatory tabel w `backend/v2/manifest.json`. Złożone wartości są serializowane do kolumn `*_json`; identyfikator wiersza `id` oraz daty `createdAt`/`updatedAt` nadaje n8n.
 
 ## 5. Normy
 

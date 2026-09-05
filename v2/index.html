@@ -14,7 +14,7 @@
       <p class="eyebrow">MOL // SYSTEM PRACY</p>
       <span class="environment">ŚRODOWISKO TESTOWE V2</span>
       <h1>Budujemy nową aplikację jako jedną spójną całość.</h1>
-      <p class="lead">Ta wersja jest całkowicie oddzielona od aktywnej V1. Na etapie 1 nie zapisuje żadnych danych pracowników.</p>
+      <p class="lead">Etap 3: fundament backendu jest przygotowany. Testujemy zapis, ochronę przed duplikatami i odzyskiwanie po błędach. Funkcje pracowników uruchamiamy w kolejnych etapach.</p>
     </section>
 
     <section class="status-card" aria-labelledby="statusTitle">
@@ -27,26 +27,27 @@
     </section>
 
     <section class="grid">
-      <article><span>Frontend</span><strong>V2 0.1.0</strong><small>oddzielny katalog i adres</small></article>
+      <article><span>Frontend</span><strong>V2 0.3.0</strong><small>środowisko odbiorowe</small></article>
       <article><span>Backend</span><strong id="backendVersion">—</strong><small>oddzielny workflow n8n</small></article>
-      <article><span>Zapisy danych</span><strong id="writesState">WYŁĄCZONE</strong><small>ochrona V1 podczas budowy</small></article>
-      <article><span>V1</span><strong>AKTYWNA</strong><small>punkt powrotu zachowany</small></article>
+      <article><span>Zapisy pracowników</span><strong id="writesState">—</strong><small>oddzielone od testów technicznych</small></article>
+      <article><span>Baza V2</span><strong id="databaseState">—</strong><small>odczyt konfiguracji na żywo</small></article>
     </section>
 
     <section class="acceptance">
-      <h2>Etap 1 — kryteria odbioru</h2>
+      <h2>Etap 3 — odbiór fundamentu backendu</h2>
       <ul>
-        <li>V1 nadal działa pod dotychczasowym adresem.</li>
-        <li>V2 ma osobny frontend i osobny endpoint backendowy.</li>
-        <li>Backend V2 odpowiada statusem 200.</li>
-        <li>Zapisy danych w V2 są wyłączone.</li>
-        <li>Wersje workflowów, tabele i integracje V1 są zinwentaryzowane.</li>
+        <li>Backend pokazuje ONLINE i wersję 0.3.0.</li>
+        <li>Baza V2 pokazuje ONLINE po rzeczywistym odczycie konfiguracji.</li>
+        <li>Zapisy pracowników pozostają WYŁĄCZONE do wdrożenia funkcji.</li>
+        <li>Przygotowano 17 osobnych tabel V2.</li>
+        <li>Testy duplikatów, konfliktów, równoczesnych zapisów i odzyskiwania przeszły poprawnie.</li>
+        <li>Logowanie i sesje będą przedmiotem etapu 4 po Twoim odbiorze.</li>
       </ul>
       <button id="retryButton" type="button">Sprawdź ponownie</button>
     </section>
 
-    <footer>V2 0.1.0 · Etap 1 · 05.09.2026</footer>
+    <footer>V2 0.3.0 · Etap 3 · 05.09.2026</footer>
   </main>
-  <script src="./app.js?v=0.1.0" defer></script>
+  <script src="./app.js?v=0.3.0" defer></script>
 </body>
 </html>

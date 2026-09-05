@@ -6,7 +6,7 @@
     "description": "Kontrakt zaakceptowany w etapie 2. Wszystkie zapisy są idempotentne po request_id."
   },
   "servers": [
-    { "url": "https://atybus.app.n8n.cloud/webhook", "description": "n8n test/production gateway" }
+    { "url": "https://n8n.estyl.team/webhook", "description": "n8n — izolowane endpointy V2" }
   ],
   "tags": [
     { "name": "System" }, { "name": "Auth" }, { "name": "Worker" },

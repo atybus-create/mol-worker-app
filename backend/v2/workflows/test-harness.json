@@ -1,0 +1,125 @@
+{
+  "name": "MOL // APP V2 // STAGE 3 TEST HARNESS",
+  "nodes": [
+    {
+      "id": "test-webhook",
+      "name": "Test Webhook",
+      "webhookId": "8c7799f9-9831-41c8-8c18-c03d0903ec6e",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mol-app-v2-stage3-test",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "fixture",
+      "name": "Fixture",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const body=$input.first().json.body||{};if(body.kind==='outbox'){return [{json:{outbox_id:'probe:e169f5ce-8c12-4b48-b6f1-313cf813300'+({recovery:'2',deadletter:'3',race:'4'}[body.job]||'1'),simulate_failure:body.fail===true,_route:'outbox'}}];}\nconst b=$input.first().json.body||{};const ids={basic:'e169f5ce-8c12-4b48-b6f1-313cf8133001',recovery:'e169f5ce-8c12-4b48-b6f1-313cf8133002',parallel:'e169f5ce-8c12-4b48-b6f1-313cf8133003',raceprobe:'e169f5ce-8c12-4b48-b6f1-313cf8133004',crash:'e169f5ce-8c12-4b48-b6f1-313cf8133005'};const mode=['basic','recovery','parallel','raceprobe','crash','invalid','unsupported','forbidden'].includes(b.mode)?b.mode:'basic';return [{json:{request_id:mode==='invalid'?'invalid':(ids[mode]||ids.basic),operation:mode==='unsupported'?'ATTENDANCE_START':'CORE_PROBE',actor_id:mode==='forbidden'?'OTHER':'SYSTEM_TEST',employee_id:'V2_TEST',source:'SYSTEM_TEST',payload:{value:b.conflict===true?'changed':'stage3'},fault_after_event:mode==='recovery'&&b.interrupt===true,crash_after_event:mode==='crash'&&b.interrupt===true}}];"
+      }
+    },
+    {
+      "id": "run-core",
+      "name": "Run Core",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        500,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json._route === 'outbox' ? 'BC5qZVnvzpMaXfp4' : 'tsyGl8RnqKipKDx1' }}"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "test-response",
+      "name": "Test Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        750,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.response || $json }}",
+        "options": {
+          "responseCode": "={{ $json.http_status || 200 }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Test Webhook": {
+      "main": [
+        [
+          {
+            "node": "Fixture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Core": {
+      "main": [
+        [
+          {
+            "node": "Test Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fixture": {
+      "main": [
+        [
+          {
+            "node": "Run Core",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "executionTimeout": 90,
+    "errorWorkflow": "rnELTCKClbzY8lxZ",
+    "timezone": "Europe/Warsaw",
+    "executionOrder": "v1"
+  }
+}
