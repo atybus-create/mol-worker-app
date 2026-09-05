@@ -20,6 +20,8 @@ Stan biznesowy ma dokładnie trzy wartości:
 - `REOPEN` działa tylko dla `CLOSED`, tworzy audyt `WORK_REOPENED`, nie uruchamia procesu i powiadamia lidera/admina.
 - Korekta może zmienić START i/lub STOP. Nie usuwa START; usunięcie STOP jest operacją `REOPEN`.
 - Czas STOP nie może być wcześniejszy niż START, a daty przyszłe są odrzucane.
+- Zatwierdzony limit własnych korekt WORKER wynosi 31 dni wstecz. Starsze korekty wykonuje LEADER/ADMIN w swoim zakresie uprawnień.
+- Korekta z arkusza jest komendą `ATTENDANCE_CORRECTION` ze źródłem `DRIVE_SHEET`, potwierdzonym autorem i oczekiwaną wersją obecności; obowiązują te same reguły domenowe co w aplikacji.
 
 ## 2. Stan procesu
 
@@ -60,6 +62,7 @@ Wszystkie tabele mają osobny prefiks V2; V1 nie jest współdzielonym magazynem
 | `MOL_V2_ATTENDANCE` | employee_id+work_date, state, start_at, stop_at, version | Bieżący stan dnia |
 | `MOL_V2_PROCESS_SESSIONS` | process_session_id, employee_id, process_code, start_at, stop_at | Historia procesów |
 | `MOL_V2_COMMANDS` | request_id, actor_id, operation, payload_hash, status, response | Idempotencja i recovery |
+| `MOL_V2_SHEET_CORRECTIONS` | correction_id, request_id, spreadsheet_id, sheet_id, row_id, expected_version, approved_by, approved_at, payload_hash, status, error_code | Zamrożona treść zatwierdzonej korekty i wynik importu |
 | `MOL_V2_WORK_EVENTS` | event_id, aggregate_id, type, before_json, after_json, request_id | Niezmienny audyt |
 | `MOL_V2_PRODUCTION_DELTAS` | delta_id, employee_id, source_time, counts, classification | Zamrożone przyrosty ES |
 | `MOL_V2_MESSAGES` | message_id, recipients, content, ack_required, dates | Komunikacja |

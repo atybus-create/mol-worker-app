@@ -67,6 +67,10 @@ Każdy zapis przyjmuje `request_id` w JSON. Identyczny użytkownik + operacja + 
 
 Odpowiedź statusowa zawsze zawiera razem: użytkownika i rolę, obecność, aktywny proces, czasy procesowe/międzyprocesowe, normę z `freshness`, liczbę wiadomości, stan synchronizacji oraz `snapshot_version`. Częściowy błąd źródła nie usuwa ostatniej poprawnej wartości.
 
-## 5. Korekty — polityka do zatwierdzenia
+## 5. Korekty — polityka zatwierdzona
 
-Rekomendacja: pracownik może korygować własne dni do 31 dni wstecz; starszą korektę wykonuje LEADER/ADMIN. Dokument źródłowy nie określa limitu, dlatego ta wartość jest jawnie oznaczona jako decyzja odbiorowa etapu 2.
+Pracownik może korygować własne dni do 31 dni wstecz; starszą korektę wykonuje LEADER/ADMIN. Użytkownik zaakceptował limit 31 dni.
+
+## 6. Korekty z arkusza rozliczeniowego — zatwierdzone rozszerzenie
+
+Arkusz Google Sheets na Drive może przekazywać zatwierdzone korekty do tej samej usługi domenowej co aplikacja. Kontrakt wewnętrzny, uprawnienia, statusy i scenariusze odbiorowe są zapisane w `drive-corrections.md`. Nie powstaje dodatkowy publiczny endpoint: adapter arkusza wywołuje wewnętrzny Command Executor. Publiczne API pozostaje bez zmian.

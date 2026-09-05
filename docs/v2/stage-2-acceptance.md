@@ -13,7 +13,8 @@ Etap 2 jest odebrany po zatwierdzeniu architektury, modelu domenowego i kontrakt
 - [ ] Zmiana procesu zamyka poprzedni i otwiera nowy atomowo; wylogowanie z procesu nie kończy pracy.
 - [ ] `REOPEN` usuwa STOP przez kontrolowane przejście, tworzy audyt i nie uruchamia procesu.
 - [ ] Hasła hashowane i rate-limit logowania są obowiązkowe przed przełączeniem produkcji.
-- [ ] Rekomendowany limit własnej korekty pracownika to 31 dni; starsze korekty wykonuje LEADER/ADMIN.
+- [x] Użytkownik zaakceptował limit własnej korekty pracownika 31 dni; starsze korekty wykonuje LEADER/ADMIN.
+- [x] Użytkownik zaakceptował dodanie zatwierdzanych korekt z arkusza rozliczeniowego do Moniti i Data Tables, z aktualizacją raportu, statusem synchronizacji i historią zmian. Kontrakt: `drive-corrections.md`. Implementacja i test integracyjny pozostają do wykonania w kolejnych etapach.
 
 ## Test techniczny etapu 2
 

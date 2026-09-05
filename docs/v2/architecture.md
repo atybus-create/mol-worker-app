@@ -6,7 +6,7 @@ Status: kontrakt etapu 2, do odbioru przed rozpoczęciem implementacji etapu 3.
 
 1. V2 jest odizolowana od V1: osobne endpointy, workflowy, tabele i frontend.
 2. n8n Data Tables są operacyjnym źródłem prawdy dla bieżącego stanu aplikacji.
-3. Google Drive/Sheets służy jako mirror, audyt i źródło raportów, ale nie steruje bieżącym UI.
+3. Google Drive/Sheets służy jako mirror, audyt i źródło raportów oraz przyjmuje jawnie zatwierdzone korekty rozliczeniowe. Bieżący UI nadal czyta Data Tables. Kontrakt importu: `drive-corrections.md`.
 4. Moniti jest opcjonalnym adapterem dla START/STOP/korekt. Wyłączenie `MONITI_ENABLED` nie wyłącza żadnej funkcji V2 poza wywołaniami Moniti.
 5. ES jest źródłem zdarzeń wykonania PAK/PICK, nie czasu pracy ani wyboru procesu.
 6. Stan biznesowy jest oddzielony od stanu synchronizacji i błędów technicznych.
@@ -34,6 +34,7 @@ Każdy publiczny workflow jest cienki: uwierzytelnia, waliduje kontrakt, wywołu
 - `Command Executor` — idempotencja, blokada logiczna, wykonanie i commit komendy.
 - `Moniti Adapter` — jedyne miejsce znające kontrakt Moniti.
 - `Drive Outbox Worker` — asynchroniczny mirror z retry i dead-letter.
+- `Drive Corrections Adapter` — odbiera zatwierdzoną korektę arkusza, sprawdza autora i wersję danych, przekazuje komendę do wspólnej usługi korekt i zapisuje wynik w arkuszu.
 - `ES Ingest & Classify` — pobranie przyrostów i nieodwracalna klasyfikacja w chwili zapisu.
 - `Summary Recalculator` — dobowe i miesięczne agregaty.
 - `Alert Engine` — reguły, epizody i deduplikacja.
