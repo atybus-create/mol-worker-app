@@ -33,7 +33,17 @@
     try{const response=await fetch((op.startsWith('process-')?base.replace('attendance-','')+op:base+op)+query,{method:op==='status'?'GET':'POST',cache:'no-store',credentials:'omit',headers:{Authorization:`Bearer ${token}`,...(body&&op!=='status'?{'Content-Type':'application/json'}:{})},body:body&&op!=='status'?JSON.stringify(body):undefined,signal:controller.signal});const envelope=await response.json();if(!response.ok||envelope.ok!==true){const e=new Error(envelope.error?.message||'Brak potwierdzenia operacji.');e.status=response.status;e.code=envelope.error?.code;throw e;}return envelope.data;
     }catch(e){if(e.name==='AbortError'||e instanceof TypeError)throw new Error('Brak potwierdzenia z serwera. Ponów to samo żądanie.');throw e;}finally{clearTimeout(timer);}}
   async function refresh(){if(!token||busy)return;const gen=generation,seq=++readSequence;busy=true;buttons();message('Odczyt potwierdzonego stanu…');try{const data=await request('status');if(gen!==generation||seq!==readSequence)return;render(data);message(pending?'Poprzednie żądanie oczekuje na potwierdzenie. Użyj „Ponów zapis”.':'Stan potwierdzony przez backend.');}catch(e){if(gen===generation)message(e.message);}finally{if(gen===generation){busy=false;buttons();}}}
-  async function submit(op,body){if(!token||busy)return;const gen=generation;let failure='';savePending({op,body});busy=true;++readSequence;buttons();message(op.startsWith('process-')?'Zapisywanie procesu…':'Zapisywanie i weryfikacja w Moniti…');try{await request(op,body);if(gen!==generation)return;savePending(null);message('Zapis potwierdzony.');}catch(e){if(gen!==generation)return;if(e.status>=400&&e.status<500&&e.code!=='COMMAND_BUSY')savePending(null);failure=e.message;message(e.message+(pending?' Ponów zapis tym samym przyciskiem.':''));}finally{if(gen===generation){busy=false;buttons();if(!pending){await refresh();if(failure&&gen===generation)message(failure);}}}}
+  async function submit(op,body){if(!token||busy)return;const gen=generation;let failure='';savePending({op,body});busy=true;++readSequence;buttons();message(op.startsWith('process-')?'Zapisywanie procesu…':'Zapisywanie i weryfikacja w Moniti…');try{
+    for(let attempt=0;;attempt++){
+      if(gen!==generation)return;
+      try{await request(op,body);break;}catch(e){
+        if(gen!==generation)return;
+        if(e.code!=='COMMAND_BUSY'||attempt>=3)throw e;
+        message('Trwa inny zapis. Automatycznie ponawiam to samo żądanie…');
+        await new Promise(resolve=>setTimeout(resolve,2000*2**attempt));
+      }
+    }
+    if(gen!==generation)return;savePending(null);message('Zapis potwierdzony.');}catch(e){if(gen!==generation)return;if(e.status>=400&&e.status<500&&e.code!=='COMMAND_BUSY')savePending(null);failure=e.message;message(e.message+(pending?' Ponów zapis tym samym przyciskiem.':''));}finally{if(gen===generation){busy=false;buttons();if(!pending){await refresh();if(failure&&gen===generation)message(failure);}}}}
   const duration=s=>{s=Math.max(0,Math.floor(s||0));return [Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(x=>String(x).padStart(2,'0')).join(':');};
   function tickProcesses(){if(!snapshot)return;const delta=snapshot.attendance?.state==='OPEN'?Math.max(0,Math.floor((Date.now()-confirmedAt)/1000)):0;el('processTotals').textContent=`W procesach: ${duration((snapshot.process_seconds||0)+(snapshot.active_process?delta:0))} · Bez procesu: ${duration((snapshot.no_process_seconds||0)+(snapshot.active_process?0:delta))}`;}
   setInterval(tickProcesses,1000);
