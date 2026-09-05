@@ -1,0 +1,31 @@
+import {readFileSync} from 'node:fs';
+import {randomUUID} from 'node:crypto';
+import {Graph,service} from '../attendance/build-workflows.mjs';
+const source=readFileSync(new URL('./domain.js',import.meta.url),'utf8');
+const ex=s=>`={{ ${s} }}`;
+const g=service();
+const node=n=>g.nodes.find(x=>x.name===n);
+function replace(n,find,replacement){const p=node(n).parameters;if(!p.jsCode.includes(find))throw Error('Missing replacement '+n+': '+find);p.jsCode=p.jsCode.replace(find,replacement);}
+replace('Validate Input',"'REOPEN','CORRECT'].includes(op)","'REOPEN','CORRECT','PROCESS_START','PROCESS_CHANGE','PROCESS_LOGOUT'].includes(op)");
+replace('Validate Input',"...(op==='CORRECT'?['start_at','stop_at','reason']:[])","...(op==='CORRECT'?['start_at','stop_at','reason']:[]),...(['PROCESS_START','PROCESS_CHANGE'].includes(op)?['process_code']:[])");
+replace('Validate Input',"const payload={work_date,", "const payload={...(['PROCESS_START','PROCESS_CHANGE'].includes(op)?{process_code:b.process_code}:{}),work_date,");
+node('Decide').parameters.jsCode=source+'\n'+node('Decide').parameters.jsCode;
+g.table('Read Catalog','PROCESSES','get',[],{},true);
+g.connections['Read Processes'].main[0]=[{node:'Read Catalog',type:'main',index:0}];g.link('Read Catalog','Read Notices');
+replace('Decide',"snapshot_version:selected?.version||0,", "snapshot_version:selected?.version||0,...processSnapshot({attendance:selected,processes,now:new Date().toISOString()}),process_catalog:$('Read Catalog').all().map(x=>x.json).filter(p=>p.active===true).map(p=>({process_code:p.process_code,display_name:p.display_name})),");
+replace('Decide',"const now=new Date().toISOString(),plan=planAttendance({", "const now=new Date().toISOString(),isProcess=i.operation.startsWith('PROCESS_'),plan=(isProcess?planProcess:planAttendance)({catalog:$('Read Catalog').all().map(x=>x.json),");
+replace('Decide',"const moniti_enabled=config.MONITI_ENABLED===true;plan.after.moniti_sync=moniti_enabled?'SYNCED':'NOT_REQUIRED';", "const moniti_enabled=!isProcess&&config.MONITI_ENABLED===true;if(!isProcess)plan.after.moniti_sync=moniti_enabled?'SYNCED':'NOT_REQUIRED';");
+replace('Decide',"data:{attendance:plan.after,snapshot_version:plan.after.version}", "data:{attendance:plan.after,snapshot_version:plan.after.version,...(isProcess?{active_process:plan.active_process,process_sessions:plan.process_sessions,process_seconds:plan.process_seconds,no_process_seconds:plan.no_process_seconds}: {})}");
+replace('Recovery Context',"'ATTENDANCE_REOPEN','ATTENDANCE_CORRECT'", "'ATTENDANCE_REOPEN','ATTENDANCE_CORRECT','ATTENDANCE_PROCESS_START','ATTENDANCE_PROCESS_CHANGE','ATTENDANCE_PROCESS_LOGOUT'");
+node('Close Process').parameters.conditions.conditions[0].leftValue=ex("$('Decide').first().json.plan.process_updates.length >= 1");
+g.test('Second Process',"$('Decide').first().json.plan.process_updates.length === 2");
+g.table('Save Second Process','PROCESS_SESSIONS','upsert',[['process_session_id',ex("$('Decide').first().json.plan.process_updates[1].process_session_id")]],g.map('PROCESS_SESSIONS',"$('Decide').first().json.plan.process_updates[1]"));
+g.table('Read Saved Processes','PROCESS_SESSIONS','get',[['attendance_id',ex("$('Decide').first().json.plan.after.attendance_id")]],{},true);
+g.code('Verify Processes',`const wanted=$('Decide').first().json.plan.process_updates,actual=$input.all().map(x=>x.json).filter(p=>p.process_session_id);if(actual.filter(p=>!p.stop_at).length>1)throw Error('PROCESS_DUPLICATE_ACTIVE');for(const p of wanted){const matches=actual.filter(a=>a.process_session_id===p.process_session_id);if(matches.length!==1||Object.entries(p).filter(([k])=>!['id','createdAt','updatedAt'].includes(k)).some(([k,v])=>['start_at','stop_at'].includes(k)?(v?Date.parse(v):null)!==(matches[0][k]?Date.parse(matches[0][k]):null):v!==matches[0][k]))throw Error('PROCESS_WRITE_NOT_CONFIRMED');}return [{json:{verified:true}}];`);
+g.connections['Save Process'].main[0]=[{node:'Second Process',type:'main',index:0}];
+g.link('Second Process','Save Second Process');g.link('Second Process','Read Saved Processes',1);g.chain('Save Second Process','Read Saved Processes','Verify Processes','Save Attendance');
+const audit=node('Save Audit').parameters.columns.value;
+audit.before_json=ex("JSON.stringify($('Decide').first().json.plan.process_before?{attendance:$('Decide').first().json.plan.before,processes:$('Decide').first().json.plan.process_before}:$('Decide').first().json.plan.before)");
+audit.after_json=ex("JSON.stringify($('Decide').first().json.plan.process_before?{attendance:$('Decide').first().json.plan.after,processes:$('Decide').first().json.plan.process_sessions}:$('Decide').first().json.plan.after)");
+function api(op,id){const a=new Graph('PROCESS '+op);a.node('Webhook','webhook',{httpMethod:'POST',path:'mol-app-v2-process-'+op.toLowerCase(),responseMode:'responseNode',options:{allowedOrigins:'https://atybus-create.github.io'}},{webhookId:randomUUID()});a.code('Request',`const i=$input.first().json;return [{json:{operation:'PROCESS_${op}',authorization:i.headers?.authorization||'',body:i.body||{}}}];`);a.execute('Command Service',id);a.node('Respond','respondToWebhook',{respondWith:'json',responseBody:ex('$json.body'),options:{responseCode:ex('$json.http_status'),responseHeaders:{entries:[{name:'Cache-Control',value:'no-store'}]}}});a.chain('Webhook','Request','Command Service','Respond');return a;}
+console.log(JSON.stringify(process.argv[2]?Object.fromEntries(['START','CHANGE','LOGOUT'].map(op=>[op.toLowerCase(),api(op,process.argv[2])])):g));

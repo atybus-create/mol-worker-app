@@ -28,6 +28,7 @@ jobs:
           node scripts/test-v2-auth.cjs
           node scripts/test-v2-attendance.cjs
           node scripts/test-v2-attendance-ui.cjs
+          node scripts/test-v2-processes.cjs
       - name: Check required UI and integrations
         run: |
           grep -q 'MAGAZYN' app.js

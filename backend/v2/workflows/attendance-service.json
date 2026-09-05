@@ -25,7 +25,7 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst i=$input.first().json,b=i.body||{},op=i.operation;const token=/^Bearer ([0-9a-f]{64})$/.exec(i.authorization||'');if(!token&&!i.recovery_actor_id)return [{json:fail(401,'UNAUTHENTICATED','Zaloguj się ponownie.')}];if(!['STATUS','START','FINISH','REOPEN','CORRECT'].includes(op))return [{json:fail(400,'INVALID_OPERATION','Nieznana operacja.')}];const allowed=op==='STATUS'?['work_date','employee_id']:['request_id','work_date','employee_id','expected_version',...(op==='CORRECT'?['start_at','stop_at','reason']:[])];if(!b||Array.isArray(b)||typeof b!=='object'||Object.keys(b).some(k=>!allowed.includes(k)))return [{json:fail(400,'VALIDATION_ERROR','Nieobsługiwane pola żądania.')}];if(op!=='STATUS'&&(typeof b.request_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(b.request_id||'')||!Number.isInteger(b.expected_version)||b.expected_version<0))return [{json:fail(400,'VALIDATION_ERROR','Wymagany request_id i expected_version.')}];if(b.employee_id!==undefined&&(typeof b.employee_id!=='string'||!/^MOL[0-9]+$/.test(b.employee_id)))return [{json:fail(400,'VALIDATION_ERROR','Nieprawidłowy pracownik.')}];const work_date=b.work_date|| (op==='STATUS'?DateTime.now().setZone('Europe/Warsaw').toISODate():null);if(typeof work_date!=='string'||!/^\\d{4}-\\d{2}-\\d{2}$/.test(work_date)||!DateTime.fromISO(work_date).isValid||work_date>DateTime.now().setZone('Europe/Warsaw').toISODate())return [{json:fail(400,'INVALID_WORK_DATE','Nieprawidłowa data.')}];const payload={work_date,...(op==='STATUS'?{}:{expected_version:b.expected_version}),...(op==='CORRECT'?{start_at:b.start_at??null,stop_at:b.stop_at??null,reason:b.reason??null}:{})};return [{json:{valid:true,source:i.source==='DRIVE_SHEET'?'DRIVE_SHEET':'APP',source_context:i.source==='DRIVE_SHEET'?i.source_context:null,operation:op,session_token:token?.[1]||'',recovery_actor_id:i.recovery_actor_id||null,request_id:(b.request_id||'').toLowerCase(),target:b.employee_id||null,payload}}];"
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst i=$input.first().json,b=i.body||{},op=i.operation;const token=/^Bearer ([0-9a-f]{64})$/.exec(i.authorization||'');if(!token&&!i.recovery_actor_id)return [{json:fail(401,'UNAUTHENTICATED','Zaloguj się ponownie.')}];if(!['STATUS','START','FINISH','REOPEN','CORRECT','PROCESS_START','PROCESS_CHANGE','PROCESS_LOGOUT'].includes(op))return [{json:fail(400,'INVALID_OPERATION','Nieznana operacja.')}];const allowed=op==='STATUS'?['work_date','employee_id']:['request_id','work_date','employee_id','expected_version',...(op==='CORRECT'?['start_at','stop_at','reason']:[]),...(['PROCESS_START','PROCESS_CHANGE'].includes(op)?['process_code']:[])];if(!b||Array.isArray(b)||typeof b!=='object'||Object.keys(b).some(k=>!allowed.includes(k)))return [{json:fail(400,'VALIDATION_ERROR','Nieobsługiwane pola żądania.')}];if(op!=='STATUS'&&(typeof b.request_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(b.request_id||'')||!Number.isInteger(b.expected_version)||b.expected_version<0))return [{json:fail(400,'VALIDATION_ERROR','Wymagany request_id i expected_version.')}];if(b.employee_id!==undefined&&(typeof b.employee_id!=='string'||!/^MOL[0-9]+$/.test(b.employee_id)))return [{json:fail(400,'VALIDATION_ERROR','Nieprawidłowy pracownik.')}];const work_date=b.work_date|| (op==='STATUS'?DateTime.now().setZone('Europe/Warsaw').toISODate():null);if(typeof work_date!=='string'||!/^\\d{4}-\\d{2}-\\d{2}$/.test(work_date)||!DateTime.fromISO(work_date).isValid||work_date>DateTime.now().setZone('Europe/Warsaw').toISODate())return [{json:fail(400,'INVALID_WORK_DATE','Nieprawidłowa data.')}];const payload={...(['PROCESS_START','PROCESS_CHANGE'].includes(op)?{process_code:b.process_code}:{}),work_date,...(op==='STATUS'?{}:{expected_version:b.expected_version}),...(op==='CORRECT'?{start_at:b.start_at??null,stop_at:b.stop_at??null,reason:b.reason??null}:{})};return [{json:{valid:true,source:i.source==='DRIVE_SHEET'?'DRIVE_SHEET':'APP',source_context:i.source==='DRIVE_SHEET'?i.source_context:null,operation:op,session_token:token?.[1]||'',recovery_actor_id:i.recovery_actor_id||null,request_id:(b.request_id||'').toLowerCase(),target:b.employee_id||null,payload}}];"
       }
     },
     {
@@ -745,7 +745,7 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\n// Pure domain planner. No network or persistence; input.actor is trusted server context.\nfunction planAttendance(input) {\n  const fail=(code,message,status=422)=>({ok:false,http_status:status,error:{code,message,retryable:status===503,details:{}}});\n  const now=Date.parse(input.now), actor=input.actor, employee=input.employee;\n  const dateAt=ms=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Warsaw',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms));\n  const validDate=value=>typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;\n  const parseTime=value=>{\n    if(typeof value!=='string'||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?(?:Z|[+-]\\d{2}:\\d{2})$/.test(value)||!validDate(value.slice(0,10)))return NaN;\n    if(Number(value.slice(11,13))>23||Number(value.slice(14,16))>59||Number(value.slice(17,19))>59)return NaN;\n    return Date.parse(value);\n  };\n  if(!Number.isFinite(now))return fail('SERVER_TIME_INVALID','Brak poprawnego czasu serwera.',503);\n  if(!actor?.employee_id||actor.active!==true||!['WORKER','LEADER','ADMIN'].includes(actor.role))return fail('UNAUTHENTICATED','Sesja nieaktywna.',401);\n  if(!employee?.employee_id||employee.active!==true)return fail('EMPLOYEE_INACTIVE','Konto pracownika nieaktywne.',403);\n  if(actor.employee_id!==employee.employee_id&&!['LEADER','ADMIN'].includes(actor.role))return fail('FORBIDDEN','Brak uprawnień do pracownika.',403);\n  if(!['START','FINISH','REOPEN','CORRECT'].includes(input.operation))return fail('OPERATION_NOT_IMPLEMENTED','Nieznana operacja.',400);\n  const b=input.payload||{}, today=dateAt(now), day=b.work_date;\n  if(!validDate(day)||day>today)return fail('INVALID_WORK_DATE','Nieprawidłowa lub przyszła data.',400);\n  if(!Number.isInteger(b.expected_version)||b.expected_version<0)return fail('EXPECTED_VERSION_REQUIRED','Odśwież stan przed zapisem.',400);\n  const rows=(input.attendance||[]).filter(r=>r.employee_id===employee.employee_id);\n  if(new Set(rows.map(r=>r.work_date)).size!==rows.length||rows.filter(r=>r.state==='OPEN').length>1)return fail('ATTENDANCE_INCONSISTENT','Wykryto niespójny stan obecności.',503);\n  const existing=rows.find(r=>r.work_date===day);\n  const before=existing?{...existing}:null;\n  if((existing?.version||0)!==b.expected_version)return fail('VERSION_CONFLICT','Dane zmieniły się. Odśwież i ponów.',409);\n  const id=employee.employee_id+':'+day;\n  let after=existing?{...existing}:{attendance_id:id,employee_id:employee.employee_id,work_date:day,state:'NOT_STARTED',start_at:null,stop_at:null,version:0};\n  // Moniti persists whole minutes (confirmed by live read-back). Use the same\n  // precision locally when enabled, rather than reporting a false mismatch.\n  const quantum=input.moniti_enabled?60000:1000;\n  const seconds=ms=>new Date(Math.floor(ms/quantum)*quantum).toISOString();\n  if(input.operation==='START'){\n    if(day!==today)return fail('START_REQUIRES_TODAY','START jest dostępny wyłącznie dla bieżącego dnia.');\n    if(existing&&existing.state!=='NOT_STARTED')return fail('ATTENDANCE_ALREADY_STARTED','Ten dzień jest już rozpoczęty.',409);\n    if(rows.some(r=>r.state==='OPEN'))return fail('OPEN_DAY_EXISTS','Najpierw zakończ otwarty dzień pracy.',409);\n    after={...after,state:'OPEN',start_at:seconds(now),stop_at:null};\n  }else{\n    if(!existing?.start_at||!['OPEN','CLOSED'].includes(existing.state))return fail('ATTENDANCE_NOT_STARTED','Brak rozpoczętego dnia.',409);\n    if(input.operation==='FINISH'){\n      if(existing.state!=='OPEN')return fail('ATTENDANCE_ALREADY_CLOSED','Dzień jest już zakończony.',409);\n      after={...after,state:'CLOSED',stop_at:seconds(now)};\n    }else{\n      const age=(Date.parse(today+'T00:00:00Z')-Date.parse(day+'T00:00:00Z'))/86400000;\n      if(actor.role==='WORKER'&&age>31)return fail('CORRECTION_WINDOW_EXCEEDED','Własne korekty obejmują maksymalnie 31 dni. Starszą zmianę wykonuje lider lub administrator.',403);\n      if(input.operation==='REOPEN'){\n        if(existing.state!=='CLOSED')return fail('ATTENDANCE_NOT_CLOSED','Dzień nie jest zakończony.',409);\n        if(rows.some(r=>r.state==='OPEN'))return fail('OPEN_DAY_EXISTS','Inny dzień jest już otwarty.',409);\n        after={...after,state:'OPEN',stop_at:null};\n      }else{\n        if(typeof b.reason!=='string'||b.reason.trim().length<3||b.reason.length>500)return fail('REASON_REQUIRED','Podaj powód korekty (3–500 znaków).',400);\n        const hasStart=b.start_at!==null&&b.start_at!==undefined&&b.start_at!=='';\n        const hasStop=b.stop_at!==null&&b.stop_at!==undefined&&b.stop_at!=='';\n        if(!hasStart&&!hasStop)return fail('EMPTY_CORRECTION','Podaj co najmniej jedną nową godzinę.',400);\n        if(hasStart){const value=parseTime(b.start_at);if(!Number.isFinite(value))return fail('INVALID_TIME','START musi być jednoznacznym czasem ISO z offsetem.',400);after.start_at=new Date(value).toISOString();}\n        if(hasStop){const value=parseTime(b.stop_at);if(!Number.isFinite(value))return fail('INVALID_TIME','STOP musi być jednoznacznym czasem ISO z offsetem.',400);after.stop_at=new Date(value).toISOString();after.state='CLOSED';}\n      }\n    }\n  }\n  if(input.moniti_enabled){\n    if(Date.parse(after.start_at)>now||(after.stop_at&&Date.parse(after.stop_at)>now))return fail('FUTURE_TIME','Godziny nie mogą być przyszłe.');\n    if(after.start_at)after.start_at=seconds(Date.parse(after.start_at));\n    if(after.stop_at)after.stop_at=seconds(Date.parse(after.stop_at));\n  }\n  const start=Date.parse(after.start_at), stop=after.stop_at?Date.parse(after.stop_at):null;\n  if(!Number.isFinite(start)||(stop!==null&&!Number.isFinite(stop)))return fail('INVALID_TIME','Nieprawidłowy czas.');\n  if(start>now||(stop!==null&&stop>now))return fail('FUTURE_TIME','Godziny nie mogą być przyszłe.');\n  if(dateAt(start)!==day)return fail('START_DATE_MISMATCH','START musi należeć do wybranego dnia w strefie Europe/Warsaw.');\n  if(stop!==null&&stop<start)return fail('STOP_BEFORE_START','STOP nie może być wcześniejszy od START.');\n  for(const row of rows){\n    if(row.work_date===day||!row.start_at)continue;\n    const rs=Date.parse(row.start_at),re=row.stop_at?Date.parse(row.stop_at):Infinity;\n    if(!Number.isFinite(rs)||(row.stop_at&&!Number.isFinite(re)))return fail('ATTENDANCE_INCONSISTENT','Nieprawidłowy zapis innego dnia.',503);\n    if(start<re&&rs<(stop??Infinity))return fail('ATTENDANCE_OVERLAP','Godziny nakładają się na inny dzień pracy.',409);\n  }\n  const processes=(input.processes||[]).filter(p=>p.employee_id===employee.employee_id&&p.attendance_id===id);\n  if(processes.filter(p=>!p.stop_at).length>1)return fail('PROCESS_INCONSISTENT','Więcej niż jeden aktywny proces.',503);\n  const process_updates=[];\n  for(const p of processes){\n    const ps=Date.parse(p.start_at),pe=p.stop_at?Date.parse(p.stop_at):null;\n    if(!Number.isFinite(ps)||(pe!==null&&(!Number.isFinite(pe)||pe<ps)))return fail('PROCESS_INCONSISTENT','Nieprawidłowy czas procesu.',503);\n    if(ps<start||(stop!==null&&(ps>stop||(pe!==null&&pe>stop))))return fail('PROCESS_TIME_CONFLICT','Korekta wyklucza zapisany czas procesu. Wymagana osobna korekta procesu.',409);\n    if(!p.stop_at&&stop!==null)process_updates.push({...p,stop_at:after.stop_at,version:(p.version||0)+1,last_request_id:input.request_id});\n  }\n  if(input.operation==='CORRECT'&&before.start_at===after.start_at&&(before.stop_at||null)===(after.stop_at||null))return fail('NO_CHANGE','Korekta nie zmienia godzin.',409);\n  after={...after,version:after.version+1,last_request_id:input.request_id,moniti_sync:input.moniti_enabled?'PENDING':'NOT_REQUIRED',drive_sync:'PENDING',correction_required:false};\n  const event_type={START:'WORK_STARTED',FINISH:'WORK_FINISHED',REOPEN:'WORK_REOPENED',CORRECT:'ATTENDANCE_CORRECTED'}[input.operation];\n  return {ok:true,before,after,process_updates,event_type,reason:input.operation==='CORRECT'?b.reason.trim():null,notify:input.operation==='CORRECT'||input.operation==='REOPEN',presence_seconds:Math.max(0,Math.floor(((stop??now)-start)/1000))};\n}\n\nif(typeof module!=='undefined')module.exports={planAttendance};\n\nconst i=$('Validate Input').first().json,auth=$('Authorize').first().json,employees=$('Read Employee').all().map(i=>i.json).filter(e=>e.employee_id),employee=employees[0];if(employees.length!==1||employee.active!==true)return [{json:fail(403,'EMPLOYEE_INACTIVE','Pracownik nieaktywny.',i.request_id)}];const commands=$('Read Commands').all().map(i=>i.json).filter(c=>c.request_id),prior=$('Read Request').all().map(i=>i.json).filter(c=>c.request_id);if(prior.length>1)return [{json:fail(503,'COMMAND_INCONSISTENT','Niespójny dziennik komend.',i.request_id)}];const old=prior[0],hash=$('Hash Command').first().json.payload_hash;if(old&&old.payload_hash!==hash)return [{json:fail(409,'REQUEST_ID_CONFLICT','Identyfikator był już użyty do innego żądania.',i.request_id)}];if(old?.status==='COMMITTED')return [{json:JSON.parse(old.response_json).response}];const pending=commands.filter(c=>!['COMMITTED','FAILED'].includes(c.status)&&c.request_id!==i.request_id);if(pending.length)return [{json:fail(503,'RECOVERY_REQUIRED','Poprzedni zapis wymaga dokończenia. Nie rozpoczynaj nowego zapisu.',i.request_id)}];const attendance=$('Read Attendance').all().map(i=>i.json).filter(r=>r.attendance_id),processes=$('Read Processes').all().map(i=>i.json).filter(r=>r.process_session_id);const config={};for(const c of $('Read Config').all().map(i=>i.json))if(c.key)config[c.key]=JSON.parse(c.value_json);if(i.operation==='STATUS'){const selected=attendance.find(r=>r.work_date===i.payload.work_date)||null,open=attendance.filter(r=>r.state==='OPEN');if(open.length>1||new Set(attendance.map(r=>r.work_date)).size!==attendance.length)return [{json:fail(503,'ATTENDANCE_INCONSISTENT','Niespójny stan czasu pracy.')}];return [{json:{http_status:200,body:{ok:true,request_id:'',data:{employee:{employee_id:employee.employee_id,display_name:employee.display_name},work_date:i.payload.work_date,attendance:selected,open_day:open[0]||null,snapshot_version:selected?.version||0,notifications:auth.actor.role==='WORKER'?[]:$('Read Notices').all().map(i=>i.json).filter(n=>n.alert_id&&(n.type==='ATTENDANCE_RECOVERY'||$('Read Notice Commands').all().map(i=>i.json).some(c=>c.request_id===n.dedup_key&&c.status==='COMMITTED'))).slice(-20).map(n=>({employee_id:n.employee_id,type:n.type,opened_at:n.opened_at,details:n.details_json})),moniti_enabled:config.MONITI_ENABLED===true,writes_enabled:config.WRITES_ENABLED===true},meta:{api_version:'2.0',server_time:new Date().toISOString()}}}}];}if(config.WRITES_ENABLED!==true)return [{json:fail(503,'WRITES_DISABLED','Zapisy V2 są wyłączone.',i.request_id)}];if(config.MONITI_ENABLED===true&&(i.payload.work_date!=='2026-09-05'||DateTime.now().setZone('Europe/Warsaw').toISODate()!=='2026-09-05'||![99191,99186,99185].includes(Number(employee.moniti_worker_id))))return [{json:fail(403,'MONITI_TEST_SCOPE','Testy Moniti są ograniczone do uzgodnionych kont i dnia 2026-09-05.',i.request_id)}];if(old){let frozen;try{frozen=JSON.parse(old.response_json);}catch{}if(!frozen?.plan||!frozen?.response)return [{json:fail(503,'COMMAND_INCONSISTENT','Brak planu odzyskiwania.',i.request_id)}];const current=attendance.find(r=>r.attendance_id===frozen.plan.after.attendance_id);if(current&&current.version!==frozen.plan.before?.version&&!(current.version===frozen.plan.after.version&&current.last_request_id===i.request_id))return [{json:fail(503,'RECOVERY_CONFLICT','Nowszy stan blokuje odtworzenie.',i.request_id)}];return [{json:{execute:true,...frozen,employee,request_id:i.request_id,payload_hash:hash,attempts:(old.attempts||0)+1}}];}const now=new Date().toISOString(),plan=planAttendance({now,actor:auth.actor,employee,request_id:i.request_id,operation:i.operation,payload:i.payload,attendance,processes,moniti_enabled:config.MONITI_ENABLED===true});if(!plan.ok)return [{json:fail(plan.http_status,plan.error.code,plan.error.message,i.request_id)}];const moniti_enabled=config.MONITI_ENABLED===true;plan.after.moniti_sync=moniti_enabled?'SYNCED':'NOT_REQUIRED';const response={http_status:200,body:{ok:true,request_id:i.request_id,data:{attendance:plan.after,snapshot_version:plan.after.version},meta:{api_version:'2.0',server_time:now}}};return [{json:{execute:true,plan,response,moniti_enabled,employee,request_id:i.request_id,payload_hash:hash,attempts:1}}];"
+        "jsCode": "// Pure process planner. Actor and clock must be supplied by the authenticated service.\nfunction processSnapshot({attendance, processes=[], now}) {\n  const end=attendance?.stop_at?Date.parse(attendance.stop_at):Date.parse(now);\n  if(!attendance?.start_at)return {active_process:null,process_sessions:[],process_seconds:0,no_process_seconds:0,presence_seconds:0};\n  const start=Date.parse(attendance.start_at), rows=processes.filter(p=>p.attendance_id===attendance.attendance_id);\n  const seconds=rows.reduce((n,p)=>n+Math.max(0,(Math.min(end,p.stop_at?Date.parse(p.stop_at):end)-Math.max(start,Date.parse(p.start_at)))/1000),0);\n  const presence=Math.max(0,(end-start)/1000);\n  return {active_process:rows.find(p=>!p.stop_at)||null,process_sessions:rows,process_seconds:Math.floor(seconds),no_process_seconds:Math.floor(Math.max(0,presence-seconds)),presence_seconds:Math.floor(presence)};\n}\n\nfunction planProcess(input) {\n  const fail=(code,message,status=409)=>({ok:false,http_status:status,error:{code,message}});\n  const {actor,employee,payload:b={},operation,request_id}=input;\n  if(!actor?.active||!['WORKER','LEADER','ADMIN'].includes(actor.role))return fail('UNAUTHENTICATED','Sesja nieaktywna.',401);\n  if(!employee?.active)return fail('EMPLOYEE_INACTIVE','Konto nieaktywne.',403);\n  // Leaders may inspect all workers, but process selection is always the worker's own action.\n  if(actor.employee_id!==employee.employee_id)return fail('FORBIDDEN','Proces zmieniasz wyłącznie na własnym koncie.',403);\n  if(!['PROCESS_START','PROCESS_CHANGE','PROCESS_LOGOUT'].includes(operation))return fail('INVALID_OPERATION','Nieznana operacja.',400);\n  const now=Date.parse(input.now);\n  if(!Number.isFinite(now))return fail('SERVER_TIME_INVALID','Nieprawidłowy czas serwera.',503);\n  const rows=(input.attendance||[]).filter(a=>a.employee_id===employee.employee_id);\n  const open=rows.filter(a=>a.state==='OPEN');\n  if(open.length>1||new Set(rows.map(a=>a.work_date)).size!==rows.length)return fail('ATTENDANCE_INCONSISTENT','Niespójna obecność.',503);\n  const before=rows.find(a=>a.work_date===b.work_date);\n  if(!before||before.state!=='OPEN'||before.stop_at)return fail('ATTENDANCE_NOT_OPEN','Najpierw rozpocznij dzień pracy.');\n  if(!Number.isInteger(b.expected_version)||b.expected_version<0)return fail('EXPECTED_VERSION_REQUIRED','Odśwież stan przed zapisem.',400);\n  if(before.version!==b.expected_version)return fail('VERSION_CONFLICT','Dane zmieniły się. Odśwież stan.');\n  // Same minute precision as attendance while Moniti is enabled: immediate STOP remains valid.\n  const stamp=new Date(Math.floor(now/(input.moniti_enabled?60000:1000))*(input.moniti_enabled?60000:1000)).toISOString();\n  const at=Date.parse(stamp), start=Date.parse(before.start_at);\n  if(!Number.isFinite(start)||start>at)return fail('PROCESS_TIME_CONFLICT','Proces nie może zacząć się przed obecnością.');\n  const all=(input.processes||[]).filter(p=>p.employee_id===employee.employee_id);\n  const active=all.filter(p=>!p.stop_at), current=active[0];\n  if(active.length>1||(current&&current.attendance_id!==before.attendance_id)||new Set(all.map(p=>p.process_session_id)).size!==all.length)return fail('PROCESS_INCONSISTENT','Niespójne sesje procesów.',503);\n  const sessions=all.filter(p=>p.attendance_id===before.attendance_id).sort((a,b)=>Date.parse(a.start_at)-Date.parse(b.start_at));\n  let previousEnd=start;\n  for(const p of sessions){const ps=Date.parse(p.start_at),pe=p.stop_at?Date.parse(p.stop_at):at;\n    if(!Number.isFinite(ps)||!Number.isFinite(pe)||ps<previousEnd||pe<ps||pe>at)return fail('PROCESS_INCONSISTENT','Czasy procesów nakładają się lub wykraczają poza obecność.',503);\n    previousEnd=pe;\n  }\n  if(operation==='PROCESS_START'&&current)return fail('PROCESS_ALREADY_ACTIVE','Proces już trwa. Użyj zmiany procesu.');\n  if(operation!=='PROCESS_START'&&!current)return fail('PROCESS_NOT_ACTIVE','Nie ma aktywnego procesu.');\n  if(operation!=='PROCESS_LOGOUT'){\n    const matches=(input.catalog||[]).filter(p=>p.process_code===b.process_code&&p.active===true);\n    if(matches.length!==1)return fail('PROCESS_UNAVAILABLE','Wybierz dostępny proces.',422);\n    if(current?.process_code===b.process_code)return fail('PROCESS_UNCHANGED','Ten proces już trwa.');\n  }\n  const updates=[];\n  if(current)updates.push({...current,stop_at:stamp,version:current.version+1,last_request_id:request_id});\n  if(operation!=='PROCESS_LOGOUT')updates.push({process_session_id:request_id+':process',attendance_id:before.attendance_id,employee_id:employee.employee_id,process_code:b.process_code,start_at:stamp,stop_at:null,version:1,last_request_id:request_id});\n  const after={...before,version:before.version+1,last_request_id:request_id,drive_sync:'PENDING'};\n  const result=sessions.map(p=>updates.find(u=>u.process_session_id===p.process_session_id)||p);\n  for(const u of updates)if(!result.some(p=>p.process_session_id===u.process_session_id))result.push(u);\n  return {ok:true,before,after,process_before:sessions,process_updates:updates,event_type:operation,notify:false,reason:null,...processSnapshot({attendance:after,processes:result,now:input.now})};\n}\nif(typeof module!=='undefined')module.exports={planProcess,processSnapshot};\n\nconst fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\n// Pure domain planner. No network or persistence; input.actor is trusted server context.\nfunction planAttendance(input) {\n  const fail=(code,message,status=422)=>({ok:false,http_status:status,error:{code,message,retryable:status===503,details:{}}});\n  const now=Date.parse(input.now), actor=input.actor, employee=input.employee;\n  const dateAt=ms=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Warsaw',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms));\n  const validDate=value=>typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;\n  const parseTime=value=>{\n    if(typeof value!=='string'||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?(?:Z|[+-]\\d{2}:\\d{2})$/.test(value)||!validDate(value.slice(0,10)))return NaN;\n    if(Number(value.slice(11,13))>23||Number(value.slice(14,16))>59||Number(value.slice(17,19))>59)return NaN;\n    return Date.parse(value);\n  };\n  if(!Number.isFinite(now))return fail('SERVER_TIME_INVALID','Brak poprawnego czasu serwera.',503);\n  if(!actor?.employee_id||actor.active!==true||!['WORKER','LEADER','ADMIN'].includes(actor.role))return fail('UNAUTHENTICATED','Sesja nieaktywna.',401);\n  if(!employee?.employee_id||employee.active!==true)return fail('EMPLOYEE_INACTIVE','Konto pracownika nieaktywne.',403);\n  if(actor.employee_id!==employee.employee_id&&!['LEADER','ADMIN'].includes(actor.role))return fail('FORBIDDEN','Brak uprawnień do pracownika.',403);\n  if(!['START','FINISH','REOPEN','CORRECT'].includes(input.operation))return fail('OPERATION_NOT_IMPLEMENTED','Nieznana operacja.',400);\n  const b=input.payload||{}, today=dateAt(now), day=b.work_date;\n  if(!validDate(day)||day>today)return fail('INVALID_WORK_DATE','Nieprawidłowa lub przyszła data.',400);\n  if(!Number.isInteger(b.expected_version)||b.expected_version<0)return fail('EXPECTED_VERSION_REQUIRED','Odśwież stan przed zapisem.',400);\n  const rows=(input.attendance||[]).filter(r=>r.employee_id===employee.employee_id);\n  if(new Set(rows.map(r=>r.work_date)).size!==rows.length||rows.filter(r=>r.state==='OPEN').length>1)return fail('ATTENDANCE_INCONSISTENT','Wykryto niespójny stan obecności.',503);\n  const existing=rows.find(r=>r.work_date===day);\n  const before=existing?{...existing}:null;\n  if((existing?.version||0)!==b.expected_version)return fail('VERSION_CONFLICT','Dane zmieniły się. Odśwież i ponów.',409);\n  const id=employee.employee_id+':'+day;\n  let after=existing?{...existing}:{attendance_id:id,employee_id:employee.employee_id,work_date:day,state:'NOT_STARTED',start_at:null,stop_at:null,version:0};\n  // Moniti persists whole minutes (confirmed by live read-back). Use the same\n  // precision locally when enabled, rather than reporting a false mismatch.\n  const quantum=input.moniti_enabled?60000:1000;\n  const seconds=ms=>new Date(Math.floor(ms/quantum)*quantum).toISOString();\n  if(input.operation==='START'){\n    if(day!==today)return fail('START_REQUIRES_TODAY','START jest dostępny wyłącznie dla bieżącego dnia.');\n    if(existing&&existing.state!=='NOT_STARTED')return fail('ATTENDANCE_ALREADY_STARTED','Ten dzień jest już rozpoczęty.',409);\n    if(rows.some(r=>r.state==='OPEN'))return fail('OPEN_DAY_EXISTS','Najpierw zakończ otwarty dzień pracy.',409);\n    after={...after,state:'OPEN',start_at:seconds(now),stop_at:null};\n  }else{\n    if(!existing?.start_at||!['OPEN','CLOSED'].includes(existing.state))return fail('ATTENDANCE_NOT_STARTED','Brak rozpoczętego dnia.',409);\n    if(input.operation==='FINISH'){\n      if(existing.state!=='OPEN')return fail('ATTENDANCE_ALREADY_CLOSED','Dzień jest już zakończony.',409);\n      after={...after,state:'CLOSED',stop_at:seconds(now)};\n    }else{\n      const age=(Date.parse(today+'T00:00:00Z')-Date.parse(day+'T00:00:00Z'))/86400000;\n      if(actor.role==='WORKER'&&age>31)return fail('CORRECTION_WINDOW_EXCEEDED','Własne korekty obejmują maksymalnie 31 dni. Starszą zmianę wykonuje lider lub administrator.',403);\n      if(input.operation==='REOPEN'){\n        if(existing.state!=='CLOSED')return fail('ATTENDANCE_NOT_CLOSED','Dzień nie jest zakończony.',409);\n        if(rows.some(r=>r.state==='OPEN'))return fail('OPEN_DAY_EXISTS','Inny dzień jest już otwarty.',409);\n        after={...after,state:'OPEN',stop_at:null};\n      }else{\n        if(typeof b.reason!=='string'||b.reason.trim().length<3||b.reason.length>500)return fail('REASON_REQUIRED','Podaj powód korekty (3–500 znaków).',400);\n        const hasStart=b.start_at!==null&&b.start_at!==undefined&&b.start_at!=='';\n        const hasStop=b.stop_at!==null&&b.stop_at!==undefined&&b.stop_at!=='';\n        if(!hasStart&&!hasStop)return fail('EMPTY_CORRECTION','Podaj co najmniej jedną nową godzinę.',400);\n        if(hasStart){const value=parseTime(b.start_at);if(!Number.isFinite(value))return fail('INVALID_TIME','START musi być jednoznacznym czasem ISO z offsetem.',400);after.start_at=new Date(value).toISOString();}\n        if(hasStop){const value=parseTime(b.stop_at);if(!Number.isFinite(value))return fail('INVALID_TIME','STOP musi być jednoznacznym czasem ISO z offsetem.',400);after.stop_at=new Date(value).toISOString();after.state='CLOSED';}\n      }\n    }\n  }\n  if(input.moniti_enabled){\n    if(Date.parse(after.start_at)>now||(after.stop_at&&Date.parse(after.stop_at)>now))return fail('FUTURE_TIME','Godziny nie mogą być przyszłe.');\n    if(after.start_at)after.start_at=seconds(Date.parse(after.start_at));\n    if(after.stop_at)after.stop_at=seconds(Date.parse(after.stop_at));\n  }\n  const start=Date.parse(after.start_at), stop=after.stop_at?Date.parse(after.stop_at):null;\n  if(!Number.isFinite(start)||(stop!==null&&!Number.isFinite(stop)))return fail('INVALID_TIME','Nieprawidłowy czas.');\n  if(start>now||(stop!==null&&stop>now))return fail('FUTURE_TIME','Godziny nie mogą być przyszłe.');\n  if(dateAt(start)!==day)return fail('START_DATE_MISMATCH','START musi należeć do wybranego dnia w strefie Europe/Warsaw.');\n  if(stop!==null&&stop<start)return fail('STOP_BEFORE_START','STOP nie może być wcześniejszy od START.');\n  for(const row of rows){\n    if(row.work_date===day||!row.start_at)continue;\n    const rs=Date.parse(row.start_at),re=row.stop_at?Date.parse(row.stop_at):Infinity;\n    if(!Number.isFinite(rs)||(row.stop_at&&!Number.isFinite(re)))return fail('ATTENDANCE_INCONSISTENT','Nieprawidłowy zapis innego dnia.',503);\n    if(start<re&&rs<(stop??Infinity))return fail('ATTENDANCE_OVERLAP','Godziny nakładają się na inny dzień pracy.',409);\n  }\n  const processes=(input.processes||[]).filter(p=>p.employee_id===employee.employee_id&&p.attendance_id===id);\n  if(processes.filter(p=>!p.stop_at).length>1)return fail('PROCESS_INCONSISTENT','Więcej niż jeden aktywny proces.',503);\n  const process_updates=[];\n  for(const p of processes){\n    const ps=Date.parse(p.start_at),pe=p.stop_at?Date.parse(p.stop_at):null;\n    if(!Number.isFinite(ps)||(pe!==null&&(!Number.isFinite(pe)||pe<ps)))return fail('PROCESS_INCONSISTENT','Nieprawidłowy czas procesu.',503);\n    if(ps<start||(stop!==null&&(ps>stop||(pe!==null&&pe>stop))))return fail('PROCESS_TIME_CONFLICT','Korekta wyklucza zapisany czas procesu. Wymagana osobna korekta procesu.',409);\n    if(!p.stop_at&&stop!==null)process_updates.push({...p,stop_at:after.stop_at,version:(p.version||0)+1,last_request_id:input.request_id});\n  }\n  if(input.operation==='CORRECT'&&before.start_at===after.start_at&&(before.stop_at||null)===(after.stop_at||null))return fail('NO_CHANGE','Korekta nie zmienia godzin.',409);\n  after={...after,version:after.version+1,last_request_id:input.request_id,moniti_sync:input.moniti_enabled?'PENDING':'NOT_REQUIRED',drive_sync:'PENDING',correction_required:false};\n  const event_type={START:'WORK_STARTED',FINISH:'WORK_FINISHED',REOPEN:'WORK_REOPENED',CORRECT:'ATTENDANCE_CORRECTED'}[input.operation];\n  return {ok:true,before,after,process_updates,event_type,reason:input.operation==='CORRECT'?b.reason.trim():null,notify:input.operation==='CORRECT'||input.operation==='REOPEN',presence_seconds:Math.max(0,Math.floor(((stop??now)-start)/1000))};\n}\n\nif(typeof module!=='undefined')module.exports={planAttendance};\n\nconst i=$('Validate Input').first().json,auth=$('Authorize').first().json,employees=$('Read Employee').all().map(i=>i.json).filter(e=>e.employee_id),employee=employees[0];if(employees.length!==1||employee.active!==true)return [{json:fail(403,'EMPLOYEE_INACTIVE','Pracownik nieaktywny.',i.request_id)}];const commands=$('Read Commands').all().map(i=>i.json).filter(c=>c.request_id),prior=$('Read Request').all().map(i=>i.json).filter(c=>c.request_id);if(prior.length>1)return [{json:fail(503,'COMMAND_INCONSISTENT','Niespójny dziennik komend.',i.request_id)}];const old=prior[0],hash=$('Hash Command').first().json.payload_hash;if(old&&old.payload_hash!==hash)return [{json:fail(409,'REQUEST_ID_CONFLICT','Identyfikator był już użyty do innego żądania.',i.request_id)}];if(old?.status==='COMMITTED')return [{json:JSON.parse(old.response_json).response}];const pending=commands.filter(c=>!['COMMITTED','FAILED'].includes(c.status)&&c.request_id!==i.request_id);if(pending.length)return [{json:fail(503,'RECOVERY_REQUIRED','Poprzedni zapis wymaga dokończenia. Nie rozpoczynaj nowego zapisu.',i.request_id)}];const attendance=$('Read Attendance').all().map(i=>i.json).filter(r=>r.attendance_id),processes=$('Read Processes').all().map(i=>i.json).filter(r=>r.process_session_id);const config={};for(const c of $('Read Config').all().map(i=>i.json))if(c.key)config[c.key]=JSON.parse(c.value_json);if(i.operation==='STATUS'){const selected=attendance.find(r=>r.work_date===i.payload.work_date)||null,open=attendance.filter(r=>r.state==='OPEN');if(open.length>1||new Set(attendance.map(r=>r.work_date)).size!==attendance.length)return [{json:fail(503,'ATTENDANCE_INCONSISTENT','Niespójny stan czasu pracy.')}];return [{json:{http_status:200,body:{ok:true,request_id:'',data:{employee:{employee_id:employee.employee_id,display_name:employee.display_name},work_date:i.payload.work_date,attendance:selected,open_day:open[0]||null,snapshot_version:selected?.version||0,...processSnapshot({attendance:selected,processes,now:new Date().toISOString()}),process_catalog:$('Read Catalog').all().map(x=>x.json).filter(p=>p.active===true).map(p=>({process_code:p.process_code,display_name:p.display_name})),notifications:auth.actor.role==='WORKER'?[]:$('Read Notices').all().map(i=>i.json).filter(n=>n.alert_id&&(n.type==='ATTENDANCE_RECOVERY'||$('Read Notice Commands').all().map(i=>i.json).some(c=>c.request_id===n.dedup_key&&c.status==='COMMITTED'))).slice(-20).map(n=>({employee_id:n.employee_id,type:n.type,opened_at:n.opened_at,details:n.details_json})),moniti_enabled:config.MONITI_ENABLED===true,writes_enabled:config.WRITES_ENABLED===true},meta:{api_version:'2.0',server_time:new Date().toISOString()}}}}];}if(config.WRITES_ENABLED!==true)return [{json:fail(503,'WRITES_DISABLED','Zapisy V2 są wyłączone.',i.request_id)}];if(config.MONITI_ENABLED===true&&(i.payload.work_date!=='2026-09-05'||DateTime.now().setZone('Europe/Warsaw').toISODate()!=='2026-09-05'||![99191,99186,99185].includes(Number(employee.moniti_worker_id))))return [{json:fail(403,'MONITI_TEST_SCOPE','Testy Moniti są ograniczone do uzgodnionych kont i dnia 2026-09-05.',i.request_id)}];if(old){let frozen;try{frozen=JSON.parse(old.response_json);}catch{}if(!frozen?.plan||!frozen?.response)return [{json:fail(503,'COMMAND_INCONSISTENT','Brak planu odzyskiwania.',i.request_id)}];const current=attendance.find(r=>r.attendance_id===frozen.plan.after.attendance_id);if(current&&current.version!==frozen.plan.before?.version&&!(current.version===frozen.plan.after.version&&current.last_request_id===i.request_id))return [{json:fail(503,'RECOVERY_CONFLICT','Nowszy stan blokuje odtworzenie.',i.request_id)}];return [{json:{execute:true,...frozen,employee,request_id:i.request_id,payload_hash:hash,attempts:(old.attempts||0)+1}}];}const now=new Date().toISOString(),isProcess=i.operation.startsWith('PROCESS_'),plan=(isProcess?planProcess:planAttendance)({catalog:$('Read Catalog').all().map(x=>x.json),now,actor:auth.actor,employee,request_id:i.request_id,operation:i.operation,payload:i.payload,attendance,processes,moniti_enabled:config.MONITI_ENABLED===true});if(!plan.ok)return [{json:fail(plan.http_status,plan.error.code,plan.error.message,i.request_id)}];const moniti_enabled=!isProcess&&config.MONITI_ENABLED===true;if(!isProcess)plan.after.moniti_sync=moniti_enabled?'SYNCED':'NOT_REQUIRED';const response={http_status:200,body:{ok:true,request_id:i.request_id,data:{attendance:plan.after,snapshot_version:plan.after.version,...(isProcess?{active_process:plan.active_process,process_sessions:plan.process_sessions,process_seconds:plan.process_seconds,no_process_seconds:plan.no_process_seconds}: {})},meta:{api_version:'2.0',server_time:now}}};return [{json:{execute:true,plan,response,moniti_enabled,employee,request_id:i.request_id,payload_hash:hash,attempts:1}}];"
       }
     },
     {
@@ -1001,8 +1001,8 @@
             "request_id": "={{ $('Decide').first().json.request_id }}",
             "actor_id": "={{ $('Authorize').first().json.actor.employee_id }}",
             "source": "={{ $('Validate Input').first().json.source }}",
-            "before_json": "={{ JSON.stringify($('Decide').first().json.plan.before) }}",
-            "after_json": "={{ JSON.stringify($('Decide').first().json.plan.after) }}",
+            "before_json": "={{ JSON.stringify($('Decide').first().json.plan.process_before?{attendance:$('Decide').first().json.plan.before,processes:$('Decide').first().json.plan.process_before}:$('Decide').first().json.plan.before) }}",
+            "after_json": "={{ JSON.stringify($('Decide').first().json.plan.process_before?{attendance:$('Decide').first().json.plan.after,processes:$('Decide').first().json.plan.process_sessions}:$('Decide').first().json.plan.after) }}",
             "status": "COMMITTING",
             "occurred_at": "={{ $('Decide').first().json.response.body.meta.server_time }}"
           },
@@ -1034,7 +1034,7 @@
           "conditions": [
             {
               "id": "Close Process",
-              "leftValue": "={{ $('Decide').first().json.plan.process_updates.length === 1 }}",
+              "leftValue": "={{ $('Decide').first().json.plan.process_updates.length >= 1 }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -1687,7 +1687,7 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst cs=$input.all().map(i=>i.json).filter(c=>c.request_id),c=cs[0];if(cs.length!==1||c.status!=='RECOVERY_REQUIRED'||!['ATTENDANCE_START','ATTENDANCE_FINISH','ATTENDANCE_REOPEN','ATTENDANCE_CORRECT'].includes(c.operation)||!['APP','DRIVE_SHEET'].includes(c.source))return [{json:{skip:true}}];return [{json:{source:c.source,source_context:JSON.parse(c.response_json).source_context||null,operation:c.operation.slice(11),recovery_actor_id:c.actor_id,body:{...JSON.parse(c.payload_json),request_id:c.request_id,employee_id:c.employee_id}}}];"
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst cs=$input.all().map(i=>i.json).filter(c=>c.request_id),c=cs[0];if(cs.length!==1||c.status!=='RECOVERY_REQUIRED'||!['ATTENDANCE_START','ATTENDANCE_FINISH','ATTENDANCE_REOPEN','ATTENDANCE_CORRECT','ATTENDANCE_PROCESS_START','ATTENDANCE_PROCESS_CHANGE','ATTENDANCE_PROCESS_LOGOUT'].includes(c.operation)||!['APP','DRIVE_SHEET'].includes(c.source))return [{json:{skip:true}}];return [{json:{source:c.source,source_context:JSON.parse(c.response_json).source_context||null,operation:c.operation.slice(11),recovery_actor_id:c.actor_id,body:{...JSON.parse(c.payload_json),request_id:c.request_id,employee_id:c.employee_id}}}];"
       }
     },
     {
@@ -1722,6 +1722,162 @@
           "combinator": "and"
         },
         "options": {}
+      }
+    },
+    {
+      "id": "read-catalog",
+      "name": "Read Catalog",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        1540
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "ex0nanHboSqhceIB"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": []
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "second-process",
+      "name": "Second Process",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        1540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Second Process",
+              "leftValue": "={{ $('Decide').first().json.plan.process_updates.length === 2 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "save-second-process",
+      "name": "Save Second Process",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        1540
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "4di5yA4jpe0ZEmPL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "process_session_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.plan.process_updates[1].process_session_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "process_session_id": "={{ $('Decide').first().json.plan.process_updates[1].process_session_id ?? null }}",
+            "employee_id": "={{ $('Decide').first().json.plan.process_updates[1].employee_id ?? null }}",
+            "attendance_id": "={{ $('Decide').first().json.plan.process_updates[1].attendance_id ?? null }}",
+            "process_code": "={{ $('Decide').first().json.plan.process_updates[1].process_code ?? null }}",
+            "start_at": "={{ $('Decide').first().json.plan.process_updates[1].start_at ?? null }}",
+            "stop_at": "={{ $('Decide').first().json.plan.process_updates[1].stop_at ?? null }}",
+            "version": "={{ $('Decide').first().json.plan.process_updates[1].version ?? null }}",
+            "last_request_id": "={{ $('Decide').first().json.plan.process_updates[1].last_request_id ?? null }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "read-saved-processes",
+      "name": "Read Saved Processes",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        1540
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "4di5yA4jpe0ZEmPL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "attendance_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.plan.after.attendance_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "verify-processes",
+      "name": "Verify Processes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        1540
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst wanted=$('Decide').first().json.plan.process_updates,actual=$input.all().map(x=>x.json).filter(p=>p.process_session_id);if(actual.filter(p=>!p.stop_at).length>1)throw Error('PROCESS_DUPLICATE_ACTIVE');for(const p of wanted){const matches=actual.filter(a=>a.process_session_id===p.process_session_id);if(matches.length!==1||Object.entries(p).filter(([k])=>!['id','createdAt','updatedAt'].includes(k)).some(([k,v])=>['start_at','stop_at'].includes(k)?(v?Date.parse(v):null)!==(matches[0][k]?Date.parse(matches[0][k]):null):v!==matches[0][k]))throw Error('PROCESS_WRITE_NOT_CONFIRMED');}return [{json:{verified:true}}];"
       }
     }
   ],
@@ -1985,7 +2141,7 @@
       "main": [
         [
           {
-            "node": "Read Notices",
+            "node": "Read Catalog",
             "type": "main",
             "index": 0
           }
@@ -2200,7 +2356,7 @@
       "main": [
         [
           {
-            "node": "Save Attendance",
+            "node": "Second Process",
             "type": "main",
             "index": 0
           }
@@ -2398,6 +2554,68 @@
         [
           {
             "node": "Early Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Catalog": {
+      "main": [
+        [
+          {
+            "node": "Read Notices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Second Process": {
+      "main": [
+        [
+          {
+            "node": "Save Second Process",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read Saved Processes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Second Process": {
+      "main": [
+        [
+          {
+            "node": "Read Saved Processes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Saved Processes": {
+      "main": [
+        [
+          {
+            "node": "Verify Processes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Processes": {
+      "main": [
+        [
+          {
+            "node": "Save Attendance",
             "type": "main",
             "index": 0
           }

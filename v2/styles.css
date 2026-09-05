@@ -3,3 +3,5 @@
 :root .work-actions{display:flex;flex-wrap:wrap;gap:10px}#workDate{max-width:240px;margin-top:8px}#attendanceMessage{min-height:1.5em;color:#d4e4f7;line-height:1.6}#workSync,#openDayNote{color:#aec2dc}
 /* Manager notifications remain separate readable entries. */
 #managerNotices { white-space: pre-line; }
+#processHistory { white-space: pre-line; }
+#processChoice { max-width: 100%; padding: 12px; border-radius: 8px; font: inherit; color: #102a43; background: #fff; }

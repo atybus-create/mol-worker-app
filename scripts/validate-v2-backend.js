@@ -35,7 +35,7 @@ for (const workflow of workflows) {
       }
     }
     if (node.type === 'n8n-nodes-base.webhook') {
-      assert.ok(['mol-app-v2-health', 'mol-app-v2-stage3-test', 'mol-app-v2-auth-login', 'mol-app-v2-auth-session', 'mol-app-v2-auth-logout', ...['status','start','finish','reopen','correct'].map(op=>'mol-app-v2-attendance-'+op)].includes(node.parameters.path));
+      assert.ok(['mol-app-v2-health', 'mol-app-v2-stage3-test', 'mol-app-v2-auth-login', 'mol-app-v2-auth-session', 'mol-app-v2-auth-logout', ...['status','start','finish','reopen','correct'].map(op=>'mol-app-v2-attendance-'+op), ...['start','change','logout'].map(op=>'mol-app-v2-process-'+op)].includes(node.parameters.path));
     }
   }
   for (const [source, outputs] of Object.entries(workflow.connections)) {

@@ -743,7 +743,14 @@
           ],
           "operationId": "logoutProcess",
           "requestBody": {
-            "$ref": "#/components/requestBodies/Command"
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessLogoutRequest"
+                }
+              }
+            }
           },
           "responses": {
             "200": {
@@ -919,7 +926,9 @@
         "additionalProperties": false,
         "required": [
           "request_id",
-          "process_code"
+          "process_code",
+          "work_date",
+          "expected_version"
         ],
         "properties": {
           "request_id": {
@@ -929,6 +938,14 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 50
+          },
+          "work_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0
           }
         }
       },
@@ -1378,7 +1395,38 @@
             ],
             "properties": {
               "data": {
-                "$ref": "#/components/schemas/ProcessState"
+                "type": "object",
+                "required": [
+                  "attendance",
+                  "snapshot_version",
+                  "active_process"
+                ],
+                "properties": {
+                  "attendance": {
+                    "$ref": "#/components/schemas/Attendance"
+                  },
+                  "snapshot_version": {
+                    "type": "integer"
+                  },
+                  "active_process": {
+                    "type": [
+                      "object",
+                      "null"
+                    ]
+                  },
+                  "process_sessions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "process_seconds": {
+                    "type": "integer"
+                  },
+                  "no_process_seconds": {
+                    "type": "integer"
+                  }
+                }
               }
             }
           }
@@ -1583,6 +1631,28 @@
             "$ref": "#/components/schemas/SheetApprovalRequest"
           }
         ]
+      },
+      "ProcessLogoutRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "request_id",
+          "work_date",
+          "expected_version"
+        ],
+        "properties": {
+          "request_id": {
+            "$ref": "#/components/schemas/RequestId"
+          },
+          "work_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
       }
     }
   },

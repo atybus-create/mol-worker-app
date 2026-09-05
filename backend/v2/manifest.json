@@ -41,7 +41,10 @@
     "attendance_start": "p3j3KhESv7vzF5Cw",
     "attendance_finish": "sZCi2pQtjhqvGCpP",
     "attendance_reopen": "3CxXgz8DzL8pNCIs",
-    "attendance_correct": "3i83FN2xZj8sH6Ht"
+    "attendance_correct": "3i83FN2xZj8sH6Ht",
+    "process_start": "P6kxDdc9QPyNZ6tA",
+    "process_change": "f87H3YlBpPxQn6tm",
+    "process_logout": "e4hP8VJMocZBcGAd"
   },
   "active_versions": {
     "health": "d43ad0ad-7e1b-4dbe-a768-de3bbaabfe94",
@@ -52,7 +55,7 @@
     "auth_login": "872fb11a-00bd-4163-a056-04b4d92940d0",
     "auth_session": "d0075043-950f-45b1-99e3-39207707ad62",
     "auth_logout": "0630e472-9b5d-4593-a171-f8ee119377d5",
-    "attendance_service": "001ab62e-a55b-4548-9eb1-66c2e34be6d1",
+    "attendance_service": "df39a611-4983-45e5-9d81-a505ae10aaca",
     "attendance_moniti": "56ff0be6-3265-41a2-b0b9-7234c957d6e0",
     "attendance_drive": "902ff676-6619-4b20-97ba-023d3ec7c5fc",
     "attendance_recovery": "10976a73-c4e2-4df0-8582-5cef75ac94a0",
@@ -62,7 +65,10 @@
     "attendance_start": "1c87b119-7687-47d5-b767-ff7613b7a87b",
     "attendance_finish": "a96a49e0-f88f-432d-83b8-03436fe8af94",
     "attendance_reopen": "7fa3ea99-c186-4f74-a151-57d903e52555",
-    "attendance_correct": "82d8bffc-afe0-4290-b50b-f8c94cd1f7cc"
+    "attendance_correct": "82d8bffc-afe0-4290-b50b-f8c94cd1f7cc",
+    "process_start": "04c24f3b-a875-4b39-a986-a0235b13d7cc",
+    "process_change": "b08f84de-3290-4c7c-9d8a-7f900ee36994",
+    "process_logout": "53046402-d3e2-4e68-973c-67b6b47c7d35"
   },
   "auth": {
     "receipt_credential_id": "79mc2IFYLaJLMrgJ",

@@ -4,6 +4,8 @@ Status: wdrożona integracja czasu pracy etapu 5 w osobnym raporcie testowym V2.
 
 ## Obsługa arkusza
 
+Wymaganie docelowej instalacji, zatwierdzone po odbiorze etapu 5: przycisk zatwierdzania korekty ma znajdować się bezpośrednio w tym arkuszu Google Sheets, którego korekta dotyczy. Użytkownik nie przepisuje UUID do aplikacji. Akcja ma pobierać tożsamość zatwierdzającego, sprawdzać rolę i aktualną wersję oraz pokazywać wynik w arkuszu. Nie wolno zastąpić autoryzacji samym dostępem do edycji pliku. Do wykonania przed odbiorem docelowego raportowania (etap 9) i przełączeniem produkcji; obecny interfejs etapu 5 jest przejściowy.
+
 Raport ma trzy zakładki: „Czas pracy V2” (stan potwierdzony, godziny, minuty, wersja), „Korekty” (propozycje) i „Wyniki korekt” (wyniki automatu). Propozycja zawiera correction_id (nowy UUID), employee_id, work_date, expected_version, start_at, stop_at i reason. Godziny wymagają ISO 8601 z offsetem, np. 2026-09-05T08:53:00+02:00. Status i szczegóły są pobierane formułą po correction_id, nie numerze wiersza. W polskiej lokalizacji formuły używają separatora średnika. Zatwierdzenie odbywa się w panelu czasu pracy V2: odczyt propozycji, przegląd, osobny przycisk zatwierdzenia.
 
 LEADER/ADMIN wpisuje nowe godziny i powód, a następnie używa uwierzytelnionej akcji „Zatwierdź korektę”. Sama edycja komórki ani wpisanie nazwiska w kolumnie autora nie stanowią zatwierdzenia. Adapter ustala tożsamość zatwierdzającego z uwierzytelnionego kontekstu, mapuje ją na pracownika V2 i sprawdza uprawnienia do danego pracownika. Brak wiarygodnej tożsamości zatrzymuje import. Dostęp do edycji pliku nie zastępuje roli w aplikacji.

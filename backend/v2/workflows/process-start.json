@@ -1,0 +1,136 @@
+{
+  "name": "MOL // APP V2 // PROCESS START",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Webhook",
+      "webhookId": "24189064-d850-4f5b-a64b-0e214be0de05",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mol-app-v2-process-start",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://atybus-create.github.io"
+        }
+      }
+    },
+    {
+      "id": "request",
+      "name": "Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst i=$input.first().json;return [{json:{operation:'PROCESS_START',authorization:i.headers?.authorization||'',body:i.body||{}}}];"
+      }
+    },
+    {
+      "id": "command-service",
+      "name": "Command Service",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "qPVmcfp6pUg3GbzH"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request": {
+      "main": [
+        [
+          {
+            "node": "Command Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Command Service": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 180,
+    "errorWorkflow": "rnELTCKClbzY8lxZ",
+    "timezone": "Europe/Warsaw",
+    "executionOrder": "v1"
+  }
+}
