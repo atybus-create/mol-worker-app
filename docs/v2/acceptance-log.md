@@ -7,7 +7,7 @@
 | 3 | Rdzeń backendu V2 | PASS: 17 schematów; 5 workflowów bez błędów/ostrzeżeń; testy idempotencji, konfliktów, współbieżności i recovery | Potwierdzony przez użytkownika | ODEBRANY |
 | 4 | Logowanie i sesja | PASS: backend, idempotencja, race, expiry, rate-limit, testy UI i przeglądarka na atybus | Potwierdzony przez użytkownika | ODEBRANY |
 | 5 | Czas pracy | PASS: 39 testów domeny, UI, trzy role, Moniti/Drive, retry, recovery, race; granice w stage-5-acceptance.md | Potwierdzony przez użytkownika po udanej korekcie Drive | ODEBRANY |
-| 6 | Procesy pracownika | Implementacja i testy w toku | Oczekuje | W TRAKCIE |
+| 6 | Procesy pracownika | PASS: domena, UI, trzy role w przeglądarce, retry, recovery, konkurujące komendy, Moniti/Drive; granice w stage-6-acceptance.md | Oczekuje | DO ODBIORU |
 | 7 | Normy i wyniki | — | — | NIE ROZPOCZĘTO |
 | 8 | Alerty i komunikacja | — | — | NIE ROZPOCZĘTO |
 | 9 | Panel lidera i raporty | — | — | NIE ROZPOCZĘTO |

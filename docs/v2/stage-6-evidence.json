@@ -1,0 +1,130 @@
+{
+  "stage": 6,
+  "status": "READY_FOR_USER_ACCEPTANCE",
+  "checked_at": "2026-09-05T09:55:05.081Z",
+  "implementation_commit": "4e33a39bcb20fb702ab2f51262cddb135479a843",
+  "health": {
+    "version": "0.6.0",
+    "stage": 6,
+    "status": 200
+  },
+  "browser_roles": [
+    "WORKER",
+    "LEADER",
+    "ADMIN"
+  ],
+  "accounting": [
+    {
+      "employee_id": "MOL004",
+      "version": 27,
+      "state": "CLOSED",
+      "start_at": "2026-09-05T06:52:00.000Z",
+      "stop_at": "2026-09-05T09:50:00.000Z",
+      "moniti_sync": "SYNCED",
+      "drive_sync": "SYNCED",
+      "process_records": 8,
+      "presence_seconds": 10680,
+      "process_seconds": 420,
+      "no_process_seconds": 10260
+    },
+    {
+      "employee_id": "MOL014",
+      "version": 16,
+      "state": "CLOSED",
+      "start_at": "2026-09-05T07:02:00.000Z",
+      "stop_at": "2026-09-05T09:46:00.000Z",
+      "moniti_sync": "SYNCED",
+      "drive_sync": "SYNCED",
+      "process_records": 6,
+      "presence_seconds": 9840,
+      "process_seconds": 180,
+      "no_process_seconds": 9660
+    },
+    {
+      "employee_id": "MOL015",
+      "version": 10,
+      "state": "CLOSED",
+      "start_at": "2026-09-05T05:00:00.000Z",
+      "stop_at": "2026-09-05T09:44:00.000Z",
+      "moniti_sync": "SYNCED",
+      "drive_sync": "SYNCED",
+      "process_records": 2,
+      "presence_seconds": 17040,
+      "process_seconds": 120,
+      "no_process_seconds": 16920
+    }
+  ],
+  "active_processes": 0,
+  "recovery_required_commands": 0,
+  "pending_drive_jobs": 0,
+  "test_sessions_revoked": true,
+  "test_harness_active": false,
+  "identical_start_calls": [
+    {
+      "status": 200,
+      "version": 14,
+      "process_id": "a7600060-1000-4000-8000-000000000003:process"
+    },
+    {
+      "status": 200,
+      "version": 14,
+      "process_id": "a7600060-1000-4000-8000-000000000003:process"
+    },
+    {
+      "status": 200,
+      "version": 14,
+      "process_id": "a7600060-1000-4000-8000-000000000003:process"
+    },
+    {
+      "status": 200,
+      "version": 14,
+      "process_id": "a7600060-1000-4000-8000-000000000003:process"
+    }
+  ],
+  "competing_changes": [
+    {
+      "process": "KOMPLETACJA",
+      "status": 409,
+      "error": "VERSION_CONFLICT",
+      "version": null
+    },
+    {
+      "process": "BIURO",
+      "status": 409,
+      "error": "VERSION_CONFLICT",
+      "version": null
+    },
+    {
+      "process": "MAGAZYN",
+      "status": 200,
+      "error": null,
+      "version": 15
+    },
+    {
+      "process": "PRZERWA",
+      "status": 409,
+      "error": "VERSION_CONFLICT",
+      "version": null
+    }
+  ],
+  "concurrency_caveat": "Calls dispatched in parallel through MCP; transport may serialize. Not a throughput benchmark.",
+  "sheet_read_range": "'Czas pracy V2'!A2:K4",
+  "sheet_versions": [
+    27,
+    16,
+    10
+  ],
+  "ci": [
+    {
+      "name": "Validate frontend",
+      "conclusion": "success",
+      "url": "https://github.com/atybus-create/mol-worker-app/actions/runs/33958813375"
+    },
+    {
+      "name": "Deploy GitHub Pages",
+      "conclusion": "success",
+      "url": "https://github.com/atybus-create/mol-worker-app/actions/runs/33958813371"
+    }
+  ],
+  "stage7_started": false
+}

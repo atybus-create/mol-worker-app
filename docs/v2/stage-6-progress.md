@@ -1,6 +1,6 @@
 # Etap 6 — procesy pracownika
 
-Status: wdrożenie backendu i frontendu testowego; odbiór techniczny NIEZAKOŃCZONY. Użytkownik zaakceptował etap 5 i wyraźnie zlecił przejście do etapu 6.
+Status: testy funkcjonalne zakończone; protokół w stage-6-acceptance.md. Użytkownik zaakceptował etap 5 i wyraźnie zlecił przejście do etapu 6. Etap 6 oczekuje na odbiór użytkownika.
 
 ## Zrobione 2026-09-05
 
@@ -20,18 +20,20 @@ Status: wdrożenie backendu i frontendu testowego; odbiór techniczny NIEZAKOŃC
 - Powtórzenie pierwotnego START zwróciło dawną wersję wyniku, nie zmieniając nowszego stanu.
 - Live LEADER: podgląd innego pracownika 200, próba uruchomienia cudzego procesu 403.
 - Live LEADER: test przerwania PROCESS_CHANGE przez chwilowe wyłączenie zapisu drugiego procesu. Stan RECOVERY_REQUIRED; przywrócono węzeł, retry tego samego request_id zakończył zapis; następnie STOP zamknął dzień i proces. Węzeł jest ponownie włączony.
-- ADMIN: logowanie i odczyt stanu 200. Testy sterowania procesem admina w przeglądarce pozostają do wykonania.
+- ADMIN: logowanie i odczyt stanu 200; pełny cykl procesu w przeglądarce zakończony poprawnie (Magazyn → odświeżenie → Biuro → logout procesu → STOP).
 - GitHub CI i Pages: sukces dla commita 89341d6.
 - Sesje API utworzone do testów unieważniono. Nie kasowano historii ani zmian wykonanych równolegle przez użytkownika.
 
-## Pozostałe sprawdzenia przed odbiorem
+## Domknięcie testów 2026-09-05
 
-1. Przeglądarka: trzy role, wybór/zmiana/logout, odświeżenie podczas aktywnego procesu, STOP, zachowanie liczników i błędów.
-2. Osobny test współbieżnych komend procesowych oraz potwierdzenie drenażu Drive po wszystkich testach.
-3. Spójność eksportów z końcową wersją live po testach awarii; końcowy protokół odbioru.
-4. Backend health nadal pokazuje wersję 0.5.0; zaktualizować przy domknięciu etapu.
+1. Przeglądarka: trzy role, wybór/zmiana/logout, odświeżenie podczas aktywnego procesu, STOP i liczniki — PASS.
+2. Cztery identyczne START: jeden proces; cztery konkurujące zmiany: jedna zaakceptowana, trzy VERSION_CONFLICT. Transport MCP może szeregować wywołania — nie jest to pomiar przepustowości.
+3. Eksport usługi i manifest zgodne z końcową wersją live; wszystkie 61 węzłów usługi włączone.
+4. Health 0.6.0 / stage 6 potwierdzony przez API i UI.
+5. Dodano ograniczone automatyczne retry COMMAND_BUSY tym samym request_id; testy automatyczne i końcowy smoke w przeglądarce PASS. Commit 4e33a39, CI i Pages SUCCESS.
+6. Końcowe obecności CLOSED: MOL004 v27, MOL014 v16, MOL015 v10. Moniti i Drive SYNCED; bezpośredni odczyt komórek raportu potwierdza wersje oraz godziny. 16 rekordów historii procesów, 0 aktywnych; 0 RECOVERY_REQUIRED.
 
-Otwarcie osobnej karty przeglądarkowej do testu zostało zablokowane przez automatyczną kontrolę narzędzia, która zakwestionowała zgodę na etap 6. Blokada nie została ominięta. Wymagane ponowne potwierdzenie użytkownika dla tego testu. Etap 6 pozostaje W TRAKCIE; etap 7 nie rozpoczęty.
+Wcześniejsza blokada testu przeglądarkowego została rozwiązana ponowną zgodą użytkownika; testy wykonano. Etap 7 nie rozpoczęty. Szczegółowy zakres i granice odbioru: stage-6-acceptance.md.
 
 ## Wymaganie zapamiętane
 
