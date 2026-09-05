@@ -12,7 +12,8 @@ function browser(storage=new Map()){
   b.window.molAttendance.activate(profile,token);await settle();assert.equal(b.el('workState').textContent,'Dzień nierozpoczęty');assert.equal(b.el('workStart').disabled,false);
   b.modes.offline=true;b.el('workStart').click();b.el('workStart').click();await settle();assert.equal(b.calls.filter(c=>c.body).length,1);assert.equal(b.el('attendanceRetry').hidden,false);assert.equal(b.el('workStart').disabled,true);
   const first=b.calls.find(c=>c.body).body.request_id;assert.ok(b.storage.size);
-  b.window.molAttendance.hide();assert.equal(b.el('attendancePanel').hidden,true);
+  b.el('correctionReason').value='private draft';b.el('sheetCorrectionId').value='old id';
+  b.window.molAttendance.hide();assert.equal(b.el('attendancePanel').hidden,true);assert.equal(b.el('correctionReason').value,'');assert.equal(b.el('sheetCorrectionId').value,'');
   const reloaded=browser(b.storage);reloaded.window.molAttendance.activate(profile,token);await settle();assert.equal(reloaded.el('attendanceRetry').hidden,false);assert.equal(reloaded.el('workStart').disabled,true);
   reloaded.el('attendanceRetry').click();await settle();assert.equal(reloaded.calls.find(c=>c.body).body.request_id,first);assert.equal(reloaded.storage.size,0);
   reloaded.modes.reject=true;reloaded.el('workStart').click();await settle();assert.equal(reloaded.el('attendanceMessage').textContent,'Wersja dnia zmieniła się.');assert.equal(reloaded.storage.size,0);

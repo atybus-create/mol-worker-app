@@ -6,7 +6,7 @@
 | 2 | Finalny model działania i kontrakty API | PASS: kontrola kontraktu; uwzględnione korekty z Drive | Zatwierdzony przez użytkownika 2026-09-05 | ODEBRANY |
 | 3 | Rdzeń backendu V2 | PASS: 17 schematów; 5 workflowów bez błędów/ostrzeżeń; testy idempotencji, konfliktów, współbieżności i recovery | Potwierdzony przez użytkownika | ODEBRANY |
 | 4 | Logowanie i sesja | PASS: backend, idempotencja, race, expiry, rate-limit, testy UI i przeglądarka na atybus | Potwierdzony przez użytkownika | ODEBRANY |
-| 5 | Czas pracy | Implementacja i testy w toku | Oczekuje | W TRAKCIE |
+| 5 | Czas pracy | PASS: 39 testów domeny, UI, trzy role, Moniti/Drive, retry, recovery, race; granice w stage-5-acceptance.md | Oczekuje na potwierdzenie użytkownika | DO ODBIORU |
 | 6 | Procesy pracownika | — | — | NIE ROZPOCZĘTO |
 | 7 | Normy i wyniki | — | — | NIE ROZPOCZĘTO |
 | 8 | Alerty i komunikacja | — | — | NIE ROZPOCZĘTO |
