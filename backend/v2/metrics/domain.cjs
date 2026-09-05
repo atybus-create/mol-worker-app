@@ -90,6 +90,7 @@ function dailySummary({employee_id,work_date,attendance=null,processes=[],deltas
   const times=processTimes(attendance,processes,now);unique(deltas,'delta_id','DELTA_DUPLICATE');
   let pak=0,pick=0,outsidePak=0,outsidePick=0;const reasons={};
   for(const d of deltas){need(d.employee_id===employee_id&&d.attendance_id===id,'DELTA_OWNER_INVALID');const p=count(d.pak_count),k=count(d.pick_count);need(!!p!==!!k,'DELTA_METRIC_INVALID');need(['MATCH_PROCESS','BOUNDARY_PAK_PICK','NO_APP','NO_PROCESS','NON_MEASURABLE','WRONG_PROCESS'].includes(d.classification),'DELTA_CLASSIFICATION_INVALID');
+    if(d.classification==='BOUNDARY_PAK_PICK')need(d.delta_id.startsWith('ESB-'),'BOUNDARY_ID_INVALID');
     if(d.delta_id.startsWith('ESB-')){const req=d.delta_id.slice(4,40);need(commands.some(c=>c.request_id===req&&c.status==='COMMITTED'),'BOUNDARY_NOT_COMMITTED');}
     if(ELIGIBLE.has(d.classification)){pak+=p;pick+=k;}else{outsidePak+=p;outsidePick+=k;reasons[d.classification]=(reasons[d.classification]||0)+p+k;}
   }
@@ -111,7 +112,7 @@ function monthSummary(employee_id,month,days,now) {
   for(const d of days){need(d.employee_id===employee_id&&d.work_date.startsWith(month+'-'),'MONTH_SCOPE_MISMATCH');for(const key of Object.keys(totals)){need(Number.isFinite(d[key])&&d[key]>=0,'DAILY_TOTAL_INVALID');totals[key]+=d[key];}}
   const relevant=days.filter(d=>d.state!=='NOT_STARTED'||d.eligible_pak+d.eligible_pick+d.outside_pak+d.outside_pick>0),unavailable=relevant.some(d=>d.freshness==='UNAVAILABLE'),stale=relevant.some(d=>d.freshness==='STALE');
   const p=percentages(totals.eligible_pak,totals.eligible_pick,totals.pak_seconds,totals.pick_seconds);
-  return {summary_id:employee_id+':'+month,employee_id,month,...totals,...p,...(unavailable?{pak_percent:null,pick_percent:null,combined_percent:null,reason:'INCOMPLETE_MONTH_DATA'}:{}),freshness:unavailable?'UNAVAILABLE':stale?'STALE':'FRESH',coverage:relevant.some(d=>d.coverage!=='COMPLETE')?'PARTIAL':'COMPLETE',calculated_at:now,days:days.length};
+  return {summary_id:employee_id+':'+month,employee_id,month,...totals,...p,...(unavailable?{pak_percent:null,pick_percent:null,combined_percent:null,reason:p.reason||'INCOMPLETE_MONTH_DATA',source_error:'INCOMPLETE_MONTH_DATA'}:{}),freshness:unavailable?'UNAVAILABLE':stale?'STALE':'FRESH',coverage:relevant.some(d=>d.coverage!=='COMPLETE')?'PARTIAL':'COMPLETE',calculated_at:now,days:days.length};
 }
 function publishMonth(previous,daily,now) {
   const month=daily.work_date.slice(0,7),employee_id=daily.employee_id,old=previous?json(previous.payload_json):null;
@@ -120,7 +121,7 @@ function publishMonth(previous,daily,now) {
   let monthly=monthSummary(employee_id,month,days,now);
   if(monthly.freshness==='UNAVAILABLE'&&old?.monthly?.freshness!=='UNAVAILABLE'&&old?.monthly)monthly={...old.monthly,freshness:'STALE',source_error:'INCOMPLETE_MONTH_DATA'};
   const payload={schema_version:1,employee_id,month,days,monthly},fingerprint=canonical(semantic(payload));
-  if(previous?.fingerprint===fingerprint)return previous;
+  if(previous?.fingerprint===fingerprint)return Object.fromEntries(['summary_id','employee_id','month','version','payload_json','fingerprint','calculated_at'].map(k=>[k,previous[k]]));
   return {summary_id:employee_id+':'+month,employee_id,month,version:(previous?.version||0)+1,payload_json:JSON.stringify(payload),fingerprint,calculated_at:now};
 }
 if(typeof module!=='undefined')module.exports={need,time,dayPL,validDay,count,json,canonical,semantic,mappingStatus,boundaryFromCommand,freezeESBatch,processTimes,percentages,dailySummary,monthSummary,publishMonth};

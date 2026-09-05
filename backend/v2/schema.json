@@ -757,6 +757,179 @@
           "type": "date"
         }
       ]
+    },
+    {
+      "name": "MOL_V2_ES_POLL_STATE",
+      "columns": [
+        {
+          "name": "checkpoint_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "work_date",
+          "type": "string"
+        },
+        {
+          "name": "es_operator",
+          "type": "string"
+        },
+        {
+          "name": "version",
+          "type": "number"
+        },
+        {
+          "name": "state_json",
+          "type": "string"
+        },
+        {
+          "name": "last_good_at",
+          "type": "date"
+        },
+        {
+          "name": "last_attempt_at",
+          "type": "date"
+        },
+        {
+          "name": "error_code",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_ES_BATCHES",
+      "columns": [
+        {
+          "name": "batch_id",
+          "type": "string"
+        },
+        {
+          "name": "work_date",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "plan_json",
+          "type": "string"
+        },
+        {
+          "name": "summary_json",
+          "type": "string"
+        },
+        {
+          "name": "origin",
+          "type": "string"
+        },
+        {
+          "name": "captured_at",
+          "type": "date"
+        },
+        {
+          "name": "attempts",
+          "type": "number"
+        },
+        {
+          "name": "error_code",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_NORM_SNAPSHOTS",
+      "columns": [
+        {
+          "name": "summary_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "month",
+          "type": "string"
+        },
+        {
+          "name": "version",
+          "type": "number"
+        },
+        {
+          "name": "payload_json",
+          "type": "string"
+        },
+        {
+          "name": "fingerprint",
+          "type": "string"
+        },
+        {
+          "name": "calculated_at",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_STATUS_SNAPSHOTS",
+      "columns": [
+        {
+          "name": "view_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "work_date",
+          "type": "string"
+        },
+        {
+          "name": "month",
+          "type": "string"
+        },
+        {
+          "name": "version",
+          "type": "number"
+        },
+        {
+          "name": "payload_json",
+          "type": "string"
+        },
+        {
+          "name": "fingerprint",
+          "type": "string"
+        },
+        {
+          "name": "calculated_at",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_REPORT_INDEX",
+      "columns": [
+        {
+          "name": "report_key",
+          "type": "string"
+        },
+        {
+          "name": "kind",
+          "type": "string"
+        },
+        {
+          "name": "summary_id",
+          "type": "string"
+        },
+        {
+          "name": "row_number",
+          "type": "number"
+        }
+      ]
     }
   ]
 }

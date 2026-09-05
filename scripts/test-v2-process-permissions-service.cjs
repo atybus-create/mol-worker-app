@@ -28,7 +28,7 @@ function run(options={}) {
     'Hash Command':[{payload_hash:'fixture'}], 'Read Attendance':[attendance],
     'Read Processes':options.processes||[], 'Read Config':config,
     'Read Catalog':['PAKOWANIE','KOMPLETACJA','PRZERWA','BIURO'].map(process_code=>({process_code,display_name:process_code,active:true})),
-    'Read Notices':[], 'Read Notice Commands':[]
+    'Read Notices':[], 'Read Notice Commands':[], 'Read Pending ES':[]
   };
   const before=JSON.stringify(data);
   const lookup=name=>{assert.ok(Object.hasOwn(data,name),'Unexpected node '+name);return {first:()=>({json:data[name][0]||{}}),all:()=>data[name].map(json=>({json}))};};

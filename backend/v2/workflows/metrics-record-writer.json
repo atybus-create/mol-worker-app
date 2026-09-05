@@ -1,0 +1,467 @@
+{
+  "name": "MOL // APP V2 // METRICS RECORD WRITER",
+  "nodes": [
+    {
+      "id": "input",
+      "name": "Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "validate-record",
+      "name": "Validate Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const i=$input.first().json;const tables={\"ES_POLL_STATE\":[\"XLDbRcZ62PLzCykY\",\"checkpoint_id\"],\"ES_BATCHES\":[\"fj3jJKgoY06BVtu5\",\"batch_id\"],\"PRODUCTION_DELTAS\":[\"GT4Ritsrue5U57NA\",\"delta_id\"],\"NORM_SNAPSHOTS\":[\"4pJlgFine6QhUQxX\",\"summary_id\"],\"STATUS_SNAPSHOTS\":[\"8GZIQBgGlH0dGTAJ\",\"view_id\"],\"DAILY_SUMMARY\":[\"GSpPhENUjWor7bqE\",\"summary_id\"],\"MONTHLY_SUMMARY\":[\"mbmyKatUZSKd4HgX\",\"summary_id\"],\"OUTBOX\":[\"gYdo04L9BIuWc40C\",\"outbox_id\"],\"REPORT_INDEX\":[\"SqNZloUkfNSg1TuG\",\"report_key\"]};if(typeof i.lock_owner!=='string'||!/^\\d+$/.test(i.lock_owner))throw Error('METRICS_LOCK_REQUIRED');const lock_key=i.table==='REPORT_INDEX'?'norm-drive-writer':'command-writer';if(i.noop===true)return [{json:{noop:true,lock_owner:i.lock_owner,lock_key}}];const t=tables[i.table];if(!t||!i.row||Array.isArray(i.row)||typeof i.row[t[1]]!=='string'||!i.row[t[1]]||Object.hasOwn(i.row,'id')||!['immutable','insert_only','replace'].includes(i.mode))throw Error('METRICS_RECORD_INVALID');if(i.table==='PRODUCTION_DELTAS'&&i.mode!=='immutable')throw Error('DELTA_IMMUTABLE');if(i.table==='OUTBOX'&&i.mode!=='insert_only')throw Error('OUTBOX_INSERT_ONLY');return [{json:{...i,table_id:t[0],key:t[1],lock_key}}];"
+      }
+    },
+    {
+      "id": "read-lock",
+      "name": "Read Lock",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Record').first().json.lock_key }}"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Record').first().json.lock_owner }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "check-lock",
+      "name": "Check Lock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const i=$('Validate Record').first().json,rows=$input.all().map(x=>x.json).filter(r=>r.lock_key);if(rows.length!==1||rows[0].owner!==i.lock_owner)throw Error('METRICS_LOCK_LOST');return [{json:i.noop?{ok:true,noop:true,skipped:true}:{ready:true}}];"
+      }
+    },
+    {
+      "id": "ready",
+      "name": "Ready",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Ready",
+              "leftValue": "={{ $json.ready === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "read-existing",
+      "name": "Read Existing",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Validate Record').first().json.table_id }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $('Validate Record').first().json.key }}",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Record').first().json.row[$('Validate Record').first().json.key] }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "decide-write",
+      "name": "Decide Write",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const i=$('Validate Record').first().json,rs=$input.all().map(x=>x.json).filter(r=>r[i.key]!==undefined);if(rs.length>1)throw Error('METRICS_DUPLICATE_RECORD');const old=rs[0];const same=old&&Object.entries(i.row).every(([k,v])=>k.endsWith('_at')||k==='source_time'?(v?Date.parse(v):null)===(old[k]?Date.parse(old[k]):null):v===old[k]);if(same)return [{json:{ok:true,skipped:true,verified:true,table:i.table,key:i.row[i.key]}}];if(old&&i.mode==='immutable')throw Error('IMMUTABLE_RECORD_CONFLICT');if(old&&i.mode==='insert_only'){const keys=i.table==='OUTBOX'?['request_id','aggregate_id','type','payload_json']:[i.key];if(keys.some(k=>old[k]!==i.row[k]))throw Error('INSERT_ID_CONFLICT');return [{json:{ok:true,skipped:true,verified:true,table:i.table,key:i.row[i.key]}}];}if(i.expected_version!==undefined&&(old?.version||0)!==i.expected_version)throw Error('METRICS_VERSION_CONFLICT');if(i.expected_status!==undefined&&(old?.status||null)!==i.expected_status)throw Error('METRICS_STATUS_CONFLICT');return [{json:{write:true}}];"
+      }
+    },
+    {
+      "id": "needs-write",
+      "name": "Needs Write",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1820,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Needs Write",
+              "leftValue": "={{ $json.write === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "row-only",
+      "name": "Row Only",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "jsCode": "return [{json:$('Validate Record').first().json.row}];"
+      }
+    },
+    {
+      "id": "write-row",
+      "name": "Write Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Validate Record').first().json.table_id }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $('Validate Record').first().json.key }}",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Record').first().json.row[$('Validate Record').first().json.key] }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "read-back",
+      "name": "Read Back",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Validate Record').first().json.table_id }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $('Validate Record').first().json.key }}",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Record').first().json.row[$('Validate Record').first().json.key] }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "verify",
+      "name": "Verify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const i=$('Validate Record').first().json,rs=$input.all().map(x=>x.json).filter(r=>r[i.key]!==undefined);if(rs.length!==1||Object.entries(i.row).some(([k,v])=>k.endsWith('_at')||k==='source_time'?(v?Date.parse(v):null)!==(rs[0][k]?Date.parse(rs[0][k]):null):v!==rs[0][k]))throw Error('METRICS_WRITE_NOT_CONFIRMED');return [{json:{ok:true,verified:true,table:i.table,key:i.row[i.key]}}];"
+      }
+    },
+    {
+      "id": "return",
+      "name": "Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        220
+      ],
+      "parameters": {
+        "jsCode": "return $input.all();"
+      }
+    }
+  ],
+  "connections": {
+    "Input": {
+      "main": [
+        [
+          {
+            "node": "Validate Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Record": {
+      "main": [
+        [
+          {
+            "node": "Read Lock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Lock": {
+      "main": [
+        [
+          {
+            "node": "Check Lock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Lock": {
+      "main": [
+        [
+          {
+            "node": "Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ready": {
+      "main": [
+        [
+          {
+            "node": "Read Existing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Existing": {
+      "main": [
+        [
+          {
+            "node": "Decide Write",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decide Write": {
+      "main": [
+        [
+          {
+            "node": "Needs Write",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Write": {
+      "main": [
+        [
+          {
+            "node": "Row Only",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Row Only": {
+      "main": [
+        [
+          {
+            "node": "Write Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Row": {
+      "main": [
+        [
+          {
+            "node": "Read Back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Back": {
+      "main": [
+        [
+          {
+            "node": "Verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "executionTimeout": 30,
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "errorWorkflow": "rnELTCKClbzY8lxZ"
+  }
+}

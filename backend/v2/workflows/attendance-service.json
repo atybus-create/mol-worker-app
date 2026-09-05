@@ -25,7 +25,7 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst i=$input.first().json,b=i.body||{},op=i.operation;const token=/^Bearer ([0-9a-f]{64})$/.exec(i.authorization||'');if(!token&&!i.recovery_actor_id)return [{json:fail(401,'UNAUTHENTICATED','Zaloguj się ponownie.')}];if(!['STATUS','START','FINISH','REOPEN','CORRECT','PROCESS_START','PROCESS_CHANGE','PROCESS_LOGOUT'].includes(op))return [{json:fail(400,'INVALID_OPERATION','Nieznana operacja.')}];const allowed=op==='STATUS'?['work_date','employee_id']:['request_id','work_date','employee_id','expected_version',...(op==='CORRECT'?['start_at','stop_at','reason']:[]),...(['PROCESS_START','PROCESS_CHANGE'].includes(op)?['process_code']:[])];if(!b||Array.isArray(b)||typeof b!=='object'||Object.keys(b).some(k=>!allowed.includes(k)))return [{json:fail(400,'VALIDATION_ERROR','Nieobsługiwane pola żądania.')}];if(op!=='STATUS'&&(typeof b.request_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(b.request_id||'')||!Number.isInteger(b.expected_version)||b.expected_version<0))return [{json:fail(400,'VALIDATION_ERROR','Wymagany request_id i expected_version.')}];if(b.employee_id!==undefined&&(typeof b.employee_id!=='string'||!/^MOL[0-9]+$/.test(b.employee_id)))return [{json:fail(400,'VALIDATION_ERROR','Nieprawidłowy pracownik.')}];const work_date=b.work_date|| (op==='STATUS'?DateTime.now().setZone('Europe/Warsaw').toISODate():null);if(typeof work_date!=='string'||!/^\\d{4}-\\d{2}-\\d{2}$/.test(work_date)||!DateTime.fromISO(work_date).isValid||work_date>DateTime.now().setZone('Europe/Warsaw').toISODate())return [{json:fail(400,'INVALID_WORK_DATE','Nieprawidłowa data.')}];const payload={...(['PROCESS_START','PROCESS_CHANGE'].includes(op)?{process_code:b.process_code}:{}),work_date,...(op==='STATUS'?{}:{expected_version:b.expected_version}),...(op==='CORRECT'?{start_at:b.start_at??null,stop_at:b.stop_at??null,reason:b.reason??null}:{})};return [{json:{valid:true,source:i.source==='DRIVE_SHEET'?'DRIVE_SHEET':'APP',source_context:i.source==='DRIVE_SHEET'?i.source_context:null,operation:op,session_token:token?.[1]||'',recovery_actor_id:i.recovery_actor_id||null,request_id:(b.request_id||'').toLowerCase(),target:b.employee_id||null,payload}}];"
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst i=$input.first().json,b=i.body||{},include_metrics=i.operation==='WORKER_STATUS',op=include_metrics?'STATUS':i.operation;const token=/^Bearer ([0-9a-f]{64})$/.exec(i.authorization||'');if(!token&&!i.recovery_actor_id)return [{json:fail(401,'UNAUTHENTICATED','Zaloguj się ponownie.')}];if(!['STATUS','START','FINISH','REOPEN','CORRECT','PROCESS_START','PROCESS_CHANGE','PROCESS_LOGOUT'].includes(op))return [{json:fail(400,'INVALID_OPERATION','Nieznana operacja.')}];const allowed=op==='STATUS'?['work_date','employee_id',...(include_metrics?['month']:[])]:['request_id','work_date','employee_id','expected_version',...(op==='CORRECT'?['start_at','stop_at','reason']:[]),...(['PROCESS_START','PROCESS_CHANGE'].includes(op)?['process_code']:[])];if(!b||Array.isArray(b)||typeof b!=='object'||Object.keys(b).some(k=>!allowed.includes(k)))return [{json:fail(400,'VALIDATION_ERROR','Nieobsługiwane pola żądania.')}];if(op!=='STATUS'&&(typeof b.request_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(b.request_id||'')||!Number.isInteger(b.expected_version)||b.expected_version<0))return [{json:fail(400,'VALIDATION_ERROR','Wymagany request_id i expected_version.')}];if(b.employee_id!==undefined&&(typeof b.employee_id!=='string'||!/^MOL[0-9]+$/.test(b.employee_id)))return [{json:fail(400,'VALIDATION_ERROR','Nieprawidłowy pracownik.')}];const work_date=b.work_date|| (op==='STATUS'?DateTime.now().setZone('Europe/Warsaw').toISODate():null);if(typeof work_date!=='string'||!/^\\d{4}-\\d{2}-\\d{2}$/.test(work_date)||!DateTime.fromISO(work_date).isValid||work_date>DateTime.now().setZone('Europe/Warsaw').toISODate())return [{json:fail(400,'INVALID_WORK_DATE','Nieprawidłowa data.')}];const month=include_metrics?(b.month||work_date.slice(0,7)):null;if(include_metrics&&(typeof month!=='string'||!/^\\d{4}-(0[1-9]|1[0-2])$/.test(month)||month>DateTime.now().setZone('Europe/Warsaw').toISODate().slice(0,7)))return [{json:fail(400,'INVALID_MONTH','Nieprawidlowy miesiac.')}];const payload={...(['PROCESS_START','PROCESS_CHANGE'].includes(op)?{process_code:b.process_code}:{}),work_date,...(op==='STATUS'?{}:{expected_version:b.expected_version}),...(op==='CORRECT'?{start_at:b.start_at??null,stop_at:b.stop_at??null,reason:b.reason??null}:{})};return [{json:{valid:true,include_metrics,month,source:i.source==='DRIVE_SHEET'?'DRIVE_SHEET':'APP',source_context:i.source==='DRIVE_SHEET'?i.source_context:null,operation:op,session_token:token?.[1]||'',recovery_actor_id:i.recovery_actor_id||null,request_id:(b.request_id||'').toLowerCase(),target:b.employee_id||null,payload}}];"
       }
     },
     {
@@ -745,7 +745,7 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Pure process planner. Actor and clock must be supplied by the authenticated service.\nfunction processSnapshot({attendance, processes=[], now}) {\n  const end=attendance?.stop_at?Date.parse(attendance.stop_at):Date.parse(now);\n  if(!attendance?.start_at)return {active_process:null,process_sessions:[],process_seconds:0,no_process_seconds:0,presence_seconds:0};\n  const start=Date.parse(attendance.start_at), rows=processes.filter(p=>p.attendance_id===attendance.attendance_id);\n  const seconds=rows.reduce((n,p)=>n+Math.max(0,(Math.min(end,p.stop_at?Date.parse(p.stop_at):end)-Math.max(start,Date.parse(p.start_at)))/1000),0);\n  const presence=Math.max(0,(end-start)/1000);\n  return {active_process:rows.find(p=>!p.stop_at)||null,process_sessions:rows,process_seconds:Math.floor(seconds),no_process_seconds:Math.floor(Math.max(0,presence-seconds)),presence_seconds:Math.floor(presence)};\n}\n\nfunction parseAllowedProcesses(value) {\n  if(value===null||value===undefined||value==='')return {valid:false,codes:new Set(),reason:'MISSING'};\n  let decoded=value;\n  if(typeof value==='string'){\n    try{decoded=JSON.parse(value);}catch{return {valid:false,codes:new Set(),reason:'INVALID'};}\n  }\n  if(!Array.isArray(decoded)||decoded.some(code=>typeof code!=='string'||!/^[A-Z0-9_]+$/.test(code)))return {valid:false,codes:new Set(),reason:'INVALID'};\n  return {valid:true,codes:new Set(decoded),reason:null};\n}\n\nfunction processPermission(employee, processCode) {\n  const allowlist=parseAllowedProcesses(employee?.allowed_processes);\n  if(!allowlist.valid)return {allowed:false,reason:'CONFIG_INVALID'};\n  if(processCode==='BIURO'&&!['LEADER','ADMIN'].includes(employee?.role))return {allowed:false,reason:'ROLE'};\n  if(!allowlist.codes.has(processCode))return {allowed:false,reason:'ALLOWLIST'};\n  return {allowed:true,reason:null};\n}\n\nfunction canUseProcess(employee, processCode) {\n  return processPermission(employee,processCode).allowed;\n}\n\nfunction visibleProcessCatalog(catalog=[], employee={}) {\n  return catalog.filter(process=>process.active===true&&canUseProcess(employee,process.process_code));\n}\n\nfunction planProcess(input) {\n  const fail=(code,message,status=409)=>({ok:false,http_status:status,error:{code,message}});\n  const {actor,employee,payload:b={},operation,request_id}=input;\n  if(!actor?.active||!['WORKER','LEADER','ADMIN'].includes(actor.role))return fail('UNAUTHENTICATED','Sesja nieaktywna.',401);\n  if(!employee?.active)return fail('EMPLOYEE_INACTIVE','Konto nieaktywne.',403);\n  // Leaders may inspect all workers, but process selection is always the worker's own action.\n  if(actor.employee_id!==employee.employee_id)return fail('FORBIDDEN','Proces zmieniasz wyłącznie na własnym koncie.',403);\n  if(!['PROCESS_START','PROCESS_CHANGE','PROCESS_LOGOUT'].includes(operation))return fail('INVALID_OPERATION','Nieznana operacja.',400);\n  if(operation!=='PROCESS_LOGOUT'){\n    const matches=(input.catalog||[]).filter(p=>p.process_code===b.process_code&&p.active===true);\n    if(matches.length!==1)return fail('PROCESS_UNAVAILABLE','Wybierz dostępny proces.',422);\n    const permission=processPermission(employee,b.process_code);\n    if(permission.reason==='CONFIG_INVALID')return fail('PROCESS_PERMISSION_CONFIG_INVALID','Nieprawidłowa konfiguracja dozwolonych procesów.',503);\n    if(!permission.allowed){\n      const message=b.process_code==='BIURO'?'Proces BIURO jest dostępny tylko dla lidera i administratora.':'Proces nie jest dostępny dla tego konta.';\n      return fail('PROCESS_FORBIDDEN',message,403);\n    }\n  }\n  const now=Date.parse(input.now);\n  if(!Number.isFinite(now))return fail('SERVER_TIME_INVALID','Nieprawidłowy czas serwera.',503);\n  const rows=(input.attendance||[]).filter(a=>a.employee_id===employee.employee_id);\n  const open=rows.filter(a=>a.state==='OPEN');\n  if(open.length>1||new Set(rows.map(a=>a.work_date)).size!==rows.length)return fail('ATTENDANCE_INCONSISTENT','Niespójna obecność.',503);\n  const before=rows.find(a=>a.work_date===b.work_date);\n  if(!before||before.state!=='OPEN'||before.stop_at)return fail('ATTENDANCE_NOT_OPEN','Najpierw rozpocznij dzień pracy.');\n  if(!Number.isInteger(b.expected_version)||b.expected_version<0)return fail('EXPECTED_VERSION_REQUIRED','Odśwież stan przed zapisem.',400);\n  if(before.version!==b.expected_version)return fail('VERSION_CONFLICT','Dane zmieniły się. Odśwież stan.');\n  // Same minute precision as attendance while Moniti is enabled: immediate STOP remains valid.\n  const stamp=new Date(Math.floor(now/(input.moniti_enabled?60000:1000))*(input.moniti_enabled?60000:1000)).toISOString();\n  const at=Date.parse(stamp), start=Date.parse(before.start_at);\n  if(!Number.isFinite(start)||start>at)return fail('PROCESS_TIME_CONFLICT','Proces nie może zacząć się przed obecnością.');\n  const all=(input.processes||[]).filter(p=>p.employee_id===employee.employee_id);\n  const active=all.filter(p=>!p.stop_at), current=active[0];\n  if(active.length>1||(current&&current.attendance_id!==before.attendance_id)||new Set(all.map(p=>p.process_session_id)).size!==all.length)return fail('PROCESS_INCONSISTENT','Niespójne sesje procesów.',503);\n  const sessions=all.filter(p=>p.attendance_id===before.attendance_id).sort((a,b)=>Date.parse(a.start_at)-Date.parse(b.start_at));\n  let previousEnd=start;\n  for(const p of sessions){const ps=Date.parse(p.start_at),pe=p.stop_at?Date.parse(p.stop_at):at;\n    if(!Number.isFinite(ps)||!Number.isFinite(pe)||ps<previousEnd||pe<ps||pe>at)return fail('PROCESS_INCONSISTENT','Czasy procesów nakładają się lub wykraczają poza obecność.',503);\n    previousEnd=pe;\n  }\n  if(operation==='PROCESS_START'&&current)return fail('PROCESS_ALREADY_ACTIVE','Proces już trwa. Użyj zmiany procesu.');\n  if(operation!=='PROCESS_START'&&!current)return fail('PROCESS_NOT_ACTIVE','Nie ma aktywnego procesu.');\n  if(operation!=='PROCESS_LOGOUT'&&current?.process_code===b.process_code)return fail('PROCESS_UNCHANGED','Ten proces już trwa.');\n  const updates=[];\n  if(current)updates.push({...current,stop_at:stamp,version:current.version+1,last_request_id:request_id});\n  if(operation!=='PROCESS_LOGOUT')updates.push({process_session_id:request_id+':process',attendance_id:before.attendance_id,employee_id:employee.employee_id,process_code:b.process_code,start_at:stamp,stop_at:null,version:1,last_request_id:request_id});\n  const after={...before,version:before.version+1,last_request_id:request_id,drive_sync:'PENDING'};\n  const result=sessions.map(p=>updates.find(u=>u.process_session_id===p.process_session_id)||p);\n  for(const u of updates)if(!result.some(p=>p.process_session_id===u.process_session_id))result.push(u);\n  return {ok:true,before,after,process_before:sessions,process_updates:updates,event_type:operation,notify:false,reason:null,...processSnapshot({attendance:after,processes:result,now:input.now})};\n}\nif(typeof module!=='undefined')module.exports={planProcess,processSnapshot,parseAllowedProcesses,processPermission,canUseProcess,visibleProcessCatalog};\n\nconst fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\n// Pure domain planner. No network or persistence; input.actor is trusted server context.\nfunction planAttendance(input) {\n  const fail=(code,message,status=422)=>({ok:false,http_status:status,error:{code,message,retryable:status===503,details:{}}});\n  const now=Date.parse(input.now), actor=input.actor, employee=input.employee;\n  const dateAt=ms=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Warsaw',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms));\n  const validDate=value=>typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;\n  const parseTime=value=>{\n    if(typeof value!=='string'||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?(?:Z|[+-]\\d{2}:\\d{2})$/.test(value)||!validDate(value.slice(0,10)))return NaN;\n    if(Number(value.slice(11,13))>23||Number(value.slice(14,16))>59||Number(value.slice(17,19))>59)return NaN;\n    return Date.parse(value);\n  };\n  if(!Number.isFinite(now))return fail('SERVER_TIME_INVALID','Brak poprawnego czasu serwera.',503);\n  if(!actor?.employee_id||actor.active!==true||!['WORKER','LEADER','ADMIN'].includes(actor.role))return fail('UNAUTHENTICATED','Sesja nieaktywna.',401);\n  if(!employee?.employee_id||employee.active!==true)return fail('EMPLOYEE_INACTIVE','Konto pracownika nieaktywne.',403);\n  if(actor.employee_id!==employee.employee_id&&!['LEADER','ADMIN'].includes(actor.role))return fail('FORBIDDEN','Brak uprawnień do pracownika.',403);\n  if(!['START','FINISH','REOPEN','CORRECT'].includes(input.operation))return fail('OPERATION_NOT_IMPLEMENTED','Nieznana operacja.',400);\n  const b=input.payload||{}, today=dateAt(now), day=b.work_date;\n  if(!validDate(day)||day>today)return fail('INVALID_WORK_DATE','Nieprawidłowa lub przyszła data.',400);\n  if(!Number.isInteger(b.expected_version)||b.expected_version<0)return fail('EXPECTED_VERSION_REQUIRED','Odśwież stan przed zapisem.',400);\n  const rows=(input.attendance||[]).filter(r=>r.employee_id===employee.employee_id);\n  if(new Set(rows.map(r=>r.work_date)).size!==rows.length||rows.filter(r=>r.state==='OPEN').length>1)return fail('ATTENDANCE_INCONSISTENT','Wykryto niespójny stan obecności.',503);\n  const existing=rows.find(r=>r.work_date===day);\n  const before=existing?{...existing}:null;\n  if((existing?.version||0)!==b.expected_version)return fail('VERSION_CONFLICT','Dane zmieniły się. Odśwież i ponów.',409);\n  const id=employee.employee_id+':'+day;\n  let after=existing?{...existing}:{attendance_id:id,employee_id:employee.employee_id,work_date:day,state:'NOT_STARTED',start_at:null,stop_at:null,version:0};\n  // Moniti persists whole minutes (confirmed by live read-back). Use the same\n  // precision locally when enabled, rather than reporting a false mismatch.\n  const quantum=input.moniti_enabled?60000:1000;\n  const seconds=ms=>new Date(Math.floor(ms/quantum)*quantum).toISOString();\n  if(input.operation==='START'){\n    if(day!==today)return fail('START_REQUIRES_TODAY','START jest dostępny wyłącznie dla bieżącego dnia.');\n    if(existing&&existing.state!=='NOT_STARTED')return fail('ATTENDANCE_ALREADY_STARTED','Ten dzień jest już rozpoczęty.',409);\n    if(rows.some(r=>r.state==='OPEN'))return fail('OPEN_DAY_EXISTS','Najpierw zakończ otwarty dzień pracy.',409);\n    after={...after,state:'OPEN',start_at:seconds(now),stop_at:null};\n  }else{\n    if(!existing?.start_at||!['OPEN','CLOSED'].includes(existing.state))return fail('ATTENDANCE_NOT_STARTED','Brak rozpoczętego dnia.',409);\n    if(input.operation==='FINISH'){\n      if(existing.state!=='OPEN')return fail('ATTENDANCE_ALREADY_CLOSED','Dzień jest już zakończony.',409);\n      after={...after,state:'CLOSED',stop_at:seconds(now)};\n    }else{\n      const age=(Date.parse(today+'T00:00:00Z')-Date.parse(day+'T00:00:00Z'))/86400000;\n      if(actor.role==='WORKER'&&age>31)return fail('CORRECTION_WINDOW_EXCEEDED','Własne korekty obejmują maksymalnie 31 dni. Starszą zmianę wykonuje lider lub administrator.',403);\n      if(input.operation==='REOPEN'){\n        if(existing.state!=='CLOSED')return fail('ATTENDANCE_NOT_CLOSED','Dzień nie jest zakończony.',409);\n        if(rows.some(r=>r.state==='OPEN'))return fail('OPEN_DAY_EXISTS','Inny dzień jest już otwarty.',409);\n        after={...after,state:'OPEN',stop_at:null};\n      }else{\n        if(typeof b.reason!=='string'||b.reason.trim().length<3||b.reason.length>500)return fail('REASON_REQUIRED','Podaj powód korekty (3–500 znaków).',400);\n        const hasStart=b.start_at!==null&&b.start_at!==undefined&&b.start_at!=='';\n        const hasStop=b.stop_at!==null&&b.stop_at!==undefined&&b.stop_at!=='';\n        if(!hasStart&&!hasStop)return fail('EMPTY_CORRECTION','Podaj co najmniej jedną nową godzinę.',400);\n        if(hasStart){const value=parseTime(b.start_at);if(!Number.isFinite(value))return fail('INVALID_TIME','START musi być jednoznacznym czasem ISO z offsetem.',400);after.start_at=new Date(value).toISOString();}\n        if(hasStop){const value=parseTime(b.stop_at);if(!Number.isFinite(value))return fail('INVALID_TIME','STOP musi być jednoznacznym czasem ISO z offsetem.',400);after.stop_at=new Date(value).toISOString();after.state='CLOSED';}\n      }\n    }\n  }\n  if(input.moniti_enabled){\n    if(Date.parse(after.start_at)>now||(after.stop_at&&Date.parse(after.stop_at)>now))return fail('FUTURE_TIME','Godziny nie mogą być przyszłe.');\n    if(after.start_at)after.start_at=seconds(Date.parse(after.start_at));\n    if(after.stop_at)after.stop_at=seconds(Date.parse(after.stop_at));\n  }\n  const start=Date.parse(after.start_at), stop=after.stop_at?Date.parse(after.stop_at):null;\n  if(!Number.isFinite(start)||(stop!==null&&!Number.isFinite(stop)))return fail('INVALID_TIME','Nieprawidłowy czas.');\n  if(start>now||(stop!==null&&stop>now))return fail('FUTURE_TIME','Godziny nie mogą być przyszłe.');\n  if(dateAt(start)!==day)return fail('START_DATE_MISMATCH','START musi należeć do wybranego dnia w strefie Europe/Warsaw.');\n  if(stop!==null&&stop<start)return fail('STOP_BEFORE_START','STOP nie może być wcześniejszy od START.');\n  for(const row of rows){\n    if(row.work_date===day||!row.start_at)continue;\n    const rs=Date.parse(row.start_at),re=row.stop_at?Date.parse(row.stop_at):Infinity;\n    if(!Number.isFinite(rs)||(row.stop_at&&!Number.isFinite(re)))return fail('ATTENDANCE_INCONSISTENT','Nieprawidłowy zapis innego dnia.',503);\n    if(start<re&&rs<(stop??Infinity))return fail('ATTENDANCE_OVERLAP','Godziny nakładają się na inny dzień pracy.',409);\n  }\n  const processes=(input.processes||[]).filter(p=>p.employee_id===employee.employee_id&&p.attendance_id===id);\n  if(processes.filter(p=>!p.stop_at).length>1)return fail('PROCESS_INCONSISTENT','Więcej niż jeden aktywny proces.',503);\n  const process_updates=[];\n  for(const p of processes){\n    const ps=Date.parse(p.start_at),pe=p.stop_at?Date.parse(p.stop_at):null;\n    if(!Number.isFinite(ps)||(pe!==null&&(!Number.isFinite(pe)||pe<ps)))return fail('PROCESS_INCONSISTENT','Nieprawidłowy czas procesu.',503);\n    if(ps<start||(stop!==null&&(ps>stop||(pe!==null&&pe>stop))))return fail('PROCESS_TIME_CONFLICT','Korekta wyklucza zapisany czas procesu. Wymagana osobna korekta procesu.',409);\n    if(!p.stop_at&&stop!==null)process_updates.push({...p,stop_at:after.stop_at,version:(p.version||0)+1,last_request_id:input.request_id});\n  }\n  if(input.operation==='CORRECT'&&before.start_at===after.start_at&&(before.stop_at||null)===(after.stop_at||null))return fail('NO_CHANGE','Korekta nie zmienia godzin.',409);\n  after={...after,version:after.version+1,last_request_id:input.request_id,moniti_sync:input.moniti_enabled?'PENDING':'NOT_REQUIRED',drive_sync:'PENDING',correction_required:false};\n  const event_type={START:'WORK_STARTED',FINISH:'WORK_FINISHED',REOPEN:'WORK_REOPENED',CORRECT:'ATTENDANCE_CORRECTED'}[input.operation];\n  return {ok:true,before,after,process_updates,event_type,reason:input.operation==='CORRECT'?b.reason.trim():null,notify:input.operation==='CORRECT'||input.operation==='REOPEN',presence_seconds:Math.max(0,Math.floor(((stop??now)-start)/1000))};\n}\n\nif(typeof module!=='undefined')module.exports={planAttendance};\n\nconst i=$('Validate Input').first().json,auth=$('Authorize').first().json,employees=$('Read Employee').all().map(i=>i.json).filter(e=>e.employee_id),employee=employees[0];if(employees.length!==1||employee.active!==true)return [{json:fail(403,'EMPLOYEE_INACTIVE','Pracownik nieaktywny.',i.request_id)}];const commands=$('Read Commands').all().map(i=>i.json).filter(c=>c.request_id),prior=$('Read Request').all().map(i=>i.json).filter(c=>c.request_id);if(prior.length>1)return [{json:fail(503,'COMMAND_INCONSISTENT','Niespójny dziennik komend.',i.request_id)}];const old=prior[0],hash=$('Hash Command').first().json.payload_hash;if(old&&old.payload_hash!==hash)return [{json:fail(409,'REQUEST_ID_CONFLICT','Identyfikator był już użyty do innego żądania.',i.request_id)}];if(old?.status==='COMMITTED')return [{json:JSON.parse(old.response_json).response}];const pending=commands.filter(c=>!['COMMITTED','FAILED'].includes(c.status)&&c.request_id!==i.request_id);if(pending.length)return [{json:fail(503,'RECOVERY_REQUIRED','Poprzedni zapis wymaga dokończenia. Nie rozpoczynaj nowego zapisu.',i.request_id)}];const attendance=$('Read Attendance').all().map(i=>i.json).filter(r=>r.attendance_id),processes=$('Read Processes').all().map(i=>i.json).filter(r=>r.process_session_id);const config={};for(const c of $('Read Config').all().map(i=>i.json)){if(!c.key)continue;if(c.key.startsWith('ALLOWED_PROCESSES_')){if(Object.hasOwn(config,c.key)){config[c.key]=null;continue;}try{config[c.key]=JSON.parse(c.value_json);}catch{config[c.key]=null;}}else config[c.key]=JSON.parse(c.value_json);}const employeePermissionKey='ALLOWED_PROCESSES_EMPLOYEE_'+employee.employee_id,rolePermissionKey='ALLOWED_PROCESSES_ROLE_'+employee.role,permissionEmployee={...employee,allowed_processes:Object.hasOwn(config,employeePermissionKey)?config[employeePermissionKey]:config[rolePermissionKey]};if(i.operation==='STATUS'){const selected=attendance.find(r=>r.work_date===i.payload.work_date)||null,open=attendance.filter(r=>r.state==='OPEN');if(open.length>1||new Set(attendance.map(r=>r.work_date)).size!==attendance.length)return [{json:fail(503,'ATTENDANCE_INCONSISTENT','Niespójny stan czasu pracy.')}];return [{json:{http_status:200,body:{ok:true,request_id:'',data:{employee:{employee_id:employee.employee_id,display_name:employee.display_name},work_date:i.payload.work_date,attendance:selected,open_day:open[0]||null,snapshot_version:selected?.version||0,...processSnapshot({attendance:selected,processes,now:new Date().toISOString()}),process_catalog:visibleProcessCatalog($('Read Catalog').all().map(x=>x.json),permissionEmployee).map(p=>({process_code:p.process_code,display_name:p.display_name})),process_permission_error:parseAllowedProcesses(permissionEmployee.allowed_processes).valid?null:'PROCESS_PERMISSION_CONFIG_INVALID',notifications:auth.actor.role==='WORKER'?[]:$('Read Notices').all().map(i=>i.json).filter(n=>n.alert_id&&(n.type==='ATTENDANCE_RECOVERY'||$('Read Notice Commands').all().map(i=>i.json).some(c=>c.request_id===n.dedup_key&&c.status==='COMMITTED'))).slice(-20).map(n=>({employee_id:n.employee_id,type:n.type,opened_at:n.opened_at,details:n.details_json})),moniti_enabled:config.MONITI_ENABLED===true,writes_enabled:config.WRITES_ENABLED===true},meta:{api_version:'2.0',server_time:new Date().toISOString()}}}}];}if(config.WRITES_ENABLED!==true)return [{json:fail(503,'WRITES_DISABLED','Zapisy V2 są wyłączone.',i.request_id)}];if(config.MONITI_ENABLED===true&&(i.payload.work_date!=='2026-09-05'||DateTime.now().setZone('Europe/Warsaw').toISODate()!=='2026-09-05'||![99191,99186,99185].includes(Number(employee.moniti_worker_id))))return [{json:fail(403,'MONITI_TEST_SCOPE','Testy Moniti są ograniczone do uzgodnionych kont i dnia 2026-09-05.',i.request_id)}];if(old){let frozen;try{frozen=JSON.parse(old.response_json);}catch{}if(!frozen?.plan||!frozen?.response)return [{json:fail(503,'COMMAND_INCONSISTENT','Brak planu odzyskiwania.',i.request_id)}];const current=attendance.find(r=>r.attendance_id===frozen.plan.after.attendance_id);if(current&&current.version!==frozen.plan.before?.version&&!(current.version===frozen.plan.after.version&&current.last_request_id===i.request_id))return [{json:fail(503,'RECOVERY_CONFLICT','Nowszy stan blokuje odtworzenie.',i.request_id)}];return [{json:{execute:true,...frozen,employee,request_id:i.request_id,payload_hash:hash,attempts:(old.attempts||0)+1}}];}const now=new Date().toISOString(),isProcess=i.operation.startsWith('PROCESS_'),plan=(isProcess?planProcess:planAttendance)({catalog:$('Read Catalog').all().map(x=>x.json),now,actor:auth.actor,employee:permissionEmployee,request_id:i.request_id,operation:i.operation,payload:i.payload,attendance,processes,moniti_enabled:config.MONITI_ENABLED===true});if(!plan.ok)return [{json:fail(plan.http_status,plan.error.code,plan.error.message,i.request_id)}];const moniti_enabled=!isProcess&&config.MONITI_ENABLED===true;if(!isProcess)plan.after.moniti_sync=moniti_enabled?'SYNCED':'NOT_REQUIRED';const response={http_status:200,body:{ok:true,request_id:i.request_id,data:{attendance:plan.after,snapshot_version:plan.after.version,...(isProcess?{active_process:plan.active_process,process_sessions:plan.process_sessions,process_seconds:plan.process_seconds,no_process_seconds:plan.no_process_seconds}: {})},meta:{api_version:'2.0',server_time:now}}};return [{json:{execute:true,plan,response,moniti_enabled,employee,request_id:i.request_id,payload_hash:hash,attempts:1}}];"
+        "jsCode": "// Pure process planner. Actor and clock must be supplied by the authenticated service.\nfunction processSnapshot({attendance, processes=[], now}) {\n  const end=attendance?.stop_at?Date.parse(attendance.stop_at):Date.parse(now);\n  if(!attendance?.start_at)return {active_process:null,process_sessions:[],process_seconds:0,no_process_seconds:0,presence_seconds:0};\n  const start=Date.parse(attendance.start_at), rows=processes.filter(p=>p.attendance_id===attendance.attendance_id);\n  const seconds=rows.reduce((n,p)=>n+Math.max(0,(Math.min(end,p.stop_at?Date.parse(p.stop_at):end)-Math.max(start,Date.parse(p.start_at)))/1000),0);\n  const presence=Math.max(0,(end-start)/1000);\n  return {active_process:rows.find(p=>!p.stop_at)||null,process_sessions:rows,process_seconds:Math.floor(seconds),no_process_seconds:Math.floor(Math.max(0,presence-seconds)),presence_seconds:Math.floor(presence)};\n}\n\nfunction parseAllowedProcesses(value) {\n  if(value===null||value===undefined||value==='')return {valid:false,codes:new Set(),reason:'MISSING'};\n  let decoded=value;\n  if(typeof value==='string'){\n    try{decoded=JSON.parse(value);}catch{return {valid:false,codes:new Set(),reason:'INVALID'};}\n  }\n  if(!Array.isArray(decoded)||decoded.some(code=>typeof code!=='string'||!/^[A-Z0-9_]+$/.test(code)))return {valid:false,codes:new Set(),reason:'INVALID'};\n  return {valid:true,codes:new Set(decoded),reason:null};\n}\n\nfunction processPermission(employee, processCode) {\n  const allowlist=parseAllowedProcesses(employee?.allowed_processes);\n  if(!allowlist.valid)return {allowed:false,reason:'CONFIG_INVALID'};\n  if(processCode==='BIURO'&&!['LEADER','ADMIN'].includes(employee?.role))return {allowed:false,reason:'ROLE'};\n  if(!allowlist.codes.has(processCode))return {allowed:false,reason:'ALLOWLIST'};\n  return {allowed:true,reason:null};\n}\n\nfunction canUseProcess(employee, processCode) {\n  return processPermission(employee,processCode).allowed;\n}\n\nfunction visibleProcessCatalog(catalog=[], employee={}) {\n  return catalog.filter(process=>process.active===true&&canUseProcess(employee,process.process_code));\n}\n\nfunction planProcess(input) {\n  const fail=(code,message,status=409)=>({ok:false,http_status:status,error:{code,message}});\n  const {actor,employee,payload:b={},operation,request_id}=input;\n  if(!actor?.active||!['WORKER','LEADER','ADMIN'].includes(actor.role))return fail('UNAUTHENTICATED','Sesja nieaktywna.',401);\n  if(!employee?.active)return fail('EMPLOYEE_INACTIVE','Konto nieaktywne.',403);\n  // Leaders may inspect all workers, but process selection is always the worker's own action.\n  if(actor.employee_id!==employee.employee_id)return fail('FORBIDDEN','Proces zmieniasz wyłącznie na własnym koncie.',403);\n  if(!['PROCESS_START','PROCESS_CHANGE','PROCESS_LOGOUT'].includes(operation))return fail('INVALID_OPERATION','Nieznana operacja.',400);\n  if(operation!=='PROCESS_LOGOUT'){\n    const matches=(input.catalog||[]).filter(p=>p.process_code===b.process_code&&p.active===true);\n    if(matches.length!==1)return fail('PROCESS_UNAVAILABLE','Wybierz dostępny proces.',422);\n    const permission=processPermission(employee,b.process_code);\n    if(permission.reason==='CONFIG_INVALID')return fail('PROCESS_PERMISSION_CONFIG_INVALID','Nieprawidłowa konfiguracja dozwolonych procesów.',503);\n    if(!permission.allowed){\n      const message=b.process_code==='BIURO'?'Proces BIURO jest dostępny tylko dla lidera i administratora.':'Proces nie jest dostępny dla tego konta.';\n      return fail('PROCESS_FORBIDDEN',message,403);\n    }\n  }\n  const now=Date.parse(input.now);\n  if(!Number.isFinite(now))return fail('SERVER_TIME_INVALID','Nieprawidłowy czas serwera.',503);\n  const rows=(input.attendance||[]).filter(a=>a.employee_id===employee.employee_id);\n  const open=rows.filter(a=>a.state==='OPEN');\n  if(open.length>1||new Set(rows.map(a=>a.work_date)).size!==rows.length)return fail('ATTENDANCE_INCONSISTENT','Niespójna obecność.',503);\n  const before=rows.find(a=>a.work_date===b.work_date);\n  if(!before||before.state!=='OPEN'||before.stop_at)return fail('ATTENDANCE_NOT_OPEN','Najpierw rozpocznij dzień pracy.');\n  if(!Number.isInteger(b.expected_version)||b.expected_version<0)return fail('EXPECTED_VERSION_REQUIRED','Odśwież stan przed zapisem.',400);\n  if(before.version!==b.expected_version)return fail('VERSION_CONFLICT','Dane zmieniły się. Odśwież stan.');\n  // Same minute precision as attendance while Moniti is enabled: immediate STOP remains valid.\n  const stamp=new Date(Math.floor(now/(input.moniti_enabled?60000:1000))*(input.moniti_enabled?60000:1000)).toISOString();\n  const at=Date.parse(stamp), start=Date.parse(before.start_at);\n  if(!Number.isFinite(start)||start>at)return fail('PROCESS_TIME_CONFLICT','Proces nie może zacząć się przed obecnością.');\n  const all=(input.processes||[]).filter(p=>p.employee_id===employee.employee_id);\n  const active=all.filter(p=>!p.stop_at), current=active[0];\n  if(active.length>1||(current&&current.attendance_id!==before.attendance_id)||new Set(all.map(p=>p.process_session_id)).size!==all.length)return fail('PROCESS_INCONSISTENT','Niespójne sesje procesów.',503);\n  const sessions=all.filter(p=>p.attendance_id===before.attendance_id).sort((a,b)=>Date.parse(a.start_at)-Date.parse(b.start_at));\n  let previousEnd=start;\n  for(const p of sessions){const ps=Date.parse(p.start_at),pe=p.stop_at?Date.parse(p.stop_at):at;\n    if(!Number.isFinite(ps)||!Number.isFinite(pe)||ps<previousEnd||pe<ps||pe>at)return fail('PROCESS_INCONSISTENT','Czasy procesów nakładają się lub wykraczają poza obecność.',503);\n    previousEnd=pe;\n  }\n  if(operation==='PROCESS_START'&&current)return fail('PROCESS_ALREADY_ACTIVE','Proces już trwa. Użyj zmiany procesu.');\n  if(operation!=='PROCESS_START'&&!current)return fail('PROCESS_NOT_ACTIVE','Nie ma aktywnego procesu.');\n  if(operation!=='PROCESS_LOGOUT'&&current?.process_code===b.process_code)return fail('PROCESS_UNCHANGED','Ten proces już trwa.');\n  const updates=[];\n  if(current)updates.push({...current,stop_at:stamp,version:current.version+1,last_request_id:request_id});\n  if(operation!=='PROCESS_LOGOUT')updates.push({process_session_id:request_id+':process',attendance_id:before.attendance_id,employee_id:employee.employee_id,process_code:b.process_code,start_at:stamp,stop_at:null,version:1,last_request_id:request_id});\n  const after={...before,version:before.version+1,last_request_id:request_id,drive_sync:'PENDING'};\n  const result=sessions.map(p=>updates.find(u=>u.process_session_id===p.process_session_id)||p);\n  for(const u of updates)if(!result.some(p=>p.process_session_id===u.process_session_id))result.push(u);\n  return {ok:true,before,after,process_before:sessions,process_updates:updates,event_type:operation,notify:false,reason:null,...processSnapshot({attendance:after,processes:result,now:input.now})};\n}\nif(typeof module!=='undefined')module.exports={planProcess,processSnapshot,parseAllowedProcesses,processPermission,canUseProcess,visibleProcessCatalog};\n\nconst fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\n// Pure domain planner. No network or persistence; input.actor is trusted server context.\nfunction planAttendance(input) {\n  const fail=(code,message,status=422)=>({ok:false,http_status:status,error:{code,message,retryable:status===503,details:{}}});\n  const now=Date.parse(input.now), actor=input.actor, employee=input.employee;\n  const dateAt=ms=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Warsaw',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms));\n  const validDate=value=>typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;\n  const parseTime=value=>{\n    if(typeof value!=='string'||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?(?:Z|[+-]\\d{2}:\\d{2})$/.test(value)||!validDate(value.slice(0,10)))return NaN;\n    if(Number(value.slice(11,13))>23||Number(value.slice(14,16))>59||Number(value.slice(17,19))>59)return NaN;\n    return Date.parse(value);\n  };\n  if(!Number.isFinite(now))return fail('SERVER_TIME_INVALID','Brak poprawnego czasu serwera.',503);\n  if(!actor?.employee_id||actor.active!==true||!['WORKER','LEADER','ADMIN'].includes(actor.role))return fail('UNAUTHENTICATED','Sesja nieaktywna.',401);\n  if(!employee?.employee_id||employee.active!==true)return fail('EMPLOYEE_INACTIVE','Konto pracownika nieaktywne.',403);\n  if(actor.employee_id!==employee.employee_id&&!['LEADER','ADMIN'].includes(actor.role))return fail('FORBIDDEN','Brak uprawnień do pracownika.',403);\n  if(!['START','FINISH','REOPEN','CORRECT'].includes(input.operation))return fail('OPERATION_NOT_IMPLEMENTED','Nieznana operacja.',400);\n  const b=input.payload||{}, today=dateAt(now), day=b.work_date;\n  if(!validDate(day)||day>today)return fail('INVALID_WORK_DATE','Nieprawidłowa lub przyszła data.',400);\n  if(!Number.isInteger(b.expected_version)||b.expected_version<0)return fail('EXPECTED_VERSION_REQUIRED','Odśwież stan przed zapisem.',400);\n  const rows=(input.attendance||[]).filter(r=>r.employee_id===employee.employee_id);\n  if(new Set(rows.map(r=>r.work_date)).size!==rows.length||rows.filter(r=>r.state==='OPEN').length>1)return fail('ATTENDANCE_INCONSISTENT','Wykryto niespójny stan obecności.',503);\n  const existing=rows.find(r=>r.work_date===day);\n  const before=existing?{...existing}:null;\n  if((existing?.version||0)!==b.expected_version)return fail('VERSION_CONFLICT','Dane zmieniły się. Odśwież i ponów.',409);\n  const id=employee.employee_id+':'+day;\n  let after=existing?{...existing}:{attendance_id:id,employee_id:employee.employee_id,work_date:day,state:'NOT_STARTED',start_at:null,stop_at:null,version:0};\n  // Moniti persists whole minutes (confirmed by live read-back). Use the same\n  // precision locally when enabled, rather than reporting a false mismatch.\n  const quantum=input.moniti_enabled?60000:1000;\n  const seconds=ms=>new Date(Math.floor(ms/quantum)*quantum).toISOString();\n  if(input.operation==='START'){\n    if(day!==today)return fail('START_REQUIRES_TODAY','START jest dostępny wyłącznie dla bieżącego dnia.');\n    if(existing&&existing.state!=='NOT_STARTED')return fail('ATTENDANCE_ALREADY_STARTED','Ten dzień jest już rozpoczęty.',409);\n    if(rows.some(r=>r.state==='OPEN'))return fail('OPEN_DAY_EXISTS','Najpierw zakończ otwarty dzień pracy.',409);\n    after={...after,state:'OPEN',start_at:seconds(now),stop_at:null};\n  }else{\n    if(!existing?.start_at||!['OPEN','CLOSED'].includes(existing.state))return fail('ATTENDANCE_NOT_STARTED','Brak rozpoczętego dnia.',409);\n    if(input.operation==='FINISH'){\n      if(existing.state!=='OPEN')return fail('ATTENDANCE_ALREADY_CLOSED','Dzień jest już zakończony.',409);\n      after={...after,state:'CLOSED',stop_at:seconds(now)};\n    }else{\n      const age=(Date.parse(today+'T00:00:00Z')-Date.parse(day+'T00:00:00Z'))/86400000;\n      if(actor.role==='WORKER'&&age>31)return fail('CORRECTION_WINDOW_EXCEEDED','Własne korekty obejmują maksymalnie 31 dni. Starszą zmianę wykonuje lider lub administrator.',403);\n      if(input.operation==='REOPEN'){\n        if(existing.state!=='CLOSED')return fail('ATTENDANCE_NOT_CLOSED','Dzień nie jest zakończony.',409);\n        if(rows.some(r=>r.state==='OPEN'))return fail('OPEN_DAY_EXISTS','Inny dzień jest już otwarty.',409);\n        after={...after,state:'OPEN',stop_at:null};\n      }else{\n        if(typeof b.reason!=='string'||b.reason.trim().length<3||b.reason.length>500)return fail('REASON_REQUIRED','Podaj powód korekty (3–500 znaków).',400);\n        const hasStart=b.start_at!==null&&b.start_at!==undefined&&b.start_at!=='';\n        const hasStop=b.stop_at!==null&&b.stop_at!==undefined&&b.stop_at!=='';\n        if(!hasStart&&!hasStop)return fail('EMPTY_CORRECTION','Podaj co najmniej jedną nową godzinę.',400);\n        if(hasStart){const value=parseTime(b.start_at);if(!Number.isFinite(value))return fail('INVALID_TIME','START musi być jednoznacznym czasem ISO z offsetem.',400);after.start_at=new Date(value).toISOString();}\n        if(hasStop){const value=parseTime(b.stop_at);if(!Number.isFinite(value))return fail('INVALID_TIME','STOP musi być jednoznacznym czasem ISO z offsetem.',400);after.stop_at=new Date(value).toISOString();after.state='CLOSED';}\n      }\n    }\n  }\n  if(input.moniti_enabled){\n    if(Date.parse(after.start_at)>now||(after.stop_at&&Date.parse(after.stop_at)>now))return fail('FUTURE_TIME','Godziny nie mogą być przyszłe.');\n    if(after.start_at)after.start_at=seconds(Date.parse(after.start_at));\n    if(after.stop_at)after.stop_at=seconds(Date.parse(after.stop_at));\n  }\n  const start=Date.parse(after.start_at), stop=after.stop_at?Date.parse(after.stop_at):null;\n  if(!Number.isFinite(start)||(stop!==null&&!Number.isFinite(stop)))return fail('INVALID_TIME','Nieprawidłowy czas.');\n  if(start>now||(stop!==null&&stop>now))return fail('FUTURE_TIME','Godziny nie mogą być przyszłe.');\n  if(dateAt(start)!==day)return fail('START_DATE_MISMATCH','START musi należeć do wybranego dnia w strefie Europe/Warsaw.');\n  if(stop!==null&&stop<start)return fail('STOP_BEFORE_START','STOP nie może być wcześniejszy od START.');\n  for(const row of rows){\n    if(row.work_date===day||!row.start_at)continue;\n    const rs=Date.parse(row.start_at),re=row.stop_at?Date.parse(row.stop_at):Infinity;\n    if(!Number.isFinite(rs)||(row.stop_at&&!Number.isFinite(re)))return fail('ATTENDANCE_INCONSISTENT','Nieprawidłowy zapis innego dnia.',503);\n    if(start<re&&rs<(stop??Infinity))return fail('ATTENDANCE_OVERLAP','Godziny nakładają się na inny dzień pracy.',409);\n  }\n  const processes=(input.processes||[]).filter(p=>p.employee_id===employee.employee_id&&p.attendance_id===id);\n  if(processes.filter(p=>!p.stop_at).length>1)return fail('PROCESS_INCONSISTENT','Więcej niż jeden aktywny proces.',503);\n  const process_updates=[];\n  for(const p of processes){\n    const ps=Date.parse(p.start_at),pe=p.stop_at?Date.parse(p.stop_at):null;\n    if(!Number.isFinite(ps)||(pe!==null&&(!Number.isFinite(pe)||pe<ps)))return fail('PROCESS_INCONSISTENT','Nieprawidłowy czas procesu.',503);\n    if(ps<start||(stop!==null&&(ps>stop||(pe!==null&&pe>stop))))return fail('PROCESS_TIME_CONFLICT','Korekta wyklucza zapisany czas procesu. Wymagana osobna korekta procesu.',409);\n    if(!p.stop_at&&stop!==null)process_updates.push({...p,stop_at:after.stop_at,version:(p.version||0)+1,last_request_id:input.request_id});\n  }\n  if(input.operation==='CORRECT'&&before.start_at===after.start_at&&(before.stop_at||null)===(after.stop_at||null))return fail('NO_CHANGE','Korekta nie zmienia godzin.',409);\n  after={...after,version:after.version+1,last_request_id:input.request_id,moniti_sync:input.moniti_enabled?'PENDING':'NOT_REQUIRED',drive_sync:'PENDING',correction_required:false};\n  const event_type={START:'WORK_STARTED',FINISH:'WORK_FINISHED',REOPEN:'WORK_REOPENED',CORRECT:'ATTENDANCE_CORRECTED'}[input.operation];\n  return {ok:true,before,after,process_updates,event_type,reason:input.operation==='CORRECT'?b.reason.trim():null,notify:input.operation==='CORRECT'||input.operation==='REOPEN',presence_seconds:Math.max(0,Math.floor(((stop??now)-start)/1000))};\n}\n\nif(typeof module!=='undefined')module.exports={planAttendance};\n\nconst i=$('Validate Input').first().json,auth=$('Authorize').first().json,employees=$('Read Employee').all().map(i=>i.json).filter(e=>e.employee_id),employee=employees[0];if(employees.length!==1||employee.active!==true)return [{json:fail(403,'EMPLOYEE_INACTIVE','Pracownik nieaktywny.',i.request_id)}];const commands=$('Read Commands').all().map(i=>i.json).filter(c=>c.request_id),prior=$('Read Request').all().map(i=>i.json).filter(c=>c.request_id);if(prior.length>1)return [{json:fail(503,'COMMAND_INCONSISTENT','Niespójny dziennik komend.',i.request_id)}];const old=prior[0],hash=$('Hash Command').first().json.payload_hash;if(old&&old.payload_hash!==hash)return [{json:fail(409,'REQUEST_ID_CONFLICT','Identyfikator był już użyty do innego żądania.',i.request_id)}];if(old?.status==='COMMITTED')return [{json:JSON.parse(old.response_json).response}];const pending=commands.filter(c=>!['COMMITTED','FAILED'].includes(c.status)&&c.request_id!==i.request_id);if(pending.length)return [{json:fail(503,'RECOVERY_REQUIRED','Poprzedni zapis wymaga dokończenia. Nie rozpoczynaj nowego zapisu.',i.request_id)}];const attendance=$('Read Attendance').all().map(i=>i.json).filter(r=>r.attendance_id),processes=$('Read Processes').all().map(i=>i.json).filter(r=>r.process_session_id);const config={};for(const c of $('Read Config').all().map(i=>i.json)){if(!c.key)continue;if(c.key.startsWith('ALLOWED_PROCESSES_')){if(Object.hasOwn(config,c.key)){config[c.key]=null;continue;}try{config[c.key]=JSON.parse(c.value_json);}catch{config[c.key]=null;}}else config[c.key]=JSON.parse(c.value_json);}const employeePermissionKey='ALLOWED_PROCESSES_EMPLOYEE_'+employee.employee_id,rolePermissionKey='ALLOWED_PROCESSES_ROLE_'+employee.role,permissionEmployee={...employee,allowed_processes:Object.hasOwn(config,employeePermissionKey)?config[employeePermissionKey]:config[rolePermissionKey]};if(i.operation==='STATUS'){const selected=attendance.find(r=>r.work_date===i.payload.work_date)||null,open=attendance.filter(r=>r.state==='OPEN');if(open.length>1||new Set(attendance.map(r=>r.work_date)).size!==attendance.length)return [{json:fail(503,'ATTENDANCE_INCONSISTENT','Niespójny stan czasu pracy.')}];return [{json:{http_status:200,body:{ok:true,request_id:'',data:{employee:{employee_id:employee.employee_id,display_name:employee.display_name},work_date:i.payload.work_date,attendance:selected,open_day:open[0]||null,snapshot_version:selected?.version||0,...processSnapshot({attendance:selected,processes,now:new Date().toISOString()}),process_catalog:visibleProcessCatalog($('Read Catalog').all().map(x=>x.json),permissionEmployee).map(p=>({process_code:p.process_code,display_name:p.display_name})),process_permission_error:parseAllowedProcesses(permissionEmployee.allowed_processes).valid?null:'PROCESS_PERMISSION_CONFIG_INVALID',notifications:auth.actor.role==='WORKER'?[]:$('Read Notices').all().map(i=>i.json).filter(n=>n.alert_id&&(n.type==='ATTENDANCE_RECOVERY'||$('Read Notice Commands').all().map(i=>i.json).some(c=>c.request_id===n.dedup_key&&c.status==='COMMITTED'))).slice(-20).map(n=>({employee_id:n.employee_id,type:n.type,opened_at:n.opened_at,details:n.details_json})),moniti_enabled:config.MONITI_ENABLED===true,writes_enabled:config.WRITES_ENABLED===true},meta:{api_version:'2.0',server_time:new Date().toISOString()}}}}];}const es_pending=$('Read Pending ES').all().map(x=>x.json).filter(x=>x.batch_id);if(es_pending.length&&(!old||es_pending.some(x=>x.batch_id!=='ESB-'+i.request_id)))return [{json:fail(503,'ES_RECOVERY_REQUIRED','Trwa odzyskiwanie poprzedniego odczytu ES.',i.request_id)}];if(config.WRITES_ENABLED!==true)return [{json:fail(503,'WRITES_DISABLED','Zapisy V2 są wyłączone.',i.request_id)}];if(config.MONITI_ENABLED===true&&(i.payload.work_date!=='2026-09-05'||DateTime.now().setZone('Europe/Warsaw').toISODate()!=='2026-09-05'||![99191,99186,99185].includes(Number(employee.moniti_worker_id))))return [{json:fail(403,'MONITI_TEST_SCOPE','Testy Moniti są ograniczone do uzgodnionych kont i dnia 2026-09-05.',i.request_id)}];if(old){let frozen;try{frozen=JSON.parse(old.response_json);}catch{}if(!frozen?.plan||!frozen?.response)return [{json:fail(503,'COMMAND_INCONSISTENT','Brak planu odzyskiwania.',i.request_id)}];const current=attendance.find(r=>r.attendance_id===frozen.plan.after.attendance_id);if(current&&current.version!==frozen.plan.before?.version&&!(current.version===frozen.plan.after.version&&current.last_request_id===i.request_id))return [{json:fail(503,'RECOVERY_CONFLICT','Nowszy stan blokuje odtworzenie.',i.request_id)}];return [{json:{execute:true,...frozen,employee,request_id:i.request_id,payload_hash:hash,attempts:(old.attempts||0)+1}}];}const now=new Date().toISOString(),isProcess=i.operation.startsWith('PROCESS_'),plan=(isProcess?planProcess:planAttendance)({catalog:$('Read Catalog').all().map(x=>x.json),now,actor:auth.actor,employee:permissionEmployee,request_id:i.request_id,operation:i.operation,payload:i.payload,attendance,processes,moniti_enabled:config.MONITI_ENABLED===true});if(!plan.ok)return [{json:fail(plan.http_status,plan.error.code,plan.error.message,i.request_id)}];const moniti_enabled=!isProcess&&config.MONITI_ENABLED===true;if(!isProcess)plan.after.moniti_sync=moniti_enabled?'SYNCED':'NOT_REQUIRED';const response={http_status:200,body:{ok:true,request_id:i.request_id,data:{attendance:plan.after,snapshot_version:plan.after.version,...(isProcess?{active_process:plan.active_process,process_sessions:plan.process_sessions,process_seconds:plan.process_seconds,no_process_seconds:plan.no_process_seconds}: {})},meta:{api_version:'2.0',server_time:now}}};return [{json:{execute:true,plan,response,es_boundary_required:i.operation!=='CORRECT',moniti_enabled,employee,request_id:i.request_id,payload_hash:hash,attempts:1}}];"
       }
     },
     {
@@ -822,7 +822,7 @@
             "payload_hash": "={{ $('Decide').first().json.payload_hash }}",
             "payload_json": "={{ JSON.stringify($('Validate Input').first().json.payload) }}",
             "status": "RECOVERY_REQUIRED",
-            "response_json": "={{ JSON.stringify({plan:$('Decide').first().json.plan,response:$('Decide').first().json.response,moniti_enabled:$('Decide').first().json.moniti_enabled,source:$('Validate Input').first().json.source,source_context:$('Validate Input').first().json.source_context}) }}",
+            "response_json": "={{ JSON.stringify({plan:$('Decide').first().json.plan,response:$('Decide').first().json.response,es_boundary_required:$('Decide').first().json.es_boundary_required===true,moniti_enabled:$('Decide').first().json.moniti_enabled,source:$('Validate Input').first().json.source,source_context:$('Validate Input').first().json.source_context}) }}",
             "expected_version": "={{ $('Validate Input').first().json.payload.expected_version }}",
             "attempts": "={{ $('Decide').first().json.attempts }}",
             "lease_owner": "={{ String($execution.id) }}",
@@ -1879,6 +1879,418 @@
         "mode": "runOnceForAllItems",
         "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst wanted=$('Decide').first().json.plan.process_updates,actual=$input.all().map(x=>x.json).filter(p=>p.process_session_id);if(actual.filter(p=>!p.stop_at).length>1)throw Error('PROCESS_DUPLICATE_ACTIVE');for(const p of wanted){const matches=actual.filter(a=>a.process_session_id===p.process_session_id);if(matches.length!==1||Object.entries(p).filter(([k])=>!['id','createdAt','updatedAt'].includes(k)).some(([k,v])=>['start_at','stop_at'].includes(k)?(v?Date.parse(v):null)!==(matches[0][k]?Date.parse(matches[0][k]):null):v!==matches[0][k]))throw Error('PROCESS_WRITE_NOT_CONFIRMED');}return [{json:{verified:true}}];"
       }
+    },
+    {
+      "id": "read-pending-es",
+      "name": "Read Pending ES",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        1540
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "fj3jJKgoY06BVtu5"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "PREPARED"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "include-metrics",
+      "name": "Include Metrics",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1560,
+        1540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Include Metrics",
+              "leftValue": "={{ $('Validate Input').first().json.include_metrics === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "read-norm-bundles",
+      "name": "Read Norm Bundles",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        1540
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "4pJlgFine6QhUQxX"
+        },
+        "matchType": "anyCondition",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "summary_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Authorize').first().json.target+':'+$('Validate Input').first().json.payload.work_date.slice(0,7) }}"
+            },
+            {
+              "keyName": "summary_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Authorize').first().json.target+':'+$('Validate Input').first().json.month }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 4
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-prior-view",
+      "name": "Read Prior View",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        1760
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "8GZIQBgGlH0dGTAJ"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "view_id",
+              "condition": "eq",
+              "keyValue": "={{ [$('Authorize').first().json.actor.employee_id,$('Authorize').first().json.target,$('Validate Input').first().json.payload.work_date,$('Validate Input').first().json.month].join(':') }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "es-boundary-required",
+      "name": "ES Boundary Required",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        1760
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ES Boundary Required",
+              "leftValue": "={{ $('Decide').first().json.es_boundary_required === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "es-boundary-input",
+      "name": "ES Boundary Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        1760
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{origin:'BOUNDARY',lock_owner:String($execution.id),boundary_request_id:$('Validate Input').first().json.request_id}}];"
+      }
+    },
+    {
+      "id": "es-boundary-capture",
+      "name": "ES Boundary Capture",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        780,
+        1760
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "i4MdwSwbjUkEosk4"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "es-boundary-confirmed",
+      "name": "ES Boundary Confirmed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        1760
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ES Boundary Confirmed",
+              "leftValue": "={{ $json.ok === true && $json.skipped !== true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "record-es-failure",
+      "name": "Record ES Failure",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        1760
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "request_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Input').first().json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "error_code": "ES_BOUNDARY_NOT_CONFIRMED",
+            "lease_owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "es-failure-response",
+      "name": "ES Failure Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        1760
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:fail(503,'ES_BOUNDARY_NOT_CONFIRMED','Zapis granicy procesu wymaga dokonczenia. Ponow to samo zadanie.',$('Validate Input').first().json.request_id)}];"
+      }
+    },
+    {
+      "id": "publish-worker-view",
+      "name": "Publish Worker View",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1820,
+        1760
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Publish Worker View",
+              "leftValue": "={{ $('Validate Input').first().json.include_metrics === true && $json.http_status === 200 && $json.body?.ok === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "build-worker-view",
+      "name": "Build Worker View",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        1980
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\n// Pure assembly of an authenticated, locked attendance snapshot and published norms.\nfunction viewNeed(value, code) { if (!value) throw new Error(code); }\nfunction viewCanonical(value) {\n  if (Array.isArray(value)) return '[' + value.map(viewCanonical).join(',') + ']';\n  if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map(k => JSON.stringify(k)+':'+viewCanonical(value[k])).join(',') + '}';\n  return JSON.stringify(value);\n}\nfunction assembleWorkerView({base, actor, month, bundles=[], previous=null, now, stale_seconds=180}) {\n  viewNeed(base?.employee?.employee_id && actor?.employee_id, 'VIEW_IDENTITY_INVALID');\n  viewNeed(['WORKER','LEADER','ADMIN'].includes(actor.role), 'VIEW_ROLE_INVALID');\n  viewNeed(actor.role!=='WORKER'||actor.employee_id===base.employee.employee_id, 'VIEW_FORBIDDEN');\n  viewNeed(/^\\d{4}-(0[1-9]|1[0-2])$/.test(month), 'VIEW_MONTH_INVALID');\n  const employee_id=base.employee.employee_id, work_date=base.work_date;\n  const view_id=[actor.employee_id,employee_id,work_date,month].join(':');\n  viewNeed(!previous||previous.view_id===view_id,'VIEW_SCOPE_CONFLICT');\n  let old;\n  try { old=previous?.payload_json ? JSON.parse(previous.payload_json) : null; } catch { old=null; }\n  if(old&&(old.employee?.employee_id!==employee_id||old.user?.employee_id!==actor.employee_id||old.work_date!==work_date||old.month!==month))old=null;\n  const unavailable=(reason)=>({pak_percent:null,pick_percent:null,combined_percent:null,eligible_pak:null,eligible_pick:null,outside_pak:null,outside_pick:null,reason,freshness:'UNAVAILABLE',has_value:false,coverage:'UNOBSERVED',calculated_at:now,version:0});\n  function readBundle(key) {\n    const rows=bundles.filter(x=>x.summary_id===key);\n    if(rows.length!==1)return {error:rows.length?'NORM_SNAPSHOT_DUPLICATE':'NORM_NOT_READY'};\n    try {\n      const p=JSON.parse(rows[0].payload_json);\n      viewNeed(p.schema_version===1&&p.employee_id===employee_id&&key===employee_id+':'+p.month&&Array.isArray(p.days),'NORM_SNAPSHOT_INVALID');\n      viewNeed(new Set(p.days.map(d=>d.work_date)).size===p.days.length,'NORM_SNAPSHOT_DUPLICATE');\n      return {payload:p,version:rows[0].version};\n    } catch {return {error:'NORM_SNAPSHOT_INVALID'};}\n  }\n  function normalize(value,fallback,reason,version) {\n    const fields=['pak_percent','pick_percent','combined_percent'];\n    const valid=value&&['FRESH','STALE','UNAVAILABLE'].includes(value.freshness)&&fields.every(k=>value[k]===null||(Number.isFinite(value[k])&&value[k]>=0));\n    if(!valid) {\n      if(fallback?.has_value===true)return {...fallback,freshness:'STALE',source_error:reason||'NORM_SNAPSHOT_INVALID'};\n      return unavailable(reason||'NORM_SNAPSHOT_INVALID');\n    }\n    if(fallback?.has_value===true&&Number.isInteger(version)&&version<(fallback.version||0))return {...fallback,freshness:'STALE',source_error:'NORM_VERSION_REGRESSION'};\n    if(value.freshness==='UNAVAILABLE'&&fallback?.has_value===true)return {...fallback,freshness:'STALE',source_error:value.source_error||value.reason||'NORM_UNAVAILABLE'};\n    return {...value,version,has_value:value.has_value??value.freshness!=='UNAVAILABLE'};\n  }\n  const dayBundle=readBundle(employee_id+':'+work_date.slice(0,7));\n  const monthBundle=month===work_date.slice(0,7)?dayBundle:readBundle(employee_id+':'+month);\n  let norm=normalize(dayBundle.payload?.days.find(d=>d.work_date===work_date),old?.norm,dayBundle.error||'NORM_NOT_READY',dayBundle.version||0);\n  let monthly_norm=normalize(monthBundle.payload?.monthly,old?.monthly_norm,monthBundle.error||'NORM_NOT_READY',monthBundle.version||0);\n  const attendance_version=base.attendance?.version||0;\n  const changed=norm.attendance_version!==undefined&&norm.attendance_version!==attendance_version;\n  const oldCalculation=base.attendance?.state==='OPEN'&&Date.parse(now)-Date.parse(norm.calculated_at)>stale_seconds*1000;\n  if(norm.has_value&&(changed||oldCalculation)) {\n    const source_error=changed?'SUMMARY_PENDING':'SUMMARY_STALE';\n    norm={...norm,freshness:'STALE',source_error};\n    if(month===work_date.slice(0,7)&&monthly_norm.has_value)monthly_norm={...monthly_norm,freshness:'STALE',source_error};\n  }\n  const a=base.attendance||{attendance_id:employee_id+':'+work_date,employee_id,work_date,state:'NOT_STARTED',version:0,start_at:null,stop_at:null,moniti_sync:base.moniti_enabled?'PENDING':'NOT_REQUIRED',drive_sync:'NOT_REQUIRED'};\n  const data={user:{employee_id:actor.employee_id,display_name:actor.display_name||actor.employee_id,role:actor.role},employee:base.employee,work_date,month,\n    attendance:a,attendance_version,open_day:base.open_day||null,active_process:base.active_process||null,\n    process:base.active_process?{state:'ACTIVE',process_session_id:base.active_process.process_session_id,process_code:base.active_process.process_code,start_at:base.active_process.start_at}:{state:'NONE',process_session_id:null,process_code:null,start_at:null},\n    process_sessions:base.process_sessions||[],process_catalog:base.process_catalog||[],process_permission_error:base.process_permission_error||null,\n    presence_seconds:base.presence_seconds||0,process_seconds:base.process_seconds||0,no_process_seconds:base.no_process_seconds||0,between_process_seconds:base.no_process_seconds||0,\n    norm,monthly_norm,notifications:base.notifications||[],unread_messages:0,messages_available:false,\n    moniti_enabled:base.moniti_enabled===true,writes_enabled:base.writes_enabled===true,\n    calculated_at:now,snapshot_version:0};\n  const fingerprint=viewCanonical({...data,calculated_at:null,snapshot_version:0});\n  if(previous?.fingerprint===fingerprint&&old)return {data:old,reused:true,row:null};\n  const version=(previous?.version||0)+1;data.snapshot_version=version;\n  return {data,reused:false,row:{view_id,employee_id,work_date,month,version,payload_json:JSON.stringify(data),fingerprint,calculated_at:now}};\n}\nif(typeof module!=='undefined')module.exports={assembleWorkerView,viewCanonical};\n\ntry {const prior=$('Read Prior View').all().map(x=>x.json).filter(x=>x.view_id);if(prior.length>1)throw Error('VIEW_DUPLICATE');const actor=$('Authorize').first().json.actor,raw=$('Read Actor').first().json,cfg=$('Read Config').all().map(x=>x.json).find(x=>x.key==='ES_STALE_SECONDS');const result=assembleWorkerView({base:$('Decide').first().json.body.data,actor:{...actor,display_name:raw.display_name},month:$('Validate Input').first().json.month,bundles:$('Read Norm Bundles').all().map(x=>x.json).filter(x=>x.summary_id),previous:prior[0]||null,now:new Date().toISOString(),stale_seconds:cfg?Number(JSON.parse(cfg.value_json)):180});return [{json:{ok:true,...result}}];}catch{return [{json:{ok:false,error_code:'WORKER_VIEW_UNAVAILABLE'}}];}"
+      }
+    },
+    {
+      "id": "view-write",
+      "name": "View Write",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        1980
+      ],
+      "parameters": {
+        "jsCode": "const v=$('Build Worker View').first().json;return [{json:v.ok!==true||!v.row?{noop:true,lock_owner:String($execution.id)}:{lock_owner:String($execution.id),table:'STATUS_SNAPSHOTS',mode:'replace',expected_version:v.row.version-1,row:v.row}}];"
+      }
+    },
+    {
+      "id": "save-view",
+      "name": "Save View",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        520,
+        1980
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OXqGTTwbgscoNm5P"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "worker-view-response",
+      "name": "Worker View Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        1980
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst v=$('Build Worker View').first().json;return [{json:v.ok===true?{http_status:200,body:{ok:true,request_id:'',data:v.data,meta:{api_version:'2.0',server_time:new Date().toISOString()}}}:fail(503,'WORKER_VIEW_UNAVAILABLE','Nie udalo sie odczytac spojnego stanu. Poprzednie dane pozostaja widoczne.')}];"
+      }
     }
   ],
   "connections": {
@@ -2174,7 +2586,7 @@
       "main": [
         [
           {
-            "node": "Decide",
+            "node": "Read Pending ES",
             "type": "main",
             "index": 0
           }
@@ -2203,7 +2615,7 @@
         ],
         [
           {
-            "node": "Prepare Return",
+            "node": "Publish Worker View",
             "type": "main",
             "index": 0
           }
@@ -2214,7 +2626,7 @@
       "main": [
         [
           {
-            "node": "Moniti Required",
+            "node": "ES Boundary Required",
             "type": "main",
             "index": 0
           }
@@ -2616,6 +3028,199 @@
         [
           {
             "node": "Save Attendance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Pending ES": {
+      "main": [
+        [
+          {
+            "node": "Include Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Include Metrics": {
+      "main": [
+        [
+          {
+            "node": "Read Norm Bundles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Norm Bundles": {
+      "main": [
+        [
+          {
+            "node": "Read Prior View",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Prior View": {
+      "main": [
+        [
+          {
+            "node": "Decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ES Boundary Required": {
+      "main": [
+        [
+          {
+            "node": "ES Boundary Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Moniti Required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ES Boundary Input": {
+      "main": [
+        [
+          {
+            "node": "ES Boundary Capture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ES Boundary Capture": {
+      "main": [
+        [
+          {
+            "node": "ES Boundary Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ES Boundary Confirmed": {
+      "main": [
+        [
+          {
+            "node": "Moniti Required",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record ES Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record ES Failure": {
+      "main": [
+        [
+          {
+            "node": "ES Failure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ES Failure Response": {
+      "main": [
+        [
+          {
+            "node": "Prepare Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish Worker View": {
+      "main": [
+        [
+          {
+            "node": "Build Worker View",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Worker View": {
+      "main": [
+        [
+          {
+            "node": "View Write",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "View Write": {
+      "main": [
+        [
+          {
+            "node": "Save View",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save View": {
+      "main": [
+        [
+          {
+            "node": "Worker View Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worker View Response": {
+      "main": [
+        [
+          {
+            "node": "Prepare Return",
             "type": "main",
             "index": 0
           }

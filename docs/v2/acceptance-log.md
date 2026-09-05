@@ -7,8 +7,8 @@
 | 3 | Rdzeń backendu V2 | PASS: 17 schematów; 5 workflowów bez błędów/ostrzeżeń; testy idempotencji, konfliktów, współbieżności i recovery | Potwierdzony przez użytkownika | ODEBRANY |
 | 4 | Logowanie i sesja | PASS: backend, idempotencja, race, expiry, rate-limit, testy UI i przeglądarka na atybus | Potwierdzony przez użytkownika | ODEBRANY |
 | 5 | Czas pracy | PASS: 39 testów domeny, UI, trzy role, Moniti/Drive, retry, recovery, race; granice w stage-5-acceptance.md | Potwierdzony przez użytkownika po udanej korekcie Drive | ODEBRANY |
-| 6 | Procesy pracownika i uprawnienia BIURO | Historyczne testy: stage-6-acceptance.md. Domknięcie: 41 testów procesów, 39 obecności, 23 wygenerowanego Decide, UI/auth/kontrakt PASS; n8n 0 błędów. Nowy zalogowany test API zablokowany przez narzędzie — niezaliczony; szczegóły w stage-6-closeout-20260905.md | Oczekuje; polecenie domknięcia nie jest odbiorem | DO ODBIORU |
-| 7 | Normy i wyniki | — | — | NIE ROZPOCZĘTO |
+| 6 | Procesy pracownika i uprawnienia BIURO | Zakres testow i ograniczenia: stage-6-closeout-20260905.md | Jawnie odebrany przez uzytkownika w tej rozmowie 2026-09-05 | ODEBRANY |
+| 7 | ES, normy i spojny status | Implementacja i testy w toku: stage-7-progress.md | Oczekuje na koncowy protokol | W TRAKCIE |
 | 8 | Alerty i komunikacja | — | — | NIE ROZPOCZĘTO |
 | 9 | Panel lidera i raporty | — | — | NIE ROZPOCZĘTO |
 | 10 | Spójny frontend V2 | — | — | NIE ROZPOCZĘTO |

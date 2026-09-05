@@ -1,0 +1,647 @@
+{
+  "name": "MOL // APP V2 // METRICS TASK ACK",
+  "nodes": [
+    {
+      "id": "input",
+      "name": "Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "context",
+      "name": "Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const i=$input.first().json;if(!/^\\d+$/.test(i.lock_owner||'')||typeof i.job_id!=='string'||!['success','failure'].includes(i.result))throw Error('METRICS_ACK_INVALID');return [{json:i}];"
+      }
+    },
+    {
+      "id": "read-lock",
+      "name": "Read Lock",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "command-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.lock_owner }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "check-lock",
+      "name": "Check Lock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const rows=$input.all().map(x=>x.json).filter(x=>x.lock_key);if(rows.length!==1)throw Error('METRICS_LOCK_LOST');return [{json:{ok:true}}];"
+      }
+    },
+    {
+      "id": "read-job",
+      "name": "Read Job",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "outbox_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.job_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "job",
+      "name": "Job",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const xs=$input.all().map(x=>x.json).filter(x=>x.outbox_id),j=xs[0];if(xs.length!==1||!['ATTENDANCE_DERIVED','ES_DERIVED'].includes(j.type))return [{json:{skip:true}}];if(['DONE','DEAD_LETTER'].includes(j.status)||Date.parse(j.next_attempt_at)>Date.now())return [{json:{skip:true}}];const c=$('Context').first().json;if(c.aggregate_id!==j.aggregate_id)throw Error('ACK_SCOPE_MISMATCH');return [{json:{...j,source_table:j.type==='ATTENDANCE_DERIVED'?'Oz0NtvJ9SRaVFMc8':'fj3jJKgoY06BVtu5',source_key:j.type==='ATTENDANCE_DERIVED'?'request_id':'batch_id'}}];"
+      }
+    },
+    {
+      "id": "due",
+      "name": "Due",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Due",
+              "leftValue": "={{ $json.skip !== true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "read-source",
+      "name": "Read Source",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Job').first().json.source_table }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $('Job').first().json.source_key }}",
+              "condition": "eq",
+              "keyValue": "={{ $('Job').first().json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-publication",
+      "name": "Read Publication",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "4pJlgFine6QhUQxX"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "summary_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.summary_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "decision",
+      "name": "Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const c=$('Context').first().json,j=$('Job').first().json,sources=$('Read Source').all().map(x=>x.json).filter(x=>x[j.source_key]),pubs=$input.all().map(x=>x.json).filter(x=>x.summary_id);if(sources.length!==1||sources[0].status!=='COMMITTED')return [{json:{skip:true,reason:'SOURCE_NOT_COMMITTED'}}];let p;if(c.result==='success'){if(pubs.length!==1||pubs[0].version<c.summary_version)throw Error('ACK_PUBLICATION_NOT_CONFIRMED');p=JSON.parse(pubs[0].payload_json);if(!p.days.some(d=>d.summary_id===j.aggregate_id))throw Error('ACK_DAY_MISSING');}const attempts=(j.attempts||0)+1;const success=c.result==='success',status=success?'DONE':attempts>=8?'DEAD_LETTER':'RETRY_PENDING';return [{json:{success,status,attempts,next_attempt_at:success?j.next_attempt_at:new Date(Date.now()+Math.min(1800000,30000*2**Math.min(attempts,6))).toISOString(),completed_at:success?new Date().toISOString():null,last_error:success?'':String(c.error_code||'METRICS_RECALC_FAILED').slice(0,100)}}];"
+      }
+    },
+    {
+      "id": "source-ready",
+      "name": "Source Ready",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Source Ready",
+              "leftValue": "={{ $json.skip !== true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "success",
+      "name": "Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Success",
+              "leftValue": "={{ $json.success === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "alert-handoff",
+      "name": "Alert Handoff",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const j=$('Job').first().json;return [{json:{lock_owner:$('Context').first().json.lock_owner,table:'OUTBOX',mode:'insert_only',row:{outbox_id:j.outbox_id+':alerts',request_id:j.request_id,aggregate_id:j.aggregate_id,type:'ALERT_DERIVED',payload_json:j.payload_json,status:'PENDING',attempts:0,next_attempt_at:new Date().toISOString(),lease_owner:'',lease_until:'1970-01-01T00:00:00.000Z',last_error:''}}}];"
+      }
+    },
+    {
+      "id": "save-handoff",
+      "name": "Save Handoff",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1300,
+        220
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OXqGTTwbgscoNm5P"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "update-job",
+      "name": "Update Job",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "outbox_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Job').first().json.outbox_id }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "={{ $('Job').first().json.status }}"
+            },
+            {
+              "keyName": "attempts",
+              "condition": "eq",
+              "keyValue": "={{ $('Job').first().json.attempts }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $('Decision').first().json.status }}",
+            "attempts": "={{ $('Decision').first().json.attempts }}",
+            "next_attempt_at": "={{ $('Decision').first().json.next_attempt_at }}",
+            "completed_at": "={{ $('Decision').first().json.completed_at }}",
+            "last_error": "={{ $('Decision').first().json.last_error }}",
+            "lease_owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "verify-ack",
+      "name": "Verify Ack",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const a=$input.first().json,d=$('Decision').first().json;if(a.outbox_id!==$('Job').first().json.outbox_id||a.status!==d.status||a.attempts!==d.attempts)throw Error('METRICS_ACK_NOT_CONFIRMED');return [{json:{ok:true,outbox_id:a.outbox_id,status:a.status}}];"
+      }
+    },
+    {
+      "id": "return",
+      "name": "Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        440
+      ],
+      "parameters": {
+        "jsCode": "return $input.all();"
+      }
+    }
+  ],
+  "connections": {
+    "Input": {
+      "main": [
+        [
+          {
+            "node": "Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context": {
+      "main": [
+        [
+          {
+            "node": "Read Lock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Lock": {
+      "main": [
+        [
+          {
+            "node": "Check Lock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Lock": {
+      "main": [
+        [
+          {
+            "node": "Read Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Job": {
+      "main": [
+        [
+          {
+            "node": "Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job": {
+      "main": [
+        [
+          {
+            "node": "Due",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Due": {
+      "main": [
+        [
+          {
+            "node": "Read Source",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Source": {
+      "main": [
+        [
+          {
+            "node": "Read Publication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Publication": {
+      "main": [
+        [
+          {
+            "node": "Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision": {
+      "main": [
+        [
+          {
+            "node": "Source Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Source Ready": {
+      "main": [
+        [
+          {
+            "node": "Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success": {
+      "main": [
+        [
+          {
+            "node": "Alert Handoff",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Handoff": {
+      "main": [
+        [
+          {
+            "node": "Save Handoff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Handoff": {
+      "main": [
+        [
+          {
+            "node": "Update Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Job": {
+      "main": [
+        [
+          {
+            "node": "Verify Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Ack": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "executionTimeout": 30,
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "errorWorkflow": "rnELTCKClbzY8lxZ"
+  }
+}

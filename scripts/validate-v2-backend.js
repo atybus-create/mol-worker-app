@@ -8,7 +8,7 @@ const schema = read('schema.json');
 const manifest = read('manifest.json');
 const allowedTables = new Set(Object.values(manifest.tables));
 const workflows = fs.readdirSync(path.join(root, 'workflows')).map(file => read(`workflows/${file}`));
-assert.equal(schema.tables.length, 19);
+assert.equal(schema.tables.length, 24);
 for (const table of schema.tables) {
   assert.ok(table.name.startsWith('MOL_V2_'));
   assert.ok(manifest.tables[table.name]);
@@ -24,7 +24,15 @@ for (const workflow of workflows) {
       assert.doesNotThrow(() => new AsyncFunction(node.parameters.jsCode), `Invalid Code node: ${workflow.name}/${node.name}`);
     }
     if (node.type === 'n8n-nodes-base.dataTable') {
-      assert.ok(allowedTables.has(node.parameters.dataTableId.value), `Non-V2 table: ${node.name}`);
+      const id=node.parameters.dataTableId.value;
+      const sharedRead=workflow.name==='MOL // APP V2 // ES REPORT READ'&&node.name==='Read Shared ES Cookie'&&node.parameters.operation==='get'&&node.parameters.dataTableId.mode==='name'&&id==='ES_auth_cookie_store';
+      const dynamic={
+        'MOL // APP V2 // METRICS RECORD WRITER':['Read Existing','Write Row','Read Back'],
+        'MOL // APP V2 // METRICS TASK ACK':['Read Source']
+      };
+      const auditedDynamic=(dynamic[workflow.name]||[]).includes(node.name)&&typeof id==='string'&&id.startsWith('={{ ');
+      assert.ok(allowedTables.has(id)||sharedRead||auditedDynamic, `Non-V2 table: ${workflow.name}/${node.name}`);
+      if(sharedRead)assert.equal(node.parameters.operation,'get');
     }
     if (node.credentials && Object.keys(node.credentials).length) {
       const allowed = {crypto: manifest.auth.receipt_credential_id, httpHeaderAuth:'jDX7MFgk2vvXqZ5f', googleSheetsOAuth2Api:'PffTtJhrPLmJ2ZrI'};
@@ -35,7 +43,7 @@ for (const workflow of workflows) {
       }
     }
     if (node.type === 'n8n-nodes-base.webhook') {
-      assert.ok(['mol-app-v2-health', 'mol-app-v2-stage3-test', 'mol-app-v2-auth-login', 'mol-app-v2-auth-session', 'mol-app-v2-auth-logout', ...['status','start','finish','reopen','correct'].map(op=>'mol-app-v2-attendance-'+op), ...['start','change','logout'].map(op=>'mol-app-v2-process-'+op)].includes(node.parameters.path));
+      assert.ok(['mol-app-v2-health', 'mol-app-v2-stage3-test', 'mol-app-v2-auth-login', 'mol-app-v2-auth-session', 'mol-app-v2-auth-logout', ...['status','start','finish','reopen','correct'].map(op=>'mol-app-v2-attendance-'+op), ...['start','change','logout'].map(op=>'mol-app-v2-process-'+op), 'mol-app-v2-worker-status', 'mol-app-v2-norms-daily', 'mol-app-v2-norms-monthly'].includes(node.parameters.path));
     }
   }
   for (const [source, outputs] of Object.entries(workflow.connections)) {

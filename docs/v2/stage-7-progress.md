@@ -7,12 +7,12 @@ Punkt powrotu: main `63c3f6faf0ac52151636be95c224ea5161cbf4b9`, galaz `backup/pr
 | Element | Zakres | Status |
 |---|---|---|
 | 7.1 | Odczyt kodu/live, mapowania, backup | WYKONANY |
-| 7.2 | Checkpointy ES, zamrozone partie zapisu, publikacja agregatow i rewizje widoku | W TRAKCIE |
-| 7.3 | Centralny odczyt ES, baseline/reset/deduplikacja, klasyfikacja i granice procesow | PLAN |
-| 7.4 | Normy dzienne i wazony miesiac, konsument ATTENDANCE_DERIVED | PLAN |
-| 7.5 | Worker-status i daily/monthly, autoryzacja i ochrona starych odpowiedzi | PLAN |
-| 7.6 | Minimalny UI norm i odizolowany mirror Sheets | PLAN |
-| 7.7 | Regresja, awarie/retry, dowody, publikacja, odbior | PLAN |
+| 7.2 | Checkpointy ES, zamrozone partie zapisu, publikacja agregatow i rewizje widoku | WDROZONE; TESTY KONCOWE |
+| 7.3 | Centralny odczyt ES, baseline/reset/deduplikacja, klasyfikacja i granice procesow | WDROZONE; TESTY KONCOWE |
+| 7.4 | Normy dzienne i wazony miesiac, konsument ATTENDANCE_DERIVED | WDROZONE; TESTY KONCOWE |
+| 7.5 | Worker-status i daily/monthly, autoryzacja i ochrona starych odpowiedzi | WDROZONE; TESTY KONCOWE |
+| 7.6 | Minimalny UI norm i odizolowany mirror Sheets | WDROZONE; TESTY KONCOWE |
+| 7.7 | Regresja, awarie/retry, dowody, publikacja, odbior | WDROZONE; TESTY KONCOWE |
 
 ## Odczyt poczatkowy
 
@@ -31,3 +31,15 @@ Nowe tabele sa dodatkiem do 19 istniejacych schematow. Bez usuwania lub odtwarza
 ## Testy wymagane
 
 Reczne przypadki 70 PAK/1h, 210 PICK/1h, mieszany dzien 100%, wazony miesiac 25% zamiast 50%; baseline/reset/duplikat/spozniony odczyt/polnoc/DST/mapowania; outside bez dnia/procesu i przy zlym procesie; granice, STOP, korekta, recovery; zachowanie normy przy bledzie i odwroconej kolejnosci odpowiedzi; WORKER nie odczytuje cudzych wynikow; lider/admin widza wszystkich. Wyniki fixture, testy live i testy niewykonane beda rozdzielone.
+
+## Checkpoint kontynuacji
+
+Backend etapu 7, wspolny status i raport norm sa opublikowane. UI pozostaje na galezi do koncowego scalania. Dodatnie wyniki ES nie sa potwierdzone na realnych kontach: sobotni raport nie zawiera trzech operatorow; komunikat ES_OPERATOR_NOT_FOUND jest jawny. Nie wykonano nowego zalogowanego E2E ani nowych zapisow Moniti.
+
+Regresja lokalna: 276 numerowanych przypadkow (71 metrics, 39 attendance, 41 processes, 23 permissions, 24 norms UI, 16 mirror, 22 worker view, 19 persistence/recovery, 10 summary input, 11 scheduler), plus auth/password/attendance UI. To testy izolowane, nie rownoznaczne z produkcyjnym load-testem. Generatory tworza 34 grafy V2 z 24 schematami.
+
+Raport: Normy dzienne V2 (sheetId 7), Normy miesieczne V2 (8). Pierwszy udany zapis i read-back: execution 584218, MOL004:2026-09 v2, 2 zweryfikowane wiersze. Kolejny: 584318, MOL015:2026-09 v2. Brak niezrealizowanych NORM_DRIVE po zakonczeniu zapisu. Formularze norm wymagaja jawnej dostepnosci, zerowy mianownik daje pusta komorke.
+
+Poprawki testowe: powtorzony niezmieniony worker-status zachowuje lock_owner; wszystkie delty ESB wymagaja COMMITTED komendy; zrodlo granicy innego operatora jest czytane po UUID; zamknieta praca przez polnoc uzywa checkpointu dnia STOP. Ograniczona kolejka przeliczen rotuje zamiast pomijac osoby za szosta pozycja.
+
+Granica algorytmu ES: raport zawiera narastajace liczniki, nie czasy pojedynczych zdarzen. Przypisanie oznacza kwalifikacje podczas odczytu przy wspolnej blokadzie, nie dowod faktycznego czasu wykonania kazdego zadania. PAK/PICK na granicy sa dopuszczone wylacznie dla zamrozonej komendy zmiany tych dwoch procesow. Po bledzie odczytu na granicy stosowany jest jawny gap/rebaseline, nie zgadywanie historii.

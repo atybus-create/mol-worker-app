@@ -140,8 +140,48 @@
           },
           "401": {
             "$ref": "#/components/responses/Error"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "work_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+            }
+          },
+          {
+            "name": "employee_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^MOL[0-9]+$"
+            },
+            "description": "WORKER: own ID only. LEADER/ADMIN: any employee, without leader_id filtering."
+          }
+        ],
+        "description": "Stage 7 implemented. Uses the authenticated, locked attendance service and atomic published norm bundle. ES failures preserve last good values with explicit freshness. Never queries ES from the browser."
       }
     },
     "/mol-app-v2-config": {
@@ -275,6 +315,15 @@
               "type": "string",
               "format": "date"
             }
+          },
+          {
+            "name": "employee_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^MOL[0-9]+$"
+            },
+            "description": "WORKER: own ID only. LEADER/ADMIN: any employee, without leader_id filtering."
           }
         ],
         "responses": {
@@ -283,8 +332,21 @@
           },
           "401": {
             "$ref": "#/components/responses/Error"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "description": "Stage 7 implemented. Uses the authenticated, locked attendance service and atomic published norm bundle. ES failures preserve last good values with explicit freshness. Never queries ES from the browser."
       }
     },
     "/mol-app-v2-norms-monthly": {
@@ -302,6 +364,15 @@
               "type": "string",
               "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
             }
+          },
+          {
+            "name": "employee_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^MOL[0-9]+$"
+            },
+            "description": "WORKER: own ID only. LEADER/ADMIN: any employee, without leader_id filtering."
           }
         ],
         "responses": {
@@ -310,8 +381,21 @@
           },
           "401": {
             "$ref": "#/components/responses/Error"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "description": "Stage 7 implemented. Uses the authenticated, locked attendance service and atomic published norm bundle. ES failures preserve last good values with explicit freshness. Never queries ES from the browser."
       }
     },
     "/mol-app-v2-leader-team": {
@@ -1216,6 +1300,73 @@
           "version": {
             "type": "integer",
             "minimum": 0
+          },
+          "has_value": {
+            "type": "boolean"
+          },
+          "source_error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "coverage": {
+            "type": "string",
+            "enum": [
+              "COMPLETE",
+              "PARTIAL",
+              "GAPPED",
+              "UNOBSERVED"
+            ]
+          },
+          "es_last_good_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "pak_seconds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "pick_seconds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "eligible_pak": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "eligible_pick": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "outside_pak": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "outside_pick": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
           }
         }
       },
@@ -1228,7 +1379,12 @@
           "norm",
           "unread_messages",
           "snapshot_version",
-          "calculated_at"
+          "calculated_at",
+          "month",
+          "monthly_norm",
+          "attendance_version",
+          "employee",
+          "messages_available"
         ],
         "properties": {
           "user": {
@@ -1257,11 +1413,46 @@
           },
           "snapshot_version": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Monotonic persisted revision scoped to actor, employee, work_date and selected month. Also changes after norm-only updates; never used as mutation expected_version."
           },
           "calculated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "employee": {
+            "type": "object",
+            "required": [
+              "employee_id"
+            ],
+            "properties": {
+              "employee_id": {
+                "type": "string"
+              },
+              "display_name": {
+                "type": "string"
+              }
+            }
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+          },
+          "monthly_norm": {
+            "$ref": "#/components/schemas/Norm"
+          },
+          "attendance_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Only this version or attendance.version is used for attendance and process mutations. It is not the view revision."
+          },
+          "messages_available": {
+            "type": "boolean",
+            "description": "False in stage 7; stage 8 communication is not implemented."
+          },
+          "presence_seconds": {
+            "type": "integer",
+            "minimum": 0
           }
         }
       },

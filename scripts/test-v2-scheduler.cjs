@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'),{selectTargets}=require('../backend/v2/metrics/scheduler.cjs');
+const all=n=>Array.from({length:n},(_,i)=>({attendance_id:'MOL'+String(i+1).padStart(3,'0')+':2026-09-05'}));let tests=0;
+const check=(n,f)=>{f();tests++;console.log('PASS '+n);};
+check('Empty set',()=>assert.deepEqual(selectTargets([],[],0),[]));
+check('All three workers every tick',()=>assert.equal(selectTargets(all(3),[],0).length,3));
+for(const size of [7,12,14,36])check('No starvation among '+size,()=>{const got=new Set();for(let t=0;t<Math.ceil(size/6);t++)for(const x of selectTargets(all(size),[],t*60000))got.add(x.employee_id);assert.equal(got.size,size);});
+check('Due old job included even with six open days',()=>{const jobs=[{outbox_id:'x',aggregate_id:'MOL999:2026-08-01',next_attempt_at:new Date(0).toISOString(),createdAt:new Date(0).toISOString()}];const got=[...selectTargets(all(6),jobs,0),...selectTargets(all(6),jobs,60000)];assert.ok(got.some(x=>x.employee_id==='MOL999'));});
+check('Future job not run',()=>assert.equal(selectTargets([],[{outbox_id:'x',aggregate_id:'MOL999:2026-08-01',next_attempt_at:new Date(60000).toISOString()}],0).length,0));
+check('No duplicate employee day',()=>assert.equal(selectTargets([...all(3),...all(3)],[],0).length,3));
+check('Invalid IDs discarded',()=>assert.equal(selectTargets([{attendance_id:'NOT_A_WORKER'}],[],0).length,0));
+check('Bad batch configuration rejected',()=>assert.throws(()=>selectTargets([],[],0,0)));
+console.log('Scheduler PASS: '+tests+' cases; fixture coverage, not a production capacity test.');

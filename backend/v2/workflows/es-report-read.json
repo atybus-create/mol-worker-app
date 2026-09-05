@@ -1,0 +1,384 @@
+{
+  "name": "MOL // APP V2 // ES REPORT READ",
+  "nodes": [
+    {
+      "id": "input",
+      "name": "Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "capture-clock",
+      "name": "Capture Clock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const now=DateTime.now().setZone('Europe/Warsaw');return [{json:{work_date:now.toISODate(),request_started_at:now.toUTC().toISO(),es_date_utc:now.startOf('day').toUTC().toISO()}}];"
+      }
+    },
+    {
+      "id": "read-shared-es-cookie",
+      "name": "Read Shared ES Cookie",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "mode": "name",
+          "value": "ES_auth_cookie_store"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "condition": "eq",
+              "keyValue": "current"
+            },
+            {
+              "keyName": "isActive",
+              "condition": "isTrue"
+            }
+          ]
+        },
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "prepare-report",
+      "name": "Prepare Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const rows=$input.all().map(i=>i.json).filter(r=>r.cookieHeader);const c=$('Capture Clock').first().json;if(rows.length!==1||!rows[0].cookieHeader.includes('.Client.Identity='))return [{json:{...c,ok:false,error_code:'ES_AUTH_UNAVAILABLE',captured_at:new Date().toISOString()}}];return [{json:{...c,ok:true,cookieHeader:rows[0].cookieHeader,payload:{filters:[{filters:[{filterName:'Date',operator:0,type:5,values:[c.es_date_utc]}]}]}}}];"
+      }
+    },
+    {
+      "id": "cookie-available",
+      "name": "Cookie Available",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Cookie Available",
+              "leftValue": "={{ $json.ok === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "fetch-es-report",
+      "name": "Fetch ES Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1300,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://mteam.easystorage.io/api/web/v1/Reporting/Reporting/ReportOperatorStatistics/Index/GetExcelFileRequest",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json, text/plain, */*"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Origin",
+              "value": "https://mteam.easystorage.io"
+            },
+            {
+              "name": "Referer",
+              "value": "https://mteam.easystorage.io/app/"
+            },
+            {
+              "name": "Cookie",
+              "value": "={{ $json.cookieHeader }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.payload }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "decode-report",
+      "name": "Decode Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const c=$('Capture Clock').first().json,r=$input.first().json,at=new Date().toISOString();if(r.success!==true||typeof r.responseData?.content!=='string')return [{json:{...c,captured_at:at,ok:false,error_code:'ES_REPORT_UNAVAILABLE'}}];if(DateTime.now().setZone('Europe/Warsaw').toISODate()!==c.work_date)return [{json:{...c,captured_at:at,ok:false,error_code:'ES_DAY_BOUNDARY_RETRY'}}];try{const b=Buffer.from(r.responseData.content,'base64');if(b.length<100||b.subarray(0,2).toString()!=='PK')throw Error('invalid');return [{json:{...c,captured_at:at,ok:true},binary:{data:await this.helpers.prepareBinaryData(b,'ES_V2_'+c.work_date+'.xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}}];}catch{return [{json:{...c,captured_at:at,ok:false,error_code:'ES_REPORT_INVALID'}}];}"
+      }
+    },
+    {
+      "id": "report-available",
+      "name": "Report Available",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1820,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Report Available",
+              "leftValue": "={{ $json.ok === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "extract-operators",
+      "name": "Extract Operators",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "normalize-operators",
+      "name": "Normalize Operators",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const c=$('Decode Report').first().json;try{const out=[],seen=new Set();const count=v=>{if(typeof v==='string'&&/^\\d+$/.test(v.trim()))v=Number(v);if(!Number.isSafeInteger(v)||v<0)throw Error('ES_COUNTER_INVALID');return v;};for(const i of $input.all()){const r=i.json;if(!Object.keys(r).length)continue;const op=String(r.Operator??'').trim().toLowerCase();if(!op){if(Object.values(r).every(v=>v===null||v===''))continue;throw Error('ES_OPERATOR_COLUMN_INVALID');}if(seen.has(op))throw Error('ES_DUPLICATE_OPERATOR');if(!Object.hasOwn(r,'Ilość zadań PICK')||!Object.hasOwn(r,'ilość skontrolowanych zamówień'))throw Error('ES_REPORT_COLUMNS_INVALID');seen.add(op);out.push({es_operator:op,pak:count(r['ilość skontrolowanych zamówień']),pick:count(r['Ilość zadań PICK'])});}return [{json:{...c,ok:true,report:out,operator_count:out.length}}];}catch(e){const allowed=['ES_COUNTER_INVALID','ES_OPERATOR_COLUMN_INVALID','ES_DUPLICATE_OPERATOR','ES_REPORT_COLUMNS_INVALID'];return [{json:{...c,ok:false,error_code:allowed.includes(e.message)?e.message:'ES_REPORT_INVALID'}}];}"
+      }
+    },
+    {
+      "id": "return",
+      "name": "Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const x=$input.first().json;return [{json:{ok:x.ok===true,work_date:x.work_date,request_started_at:x.request_started_at,captured_at:x.captured_at||new Date().toISOString(),report:x.ok===true?x.report:[],operator_count:x.operator_count||0,error_code:x.ok===true?null:x.error_code||'ES_REPORT_UNAVAILABLE'}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Input": {
+      "main": [
+        [
+          {
+            "node": "Capture Clock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Clock": {
+      "main": [
+        [
+          {
+            "node": "Read Shared ES Cookie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Shared ES Cookie": {
+      "main": [
+        [
+          {
+            "node": "Prepare Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Report": {
+      "main": [
+        [
+          {
+            "node": "Cookie Available",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cookie Available": {
+      "main": [
+        [
+          {
+            "node": "Fetch ES Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch ES Report": {
+      "main": [
+        [
+          {
+            "node": "Decode Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode Report": {
+      "main": [
+        [
+          {
+            "node": "Report Available",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Available": {
+      "main": [
+        [
+          {
+            "node": "Extract Operators",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Operators": {
+      "main": [
+        [
+          {
+            "node": "Normalize Operators",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Operators": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "executionTimeout": 30,
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "errorWorkflow": "rnELTCKClbzY8lxZ"
+  }
+}

@@ -20,7 +20,12 @@
     "MOL_V2_LOCKS": "uKfyrOkB2zoSEuBH",
     "MOL_V2_ERRORS": "QMyDe52h9QiRlsOp",
     "MOL_V2_AUTH_LIMITS": "XNQosSJXp23l2EBU",
-    "MOL_V2_AUTH_RECEIPTS": "sbWYwBwKoktbD3Yf"
+    "MOL_V2_AUTH_RECEIPTS": "sbWYwBwKoktbD3Yf",
+    "MOL_V2_ES_POLL_STATE": "XLDbRcZ62PLzCykY",
+    "MOL_V2_ES_BATCHES": "fj3jJKgoY06BVtu5",
+    "MOL_V2_NORM_SNAPSHOTS": "4pJlgFine6QhUQxX",
+    "MOL_V2_STATUS_SNAPSHOTS": "8GZIQBgGlH0dGTAJ",
+    "MOL_V2_REPORT_INDEX": "SqNZloUkfNSg1TuG"
   },
   "workflows": {
     "health": "sfoWeuiJBN2qvCRF",
@@ -44,7 +49,19 @@
     "attendance_correct": "3i83FN2xZj8sH6Ht",
     "process_start": "P6kxDdc9QPyNZ6tA",
     "process_change": "f87H3YlBpPxQn6tm",
-    "process_logout": "e4hP8VJMocZBcGAd"
+    "process_logout": "e4hP8VJMocZBcGAd",
+    "metrics_rules": "CUxveOxMVj1RhxHa",
+    "metrics_record_writer": "OXqGTTwbgscoNm5P",
+    "es_report_read": "LQnqf4nQmNKsRsMT",
+    "es_ingest": "i4MdwSwbjUkEosk4",
+    "metrics_task_ack": "r0pQp59VKwIt4i0h",
+    "summary_recalculator": "pBYXQiiTNxhK9IGq",
+    "metrics_scheduler": "vxe3T6UbcSofc4FL",
+    "worker_status": "yXJ9hBTKl2yFBTVO",
+    "norms_daily": "7OJ48TN6IEkQqrMW",
+    "norms_monthly": "ZenbZql84avHIz9b",
+    "norm_mirror_rules": "KtpOu0qejqaKBwuv",
+    "norm_drive": "25EgiHZmEcqxxTvG"
   },
   "active_versions": {
     "health": "c1d0d26e-5e25-41ba-88d6-5a5175740947",
@@ -55,7 +72,7 @@
     "auth_login": "872fb11a-00bd-4163-a056-04b4d92940d0",
     "auth_session": "d0075043-950f-45b1-99e3-39207707ad62",
     "auth_logout": "0630e472-9b5d-4593-a171-f8ee119377d5",
-    "attendance_service": "8a8a7d2b-f41a-472a-a7ab-78237dbac7a9",
+    "attendance_service": "93a25b06-d3d4-4351-b151-ba502d354fe3",
     "attendance_moniti": "56ff0be6-3265-41a2-b0b9-7234c957d6e0",
     "attendance_drive": "902ff676-6619-4b20-97ba-023d3ec7c5fc",
     "attendance_recovery": "10976a73-c4e2-4df0-8582-5cef75ac94a0",
@@ -68,7 +85,15 @@
     "attendance_correct": "82d8bffc-afe0-4290-b50b-f8c94cd1f7cc",
     "process_start": "04c24f3b-a875-4b39-a986-a0235b13d7cc",
     "process_change": "b08f84de-3290-4c7c-9d8a-7f900ee36994",
-    "process_logout": "53046402-d3e2-4e68-973c-67b6b47c7d35"
+    "process_logout": "53046402-d3e2-4e68-973c-67b6b47c7d35",
+    "metrics_rules": "42f456de-65e1-4a97-90dd-190740adf1d3",
+    "metrics_record_writer": "7f87e666-c81f-4271-8d34-c60f04ee68a8",
+    "es_report_read": "fd322797-d119-4037-a407-2039a81c48df",
+    "es_ingest": "6a23db6b-9cad-4360-afc0-876d28a031bd",
+    "metrics_task_ack": "2509a93d-9f7d-4149-9fca-b7754f5a7824",
+    "worker_status": "8837d66d-7a39-4131-9768-9472860e2ac2",
+    "norms_daily": "2630ad02-b486-42bb-910a-8fef513926a6",
+    "norms_monthly": "97e82ccf-0b86-4980-8a2a-4d8a79051879"
   },
   "auth": {
     "receipt_credential_id": "79mc2IFYLaJLMrgJ",
@@ -80,7 +105,11 @@
   },
   "attendance": {
     "moniti_test_date": "2026-09-05",
-    "moniti_test_worker_ids": [99191, 99186, 99185],
+    "moniti_test_worker_ids": [
+      99191,
+      99186,
+      99185
+    ],
     "moniti_precision_seconds": 60,
     "report_spreadsheet_id": "1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4",
     "report_url": "https://docs.google.com/spreadsheets/d/1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4/edit?ouid=113962701124300298502",
@@ -93,9 +122,26 @@
     "role_key_prefix": "ALLOWED_PROCESSES_ROLE_",
     "employee_key_prefix": "ALLOWED_PROCESSES_EMPLOYEE_",
     "precedence": "explicit employee entry replaces role entry, including an empty array",
-    "office_roles": ["LEADER", "ADMIN"],
+    "office_roles": [
+      "LEADER",
+      "ADMIN"
+    ],
     "employee_column_created": false,
     "configuration_snapshot": "processes/permissions-config.json",
     "revision": "stage6-closeout-20260905"
+  },
+  "metrics": {
+    "version": "0.7.0",
+    "generator": "metrics/build-all.mjs",
+    "source_of_truth": "NORM_SNAPSHOTS monthly atomic bundle",
+    "snapshot_version": "per actor, employee, work_date and selected month; not attendance.version",
+    "report_spreadsheet_id": "1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4",
+    "report_sheets": {
+      "daily": 7,
+      "monthly": 8
+    },
+    "stage8_alert_handoff": "ALERT_DERIVED",
+    "schema_migration": "additive 5 tables; original schema version 1 preserved",
+    "export_note": "Deterministic deployment graphs reconstructed from reviewed live nodes; layout/defaults may differ. Not claimed as raw byte-for-byte API exports."
   }
 }
