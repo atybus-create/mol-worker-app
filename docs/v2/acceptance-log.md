@@ -7,13 +7,17 @@
 | 3 | Rdzeń backendu V2 | PASS: 17 schematów; 5 workflowów bez błędów/ostrzeżeń; testy idempotencji, konfliktów, współbieżności i recovery | Potwierdzony przez użytkownika | ODEBRANY |
 | 4 | Logowanie i sesja | PASS: backend, idempotencja, race, expiry, rate-limit, testy UI i przeglądarka na atybus | Potwierdzony przez użytkownika | ODEBRANY |
 | 5 | Czas pracy | PASS: 39 testów domeny, UI, trzy role, Moniti/Drive, retry, recovery, race; granice w stage-5-acceptance.md | Potwierdzony przez użytkownika po udanej korekcie Drive | ODEBRANY |
-| 6 | Procesy pracownika | PASS: domena, UI, trzy role w przeglądarce, retry, recovery, konkurujące komendy, Moniti/Drive; granice w stage-6-acceptance.md | Oczekuje | DO ODBIORU |
+| 6 | Procesy pracownika i uprawnienia BIURO | Historyczne testy: stage-6-acceptance.md. Domknięcie: 41 testów procesów, 39 obecności, 23 wygenerowanego Decide, UI/auth/kontrakt PASS; n8n 0 błędów. Nowy zalogowany test API zablokowany przez narzędzie — niezaliczony; szczegóły w stage-6-closeout-20260905.md | Oczekuje; polecenie domknięcia nie jest odbiorem | DO ODBIORU |
 | 7 | Normy i wyniki | — | — | NIE ROZPOCZĘTO |
 | 8 | Alerty i komunikacja | — | — | NIE ROZPOCZĘTO |
 | 9 | Panel lidera i raporty | — | — | NIE ROZPOCZĘTO |
 | 10 | Spójny frontend V2 | — | — | NIE ROZPOCZĘTO |
 | 11 | Test równoległy V1 kontra V2 | — | — | NIE ROZPOCZĘTO |
 | 12 | Przełączenie produkcji | — | — | NIE ROZPOCZĘTO |
+
+## Domknięcie etapu 6
+
+Protokół: [stage-6-closeout-20260905.md](stage-6-closeout-20260905.md). BIURO jest ograniczone do LEADER/ADMIN, a listy procesów są sterowane danymi ról i osób w MOL_V2_CONFIG. Nie utworzono fizycznej kolumny allowed_processes w EMPLOYEES; różnica względem literalnego pola jest jawna. Testów fixture nie traktujemy jako nowego odbioru przeglądarkowego lub zalogowanego API. Etap 7 pozostaje zamknięty do decyzji użytkownika.
 
 ## Wymagania odbiorowe roli LEADER — etapy 8 i 9
 
