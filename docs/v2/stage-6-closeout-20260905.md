@@ -1,6 +1,6 @@
 # Etap 6 — domknięcie uprawnień procesów, 2026-09-05
 
-Status: poprawka wdrożona w n8n; kod, generator, eksport i manifest zsynchronizowane na gałęzi domknięcia. Odbiór użytkownika pozostaje otwarty. Etap 7 nie rozpoczęty. Ten protokół uzupełnia historyczny `stage-6-acceptance.md`, nie zastępuje go fikcyjnym ponowieniem wcześniejszych testów.
+Status: poprawka wdrożona w n8n; kod, generator, eksport i manifest przeniesione na main w commicie `693c6d1669b8311d425133debfff253b7919691d`. Odbiór użytkownika pozostaje otwarty. Nowy zalogowany test API jest zablokowany, a pełny Validate frontend nie jest zielony z powodu testu starego endpointu V1. Etap 7 nie rozpoczęty. Ten protokół uzupełnia historyczny `stage-6-acceptance.md`, nie zastępuje go fikcyjnym ponowieniem wcześniejszych testów.
 
 ## Wdrożona poprawka
 
@@ -25,10 +25,33 @@ Walidacja n8n: 61 włączonych węzłów, 72 prawidłowe połączenia, 113 wyra�
 
 **Niewykonane w tym domknięciu:** nowy zalogowany test API trzech ról i pełny cykl w przeglądarce. Próba logowania została zatrzymana przez zabezpieczenie narzędzia. Nie obchodzono tej blokady. Nie wolno opisywać nowych testów jako live 403 WORKER / live sukces LEADER i ADMIN. Reguły te potwierdzają testy domeny i rzeczywistego wygenerowanego kodu; nowe potwierdzenie end-to-end pozostaje do wykonania przez użytkownika lub po przywróceniu dozwolonego testowania.
 
+## Kontrola po publikacji main
+
+Wyniki dla commita `693c6d1669b8311d425133debfff253b7919691d`:
+
+| Kontrola | Wykonanie GitHub Actions | Wynik |
+|---|---:|---|
+| Stage 6 backend sync, w tym testy i odtwarzalność eksportu na main | 33978047290 | SUCCESS |
+| Deploy GitHub Pages | 33978047295 | SUCCESS |
+| Validate frontend | 33978047300 | FAILURE wyłącznie w końcowym teście CORS starego endpointu V1 |
+
+Validate frontend zaliczył składnię, kontrakt i testy V2, wymagane elementy UI, logo i skan testowych sekretów. Końcowy OPTIONS do `/webhook/mol-app-config` zwrócił HTTP 500 bez Access-Control-Allow-Origin. Nie zmieniono ani nie pominięto tego testu w celu uzyskania zielonego wyniku.
+
+Osobna diagnostyka `33978108157`, job `101338287342`, sprawdziła cztery publiczne zapytania OPTIONS bez haseł, tokenów i zapisów biznesowych. Wyniki odczytane z logu:
+
+| Endpoint | HTTP | Nagłówki |
+|---|---:|---|
+| V1 mol-app-config | 500 | Brak Access-Control-Allow-Origin |
+| V2 mol-app-v2-attendance-status | 204 | Origin aplikacji; GET; authorization |
+| V2 mol-app-v2-process-start | 204 | Origin aplikacji; POST; authorization, content-type |
+| V2 mol-app-v2-auth-login | 204 | Origin aplikacji; POST; content-type |
+
+Wszystkie trzy sprawdzone endpointy V2 zwróciły `Access-Control-Allow-Origin: https://atybus-create.github.io` oraz oczekiwane metody i nagłówki. Całe wykonanie diagnostyczne jest FAILURE, ponieważ obejmuje również nieudany test V1; nie przedstawiamy go jako zielonego workflowu. Przyczyny błędu V1 nie ustalono i nie wdrażano zmian V1. OPTIONS logowania nie jest testem uwierzytelnienia. Pole `ci_conclusion` w `stage-6-closeout-evidence.json` dotyczy wskazanego tam wcześniejszego wykonania gałęzi, a nie wszystkich kontroli main.
+
 ## Stan i bezpieczeństwo
 
 Brak nowych zmian obecności: MOL004 CLOSED v31, MOL014 CLOSED v20, MOL015 CLOSED v10; Moniti/Drive SYNCED. Zero aktywnych procesów, zero RECOVERY_REQUIRED, zero niezakończonych ATTENDANCE_DRIVE. Obie blokady wolne. Trzy techniczne sesje `stage6-closeout-*` są unieważnione. Nie wykonano nowych zapisów do Moniti, nie zmieniono V1 ani jej danych. Nie skasowano audytu ani kolejki ATTENDANCE_DERIVED, której konsument należy do etapu 7.
 
 Opublikowana usługa: `qPVmcfp6pUg3GbzH`, wersja `8a8a7d2b-f41a-472a-a7ab-78237dbac7a9`. Health: `sfoWeuiJBN2qvCRF`, wersja `c1d0d26e-5e25-41ba-88d6-5a5175740947`. Pozostałe referencje w manifeście zachowano. Backup repo: `backup/pre-stage6-closeout-20260905` przy `386ef2fb804ed6d85f11710d5ca76b967e0f7755`. Nie przywracać samego starego main bez odpowiedniego planu dla live i konfiguracji.
 
-Przed przejściem do etapu 7 wymagany jest odbiór użytkownika, z jawnym potwierdzeniem zakresu testów i konfiguracji procesów. Publikacja kodu nie stanowi odbioru.
+Przed przejściem do etapu 7 wymagany jest odbiór użytkownika, z jawnym potwierdzeniem zakresu testów i konfiguracji procesów. Publikacja kodu nie stanowi odbioru. Pełnego zamknięcia testów nie potwierdzamy przy zablokowanym zalogowanym teście API.
