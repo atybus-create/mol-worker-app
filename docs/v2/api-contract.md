@@ -35,7 +35,7 @@ HTTP: `400` walidacja, `401` sesja, `403` rola, `404` zasób, `409` konflikt sta
 
 ## 2. Idempotencja
 
-Każdy zapis przyjmuje `request_id` w JSON. Identyczny użytkownik + operacja + payload zwraca pierwotny wynik bez powtórzenia skutków. Ten sam identyfikator z innym payloadem zwraca `409 IDEMPOTENCY_CONFLICT`. Rekordy są przechowywane minimum 90 dni.
+Każdy zapis przyjmuje `request_id` w JSON. Identyczny użytkownik + operacja + payload zwraca pierwotny wynik bez powtórzenia skutków. Ten sam identyfikator z innym payloadem zwraca `409 REQUEST_ID_CONFLICT` w module obecności. Retencja minimum 90 dni pozostaje wymogiem; etap 5 nie uruchamia kasowania komend.
 
 ## 3. Endpointy
 
@@ -44,6 +44,8 @@ Każdy zapis przyjmuje `request_id` w JSON. Identyczny użytkownik + operacja + 
 | `GET /mol-app-v2-health` | publiczny | Stan środowiska V2 |
 | `POST /mol-app-v2-auth-login` | publiczny | Utworzenie sesji |
 | `POST /mol-app-v2-auth-logout` | zalogowany | Unieważnienie sesji |
+| `GET /mol-app-v2-auth-session` | zalogowany | Potwierdzenie sesji i aktualnej roli |
+| `GET /mol-app-v2-attendance-status` | WORKER+ | Potwierdzony dzień i otwarty dzień; lider/admin także wskazany pracownik |
 | `GET /mol-app-v2-worker-status` | zalogowany | Jeden spójny snapshot ekranu pracownika |
 | `GET /mol-app-v2-config` | zalogowany | Konfiguracja dozwolona dla roli |
 | `POST /mol-app-v2-attendance-start` | WORKER+ | Rozpoczęcie dnia |
@@ -65,6 +67,10 @@ Każdy zapis przyjmuje `request_id` w JSON. Identyczny użytkownik + operacja + 
 
 ## 4. Snapshot pracownika
 
+Etap 5 udostępnia `attendance-status?work_date=YYYY-MM-DD` (opcjonalnie `employee_id` dla LEADER/ADMIN). Zwraca obecność, otwarty dzień, wersję, flagi integracji i powiadomienia dla zarządzających. Pełny `worker-status` opisany poniżej jest kontraktem późniejszych etapów, nie wdrożonym modułem norm/procesów.
+
+Zapisy obecności wymagają `request_id`, `work_date`, `expected_version`. START/STOP biorą czas serwera. Korekta dodatkowo wymaga `reason` i co najmniej jednej z godzin. Publiczne żądanie nie może podawać zaufanej roli, źródła ani pól recovery. Odpowiedź zapisu zawiera `data.attendance` oraz `data.snapshot_version`. Moniti bez potwierdzenia oznacza `503 MONITI_UNAVAILABLE`/`RECOVERY_REQUIRED`; retry używa tego samego request_id. Przy włączonym Moniti dokładność wynosi minutę.
+
 Odpowiedź statusowa zawsze zawiera razem: użytkownika i rolę, obecność, aktywny proces, czasy procesowe/międzyprocesowe, normę z `freshness`, liczbę wiadomości, stan synchronizacji oraz `snapshot_version`. Częściowy błąd źródła nie usuwa ostatniej poprawnej wartości.
 
 ## 5. Korekty — polityka zatwierdzona
@@ -73,4 +79,4 @@ Pracownik może korygować własne dni do 31 dni wstecz; starszą korektę wykon
 
 ## 6. Korekty z arkusza rozliczeniowego — zatwierdzone rozszerzenie
 
-Arkusz Google Sheets na Drive może przekazywać zatwierdzone korekty do tej samej usługi domenowej co aplikacja. Kontrakt wewnętrzny, uprawnienia, statusy i scenariusze odbiorowe są zapisane w `drive-corrections.md`. Nie powstaje dodatkowy publiczny endpoint: adapter arkusza wywołuje wewnętrzny Command Executor. Publiczne API pozostaje bez zmian.
+Arkusz Google Sheets na Drive przekazuje zatwierdzone korekty do tej samej usługi domenowej co aplikacja. Kontrakt wewnętrzny i statusy opisuje `drive-corrections.md`. Podgląd: `attendance-status?correction_id=UUID`. Zatwierdzenie na istniejącym `attendance-correct`: `{request_id, correction_id, approved_hash}`. Hash pochodzi z serwerowego odczytu propozycji. Tożsamość pochodzi z sesji LEADER/ADMIN, nigdy z arkusza. Adapter wywołuje wewnętrzną usługę bez dodatkowego publicznego endpointu.
