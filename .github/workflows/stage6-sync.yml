@@ -1,23 +1,23 @@
 name: Stage 6 backend sync
 on:
   push:
-    branches: [codex/stage6-closeout-permissions]
+    branches: [codex/stage6-closeout-permissions, main]
     paths:
-      - 'backend/v2/processes/**'
-      - 'backend/v2/attendance/**'
-      - 'backend/v2/manifest.json'
-      - 'backend/v2/schema.json'
-      - 'scripts/test-v2-processes.cjs'
+      - 'backend/v2/**'
+      - 'scripts/test-v2-*.cjs'
       - '.github/workflows/stage6-sync.yml'
 permissions:
   contents: write
+concurrency:
+  group: stage6-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   regenerate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: codex/stage6-closeout-permissions
+          ref: ${{ github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -34,7 +34,18 @@ jobs:
           node scripts/test-v2-attendance.cjs
           node scripts/test-v2-attendance-ui.cjs
           node scripts/test-v2-processes.cjs
-      - name: Commit regenerated export
+          node scripts/test-v2-process-permissions-service.cjs
+          git diff --check
+          node - <<'NODE'
+          const fs=require('node:fs'),crypto=require('node:crypto');
+          const w=JSON.parse(fs.readFileSync('backend/v2/workflows/attendance-service.json','utf8'));
+          console.log('Decide SHA256: '+crypto.createHash('sha256').update(w.nodes.find(n=>n.name==='Decide').parameters.jsCode).digest('hex'));
+          NODE
+      - name: Check main export is reproducible
+        if: github.ref == 'refs/heads/main'
+        run: git diff --exit-code -- backend/v2/workflows/attendance-service.json
+      - name: Commit regenerated export on closeout branch only
+        if: github.ref == 'refs/heads/codex/stage6-closeout-permissions'
         run: |
           if git diff --quiet -- backend/v2/workflows/attendance-service.json; then
             echo 'Export already current.'
