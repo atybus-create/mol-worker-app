@@ -138,7 +138,19 @@
   "race_session_count": 1,
   "password_vectors": "PASS (independent node:crypto PBKDF2)",
   "ui_unit_tests": "PASS",
-  "live_browser": "PENDING",
+  "live_browser": {
+    "status": "PASS",
+    "url": "https://atybus-create.github.io/mol-worker-app/v2/",
+    "version": "0.4.0",
+    "checks": [
+      "atybus login: Artur Tybuś / Administrator",
+      "reload: session restored with same expiry",
+      "logout: server confirmation",
+      "reload after logout: login form",
+      "wrong password: generic error, no session"
+    ],
+    "visual_check": "PASS at in-app browser viewport"
+  },
   "diagnostic_active": false,
   "cors_origin": "https://atybus-create.github.io",
   "validation": [
@@ -174,6 +186,26 @@
       "expressionsValidated": 14,
       "errorCount": 0,
       "warningCount": 0
+    }
+  ],
+  "cleanup": {
+    "activeSessions": 0,
+    "onlyHashedTokens": true
+  },
+  "github_runs": [
+    {
+      "id": 33949952156,
+      "name": "Validate frontend",
+      "status": "completed",
+      "conclusion": "success",
+      "sha": "f6176fedfbc25e07405dba79da582d75ea57b0f3"
+    },
+    {
+      "id": 33949952152,
+      "name": "Deploy GitHub Pages",
+      "status": "completed",
+      "conclusion": "success",
+      "sha": "f6176fedfbc25e07405dba79da582d75ea57b0f3"
     }
   ]
 }

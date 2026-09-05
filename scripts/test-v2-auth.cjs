@@ -7,6 +7,13 @@ const read = p => JSON.parse(fs.readFileSync(path.join(root,p),'utf8'));
 const login = read('backend/v2/workflows/auth-login.json');
 const session = read('backend/v2/workflows/auth-session.json');
 const logout = read('backend/v2/workflows/auth-logout.json');
+const evidence = read('docs/v2/stage-4-evidence.json');
+assert.ok(evidence.tests.every(test=>test.pass));
+assert.equal(evidence.race_session_count,1);
+assert.equal(evidence.race.filter(r=>r.status===200).length,1);
+assert.equal(evidence.race.filter(r=>r.code==='AUTH_BUSY').length,3);
+assert.equal(evidence.diagnostic_active,false);
+assert.equal(evidence.live_browser.status,'PASS');
 const run = (graph,name,input,refs={}) => new Function('$input','$','$execution',graph.nodes.find(n=>n.name===name).parameters.jsCode)(
   {first:()=>({json:input}),all:()=>[].concat(input).map(json=>({json}))}, name=>({first:()=>({json:refs[name]})}),{id:'unit-test'}
 )[0].json;

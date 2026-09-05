@@ -5,7 +5,7 @@
 | 1 | Zamrożenie V1, inwentaryzacja, izolowany szkielet V2 | Backend 200; 0 błędów; 0 ostrzeżeń; `writes_enabled=false` | Potwierdzony 2026-09-05 | ODEBRANY |
 | 2 | Finalny model działania i kontrakty API | PASS: kontrola kontraktu; uwzględnione korekty z Drive | Zatwierdzony przez użytkownika 2026-09-05 | ODEBRANY |
 | 3 | Rdzeń backendu V2 | PASS: 17 schematów; 5 workflowów bez błędów/ostrzeżeń; testy idempotencji, konfliktów, współbieżności i recovery | Potwierdzony przez użytkownika | ODEBRANY |
-| 4 | Logowanie i sesja | Wdrożenie i testy w toku | Oczekuje | W TRAKCIE |
+| 4 | Logowanie i sesja | PASS: backend, idempotencja, race, expiry, rate-limit, testy UI i przeglądarka na atybus | Oczekuje na potwierdzenie | DO ODBIORU |
 | 5 | Czas pracy | — | — | NIE ROZPOCZĘTO |
 | 6 | Procesy pracownika | — | — | NIE ROZPOCZĘTO |
 | 7 | Normy i wyniki | — | — | NIE ROZPOCZĘTO |

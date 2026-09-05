@@ -1,6 +1,6 @@
 # Etap 4 — logowanie i sesje V2
 
-Status: testy techniczne backendu i lokalnego frontendu PASS; publikacja i odbiór w przeglądarce w toku. Etap 5 nie został rozpoczęty.
+Status: WDROŻONY — DO ODBIORU. Backend, testy automatyczne, publikacja oraz pełny cykl w przeglądarce PASS. Potwierdzono logowanie atybus, odświeżenie, wylogowanie, ponowne odświeżenie oraz błędne hasło. Etap 5 nie został rozpoczęty.
 
 ## Zakres
 
