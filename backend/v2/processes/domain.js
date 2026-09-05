@@ -9,20 +9,20 @@ function processSnapshot({attendance, processes=[], now}) {
 }
 
 function parseAllowedProcesses(value) {
-  if(value===null||value===undefined||value==='')return {configured:false,valid:true,codes:null};
+  if(value===null||value===undefined||value==='')return {valid:false,codes:new Set(),reason:'MISSING'};
   let decoded=value;
   if(typeof value==='string'){
-    try{decoded=JSON.parse(value);}catch{return {configured:true,valid:false,codes:new Set()};}
+    try{decoded=JSON.parse(value);}catch{return {valid:false,codes:new Set(),reason:'INVALID'};}
   }
-  if(!Array.isArray(decoded)||decoded.some(code=>typeof code!=='string'||!/^[A-Z0-9_]+$/.test(code)))return {configured:true,valid:false,codes:new Set()};
-  return {configured:true,valid:true,codes:new Set(decoded)};
+  if(!Array.isArray(decoded)||decoded.some(code=>typeof code!=='string'||!/^[A-Z0-9_]+$/.test(code)))return {valid:false,codes:new Set(),reason:'INVALID'};
+  return {valid:true,codes:new Set(decoded),reason:null};
 }
 
 function processPermission(employee, processCode) {
-  if(processCode==='BIURO'&&!['LEADER','ADMIN'].includes(employee?.role))return {allowed:false,reason:'ROLE'};
   const allowlist=parseAllowedProcesses(employee?.allowed_processes);
   if(!allowlist.valid)return {allowed:false,reason:'CONFIG_INVALID'};
-  if(allowlist.configured&&!allowlist.codes.has(processCode))return {allowed:false,reason:'ALLOWLIST'};
+  if(processCode==='BIURO'&&!['LEADER','ADMIN'].includes(employee?.role))return {allowed:false,reason:'ROLE'};
+  if(!allowlist.codes.has(processCode))return {allowed:false,reason:'ALLOWLIST'};
   return {allowed:true,reason:null};
 }
 
