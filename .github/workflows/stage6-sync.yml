@@ -44,6 +44,32 @@ jobs:
       - name: Check main export is reproducible
         if: github.ref == 'refs/heads/main'
         run: git diff --exit-code -- backend/v2/workflows/attendance-service.json
+      - name: Verify public V2 health and preflight without sessions
+        run: |
+          node --input-type=module - <<'NODE'
+          import assert from 'node:assert/strict';
+          const base='https://n8n.estyl.team/webhook/mol-app-v2-';
+          const origin='https://atybus-create.github.io';
+          const health=await fetch(base+'health',{signal:AbortSignal.timeout(20000)});
+          assert.equal(health.status,200,'V2 health HTTP');
+          const body=await health.json();
+          assert.equal(body.ok,true);assert.equal(body.service,'MOL_APP_V2');
+          console.log('V2 health PASS HTTP 200');
+          // OPTIONS only: no credentials, no login, no attendance or process writes.
+          for(const [path,method] of [['auth-login','POST'],['attendance-status','GET'],['process-start','POST'],['process-change','POST'],['process-logout','POST']]) {
+            const response=await fetch(base+path,{method:'OPTIONS',signal:AbortSignal.timeout(20000),headers:{Origin:origin,'Access-Control-Request-Method':method,'Access-Control-Request-Headers':'authorization,content-type'}});
+            const allowOrigin=response.headers.get('access-control-allow-origin');
+            const methods=(response.headers.get('access-control-allow-methods')||'').split(',').map(s=>s.trim().toUpperCase());
+            const headers=(response.headers.get('access-control-allow-headers')||'').split(',').map(s=>s.trim().toLowerCase());
+            console.log(JSON.stringify({path,status:response.status,allowOrigin,methods,headers}));
+            assert.ok([200,204].includes(response.status),path+' preflight HTTP');
+            assert.ok([origin,'*'].includes(allowOrigin),path+' allowed origin');
+            assert.ok(methods.includes(method),path+' allowed method');
+            assert.ok(headers.includes('authorization'),path+' authorization header');
+            assert.ok(headers.includes('content-type')||headers.includes('*'),path+' content type');
+          }
+          console.log('Public V2 preflight PASS: 5 endpoints; no authenticated calls.');
+          NODE
       - name: Commit regenerated export on closeout branch only
         if: github.ref == 'refs/heads/codex/stage6-closeout-permissions'
         run: |
