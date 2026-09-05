@@ -1,0 +1,67 @@
+name: Stage 7 source materialization
+on:
+  push:
+    branches: [codex/stage7-es-norms]
+    paths: ['.stage7-transfer/**', '.github/workflows/stage7-import.yml']
+permissions:
+  contents: write
+concurrency:
+  group: stage7-source-materialization
+  cancel-in-progress: false
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verify and materialize reviewed V2 sources
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path, PurePosixPath
+          import hashlib, io, tarfile
+          data=b''.join(Path(f'.stage7-transfer/part-{i}').read_bytes() for i in range(8))
+          assert hashlib.sha256(data).hexdigest()=='c8e967cdc8096e6883290d6f55b3bd4255c743739e38f73f6d99dd0689469e76', 'Source archive integrity failure'
+          root=Path.cwd().resolve()
+          exact={'.github/workflows/stage6-sync.yml','.github/workflows/stage7-verify.yml'}
+          with tarfile.open(fileobj=io.BytesIO(data),mode='r:xz') as archive:
+              entries=archive.getmembers()
+              assert len(entries)==32
+              assert len({m.name for m in entries})==len(entries)
+              for m in entries:
+                  p=PurePosixPath(m.name)
+                  assert m.isfile() and not p.is_absolute() and '..' not in p.parts
+                  assert m.name in exact or m.name.startswith(('backend/v2/','docs/v2/','scripts/','v2/'))
+                  target=(root/m.name).resolve()
+                  assert root in target.parents
+                  target.parent.mkdir(parents=True,exist_ok=True)
+                  target.write_bytes(archive.extractfile(m).read())
+          print('Verified and materialized 32 reviewed source files; V1 paths excluded.')
+          PY
+      - name: Generate complete V2 exports and run regression
+        run: |
+          node backend/v2/metrics/build-all.mjs
+          node scripts/validate-v2-contract.js
+          node scripts/validate-v2-backend.js
+          for f in scripts/test-v2-*.cjs; do node "$f"; done
+          git diff --check
+          ! grep -R -E 'PHPSESSID=[A-Za-z0-9]{10,}|ghp_[A-Za-z0-9]{20,}|BEGIN (RSA |EC )?PRIVATE KEY' backend/v2 docs/v2 scripts v2
+      - name: Commit plain source files and remove transport files
+        run: |
+          git rm -- .stage7-transfer/part-* .github/workflows/stage7-import.yml
+          git add -- backend/v2 docs/v2 scripts v2 .github/workflows/stage6-sync.yml .github/workflows/stage7-verify.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'build(v2): materialize tested stage 7 generators, exports and regression suite'
+          git push origin HEAD:codex/stage7-es-norms
+          git rev-parse HEAD
+      - name: Archive exact tested source
+        run: tar --exclude=.git -cf /tmp/stage7-source.tar .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage7-source
+          path: /tmp/stage7-source.tar
+          retention-days: 7
