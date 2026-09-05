@@ -64,15 +64,15 @@
     "norm_drive": "25EgiHZmEcqxxTvG"
   },
   "active_versions": {
-    "health": "c1d0d26e-5e25-41ba-88d6-5a5175740947",
+    "health": "fca803c6-7984-4c26-a108-f593c4e958d8",
     "command": "6f348eb6-f8b3-4d07-ae61-903fcb17d5c6",
-    "error_handler": "27b35770-ed05-4b35-abb4-ecb12a3f8367",
+    "error_handler": "93d1354d-d7ea-4611-afa0-1fc29681ed53",
     "outbox": "a8906fe3-c6c2-4a58-88c3-acf1f2d074d4",
     "test_harness": null,
     "auth_login": "872fb11a-00bd-4163-a056-04b4d92940d0",
     "auth_session": "d0075043-950f-45b1-99e3-39207707ad62",
     "auth_logout": "0630e472-9b5d-4593-a171-f8ee119377d5",
-    "attendance_service": "93a25b06-d3d4-4351-b151-ba502d354fe3",
+    "attendance_service": "a30a1d99-5f38-40a8-b498-947fc448e3a6",
     "attendance_moniti": "56ff0be6-3265-41a2-b0b9-7234c957d6e0",
     "attendance_drive": "902ff676-6619-4b20-97ba-023d3ec7c5fc",
     "attendance_recovery": "10976a73-c4e2-4df0-8582-5cef75ac94a0",
@@ -93,7 +93,11 @@
     "metrics_task_ack": "2509a93d-9f7d-4149-9fca-b7754f5a7824",
     "worker_status": "8837d66d-7a39-4131-9768-9472860e2ac2",
     "norms_daily": "2630ad02-b486-42bb-910a-8fef513926a6",
-    "norms_monthly": "97e82ccf-0b86-4980-8a2a-4d8a79051879"
+    "norms_monthly": "97e82ccf-0b86-4980-8a2a-4d8a79051879",
+    "summary_recalculator": "a1fc14e8-1c54-4656-9a2d-0a6efdd2680e",
+    "metrics_scheduler": "dc42cf51-c0ac-4194-8718-3baf218c6763",
+    "norm_mirror_rules": "1761c5dd-9189-4c87-b3a9-0aaa0692e3b2",
+    "norm_drive": "11721c2e-bae1-4d55-b1a3-fcd462cb9f09"
   },
   "auth": {
     "receipt_credential_id": "79mc2IFYLaJLMrgJ",
@@ -142,6 +146,17 @@
     },
     "stage8_alert_handoff": "ALERT_DERIVED",
     "schema_migration": "additive 5 tables; original schema version 1 preserved",
-    "export_note": "Deterministic deployment graphs reconstructed from reviewed live nodes; layout/defaults may differ. Not claimed as raw byte-for-byte API exports."
+    "export_note": "Deterministic deployment graphs reconstructed from reviewed live nodes; layout/defaults may differ. Not claimed as raw byte-for-byte API exports.",
+    "diagnostics": {
+      "controlled_read": {
+        "workflow_id": "5QQkZWLqVDzx5it5",
+        "active": false
+      },
+      "persistence_test": {
+        "workflow_id": "vqpQl7orcv75JNC5",
+        "active": false
+      }
+    },
+    "version_reference_note": "Stage 7 references updated from published graphs read on 2026-09-05. Unchanged stage 3-6 references retain their earlier verification date."
   }
 }
