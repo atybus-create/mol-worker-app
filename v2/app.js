@@ -25,7 +25,7 @@ async function checkHealth() {
     }
 
     byId('statusTitle').textContent = 'Backend V2 działa poprawnie';
-    byId('statusDescription').textContent = 'Połączenie z bazą V2 działa. Logowanie zapisuje tylko sesje; zapisy czasu pracy pozostają wyłączone.';
+    byId('statusDescription').textContent = 'Połączenie z bazą V2 działa. Stan zapisów jest odczytywany z konfiguracji backendu.';
     byId('backendVersion').textContent = health.version;
     byId('databaseState').textContent = health.database;
     byId('writesState').textContent = health.writes_enabled ? 'WŁĄCZONE' : 'WYŁĄCZONE';
@@ -59,6 +59,7 @@ function saveToken(token) {
 }
 
 function showLogin(message = '') {
+  window.molAttendance?.hide();
   clearTimeout(expiryTimer);
   byId('authTitle').textContent = 'Zaloguj się';
   byId('authMessage').textContent = message;
@@ -80,6 +81,7 @@ function showSession(data) {
   byId('userName').textContent = data.user.display_name;
   byId('userRole').textContent = {WORKER:'Pracownik', LEADER:'Lider', ADMIN:'Administrator'}[data.user.role];
   byId('sessionExpiry').textContent = new Date(data.expires_at).toLocaleString('pl-PL');
+  window.molAttendance?.activate(data, data.session_token || sessionToken);
   clearTimeout(expiryTimer);
   expiryTimer = setTimeout(() => {
     generation++;
@@ -131,6 +133,7 @@ async function restoreSession() {
     if (error.status === 401) { saveToken(''); showLogin('Sesja wygasła lub została zakończona. Zaloguj się ponownie.'); }
     else {
       byId('authTitle').textContent = 'Sesja niepotwierdzona';
+      window.molAttendance?.hide();
       byId('authMessage').textContent = error.message;
       byId('sessionPanel').hidden = true;
       byId('loginForm').hidden = true;

@@ -1,0 +1,2417 @@
+{
+  "name": "MOL // APP V2 // ATTENDANCE SERVICE",
+  "nodes": [
+    {
+      "id": "input",
+      "name": "Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "validate-input",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst i=$input.first().json,b=i.body||{},op=i.operation;const token=/^Bearer ([0-9a-f]{64})$/.exec(i.authorization||'');if(!token&&!i.recovery_actor_id)return [{json:fail(401,'UNAUTHENTICATED','Zaloguj się ponownie.')}];if(!['STATUS','START','FINISH','REOPEN','CORRECT'].includes(op))return [{json:fail(400,'INVALID_OPERATION','Nieznana operacja.')}];const allowed=op==='STATUS'?['work_date','employee_id']:['request_id','work_date','employee_id','expected_version',...(op==='CORRECT'?['start_at','stop_at','reason']:[])];if(!b||Array.isArray(b)||typeof b!=='object'||Object.keys(b).some(k=>!allowed.includes(k)))return [{json:fail(400,'VALIDATION_ERROR','Nieobsługiwane pola żądania.')}];if(op!=='STATUS'&&(typeof b.request_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(b.request_id||'')||!Number.isInteger(b.expected_version)||b.expected_version<0))return [{json:fail(400,'VALIDATION_ERROR','Wymagany request_id i expected_version.')}];if(b.employee_id!==undefined&&(typeof b.employee_id!=='string'||!/^MOL[0-9]+$/.test(b.employee_id)))return [{json:fail(400,'VALIDATION_ERROR','Nieprawidłowy pracownik.')}];const work_date=b.work_date|| (op==='STATUS'?DateTime.now().setZone('Europe/Warsaw').toISODate():null);if(typeof work_date!=='string'||!/^\\d{4}-\\d{2}-\\d{2}$/.test(work_date)||!DateTime.fromISO(work_date).isValid||work_date>DateTime.now().setZone('Europe/Warsaw').toISODate())return [{json:fail(400,'INVALID_WORK_DATE','Nieprawidłowa data.')}];const payload={work_date,...(op==='STATUS'?{}:{expected_version:b.expected_version}),...(op==='CORRECT'?{start_at:b.start_at??null,stop_at:b.stop_at??null,reason:b.reason??null}:{})};return [{json:{valid:true,source:i.source==='DRIVE_SHEET'?'DRIVE_SHEET':'APP',source_context:i.source==='DRIVE_SHEET'?i.source_context:null,operation:op,session_token:token?.[1]||'',recovery_actor_id:i.recovery_actor_id||null,request_id:(b.request_id||'').toLowerCase(),target:b.employee_id||null,payload}}];"
+      }
+    },
+    {
+      "id": "input-valid",
+      "name": "Input Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Input Valid",
+              "leftValue": "={{ $json.valid === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "hash-session",
+      "name": "Hash Session",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "action": "hash",
+        "type": "SHA256",
+        "binaryData": false,
+        "value": "={{ $('Validate Input').first().json.session_token }}",
+        "dataPropertyName": "token_hash",
+        "encoding": "hex"
+      }
+    },
+    {
+      "id": "read-session",
+      "name": "Read Session",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "JXNEIdijeKfhuwYD"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "token_hash",
+              "condition": "eq",
+              "keyValue": "={{ $json.token_hash }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "check-session",
+      "name": "Check Session",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst ss=$input.all().map(i=>i.json).filter(s=>s.session_id),s=ss[0];return [{json:ss.length===1&&!s.revoked_at&&Date.parse(s.expires_at)>Date.now()?{valid:true,employee_id:s.employee_id}:fail(401,'UNAUTHENTICATED','Sesja wygasła lub została zakończona.')}];"
+      }
+    },
+    {
+      "id": "session-valid",
+      "name": "Session Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Session Valid",
+              "leftValue": "={{ $json.valid === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "read-actor",
+      "name": "Read Actor",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "npCr4h1LjhVL205w"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "employee_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Input').first().json.recovery_actor_id || $('Check Session').first().json.employee_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "authorize",
+      "name": "Authorize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst es=$input.all().map(i=>i.json).filter(e=>e.employee_id),e=es[0],i=$('Validate Input').first().json;if(es.length!==1||e.active!==true||!['WORKER','LEADER','ADMIN'].includes(e.role))return [{json:fail(401,'UNAUTHENTICATED','Konto nieaktywne.')}];const target=i.target||e.employee_id;if(target!==e.employee_id&&e.role==='WORKER')return [{json:fail(403,'FORBIDDEN','Brak dostępu do danych pracownika.')}];return [{json:{valid:true,actor:{employee_id:e.employee_id,active:e.active,role:e.role},target,canonical:JSON.stringify({actor_id:e.employee_id,employee_id:target,operation:i.operation,source:i.source,...(i.source_context?{source_context:i.source_context}:{}),payload:i.payload})}}];"
+      }
+    },
+    {
+      "id": "authorized",
+      "name": "Authorized",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Authorized",
+              "leftValue": "={{ $json.valid === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "hash-command",
+      "name": "Hash Command",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        520,
+        220
+      ],
+      "parameters": {
+        "action": "hash",
+        "type": "SHA256",
+        "binaryData": false,
+        "value": "={{ $json.canonical }}",
+        "dataPropertyName": "payload_hash",
+        "encoding": "hex"
+      }
+    },
+    {
+      "id": "acquire-writer",
+      "name": "Acquire Writer",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "command-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": ""
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "={{ String($execution.id) }}",
+            "lease_until": "={{ $now.plus({seconds:180}).toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "owns-writer",
+      "name": "Owns Writer",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Owns Writer",
+              "leftValue": "={{ $json.owner === String($execution.id) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "busy",
+      "name": "Busy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        220
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:fail(409,'COMMAND_BUSY','Trwa zapis. Ponów żądanie.',$('Validate Input').first().json.request_id)}];"
+      }
+    },
+    {
+      "id": "prepare-return",
+      "name": "Prepare Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        220
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "release-writer",
+      "name": "Release Writer",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "command-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": "={{ String($execution.id) }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "return",
+      "name": "Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        440
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:$('Prepare Return').first().json}];"
+      }
+    },
+    {
+      "id": "early-return",
+      "name": "Early Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        440
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "recovery-authorized",
+      "name": "Recovery Authorized",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        440
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Recovery Authorized",
+              "leftValue": "={{ $('Validate Input').first().json.recovery_actor_id !== null }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "read-employee",
+      "name": "Read Employee",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        440
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "npCr4h1LjhVL205w"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "employee_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Authorize').first().json.target }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-commands",
+      "name": "Read Commands",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        440
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "employee_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Authorize').first().json.target }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-request",
+      "name": "Read Request",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        440
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "request_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Input').first().json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-attendance",
+      "name": "Read Attendance",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        440
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "HmJugmYliWT0ERn4"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "employee_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Authorize').first().json.target }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-processes",
+      "name": "Read Processes",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        440
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "4di5yA4jpe0ZEmPL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "employee_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Authorize').first().json.target }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-notices",
+      "name": "Read Notices",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        660
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "W5wg5lF0BwjbQQ4g"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "OPEN"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-notice-commands",
+      "name": "Read Notice Commands",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        660
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": []
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-config",
+      "name": "Read Config",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        660
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "x66LbXe5CSpdMIkv"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": []
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "decide",
+      "name": "Decide",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        660
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\n// Pure domain planner. No network or persistence; input.actor is trusted server context.\nfunction planAttendance(input) {\n  const fail=(code,message,status=422)=>({ok:false,http_status:status,error:{code,message,retryable:status===503,details:{}}});\n  const now=Date.parse(input.now), actor=input.actor, employee=input.employee;\n  const dateAt=ms=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Warsaw',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms));\n  const validDate=value=>typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;\n  const parseTime=value=>{\n    if(typeof value!=='string'||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?(?:Z|[+-]\\d{2}:\\d{2})$/.test(value)||!validDate(value.slice(0,10)))return NaN;\n    if(Number(value.slice(11,13))>23||Number(value.slice(14,16))>59||Number(value.slice(17,19))>59)return NaN;\n    return Date.parse(value);\n  };\n  if(!Number.isFinite(now))return fail('SERVER_TIME_INVALID','Brak poprawnego czasu serwera.',503);\n  if(!actor?.employee_id||actor.active!==true||!['WORKER','LEADER','ADMIN'].includes(actor.role))return fail('UNAUTHENTICATED','Sesja nieaktywna.',401);\n  if(!employee?.employee_id||employee.active!==true)return fail('EMPLOYEE_INACTIVE','Konto pracownika nieaktywne.',403);\n  if(actor.employee_id!==employee.employee_id&&!['LEADER','ADMIN'].includes(actor.role))return fail('FORBIDDEN','Brak uprawnień do pracownika.',403);\n  if(!['START','FINISH','REOPEN','CORRECT'].includes(input.operation))return fail('OPERATION_NOT_IMPLEMENTED','Nieznana operacja.',400);\n  const b=input.payload||{}, today=dateAt(now), day=b.work_date;\n  if(!validDate(day)||day>today)return fail('INVALID_WORK_DATE','Nieprawidłowa lub przyszła data.',400);\n  if(!Number.isInteger(b.expected_version)||b.expected_version<0)return fail('EXPECTED_VERSION_REQUIRED','Odśwież stan przed zapisem.',400);\n  const rows=(input.attendance||[]).filter(r=>r.employee_id===employee.employee_id);\n  if(new Set(rows.map(r=>r.work_date)).size!==rows.length||rows.filter(r=>r.state==='OPEN').length>1)return fail('ATTENDANCE_INCONSISTENT','Wykryto niespójny stan obecności.',503);\n  const existing=rows.find(r=>r.work_date===day);\n  const before=existing?{...existing}:null;\n  if((existing?.version||0)!==b.expected_version)return fail('VERSION_CONFLICT','Dane zmieniły się. Odśwież i ponów.',409);\n  const id=employee.employee_id+':'+day;\n  let after=existing?{...existing}:{attendance_id:id,employee_id:employee.employee_id,work_date:day,state:'NOT_STARTED',start_at:null,stop_at:null,version:0};\n  // Moniti persists whole minutes (confirmed by live read-back). Use the same\n  // precision locally when enabled, rather than reporting a false mismatch.\n  const quantum=input.moniti_enabled?60000:1000;\n  const seconds=ms=>new Date(Math.floor(ms/quantum)*quantum).toISOString();\n  if(input.operation==='START'){\n    if(day!==today)return fail('START_REQUIRES_TODAY','START jest dostępny wyłącznie dla bieżącego dnia.');\n    if(existing&&existing.state!=='NOT_STARTED')return fail('ATTENDANCE_ALREADY_STARTED','Ten dzień jest już rozpoczęty.',409);\n    if(rows.some(r=>r.state==='OPEN'))return fail('OPEN_DAY_EXISTS','Najpierw zakończ otwarty dzień pracy.',409);\n    after={...after,state:'OPEN',start_at:seconds(now),stop_at:null};\n  }else{\n    if(!existing?.start_at||!['OPEN','CLOSED'].includes(existing.state))return fail('ATTENDANCE_NOT_STARTED','Brak rozpoczętego dnia.',409);\n    if(input.operation==='FINISH'){\n      if(existing.state!=='OPEN')return fail('ATTENDANCE_ALREADY_CLOSED','Dzień jest już zakończony.',409);\n      after={...after,state:'CLOSED',stop_at:seconds(now)};\n    }else{\n      const age=(Date.parse(today+'T00:00:00Z')-Date.parse(day+'T00:00:00Z'))/86400000;\n      if(actor.role==='WORKER'&&age>31)return fail('CORRECTION_WINDOW_EXCEEDED','Własne korekty obejmują maksymalnie 31 dni. Starszą zmianę wykonuje lider lub administrator.',403);\n      if(input.operation==='REOPEN'){\n        if(existing.state!=='CLOSED')return fail('ATTENDANCE_NOT_CLOSED','Dzień nie jest zakończony.',409);\n        if(rows.some(r=>r.state==='OPEN'))return fail('OPEN_DAY_EXISTS','Inny dzień jest już otwarty.',409);\n        after={...after,state:'OPEN',stop_at:null};\n      }else{\n        if(typeof b.reason!=='string'||b.reason.trim().length<3||b.reason.length>500)return fail('REASON_REQUIRED','Podaj powód korekty (3–500 znaków).',400);\n        const hasStart=b.start_at!==null&&b.start_at!==undefined&&b.start_at!=='';\n        const hasStop=b.stop_at!==null&&b.stop_at!==undefined&&b.stop_at!=='';\n        if(!hasStart&&!hasStop)return fail('EMPTY_CORRECTION','Podaj co najmniej jedną nową godzinę.',400);\n        if(hasStart){const value=parseTime(b.start_at);if(!Number.isFinite(value))return fail('INVALID_TIME','START musi być jednoznacznym czasem ISO z offsetem.',400);after.start_at=new Date(value).toISOString();}\n        if(hasStop){const value=parseTime(b.stop_at);if(!Number.isFinite(value))return fail('INVALID_TIME','STOP musi być jednoznacznym czasem ISO z offsetem.',400);after.stop_at=new Date(value).toISOString();after.state='CLOSED';}\n      }\n    }\n  }\n  if(input.moniti_enabled){\n    if(Date.parse(after.start_at)>now||(after.stop_at&&Date.parse(after.stop_at)>now))return fail('FUTURE_TIME','Godziny nie mogą być przyszłe.');\n    if(after.start_at)after.start_at=seconds(Date.parse(after.start_at));\n    if(after.stop_at)after.stop_at=seconds(Date.parse(after.stop_at));\n  }\n  const start=Date.parse(after.start_at), stop=after.stop_at?Date.parse(after.stop_at):null;\n  if(!Number.isFinite(start)||(stop!==null&&!Number.isFinite(stop)))return fail('INVALID_TIME','Nieprawidłowy czas.');\n  if(start>now||(stop!==null&&stop>now))return fail('FUTURE_TIME','Godziny nie mogą być przyszłe.');\n  if(dateAt(start)!==day)return fail('START_DATE_MISMATCH','START musi należeć do wybranego dnia w strefie Europe/Warsaw.');\n  if(stop!==null&&stop<start)return fail('STOP_BEFORE_START','STOP nie może być wcześniejszy od START.');\n  for(const row of rows){\n    if(row.work_date===day||!row.start_at)continue;\n    const rs=Date.parse(row.start_at),re=row.stop_at?Date.parse(row.stop_at):Infinity;\n    if(!Number.isFinite(rs)||(row.stop_at&&!Number.isFinite(re)))return fail('ATTENDANCE_INCONSISTENT','Nieprawidłowy zapis innego dnia.',503);\n    if(start<re&&rs<(stop??Infinity))return fail('ATTENDANCE_OVERLAP','Godziny nakładają się na inny dzień pracy.',409);\n  }\n  const processes=(input.processes||[]).filter(p=>p.employee_id===employee.employee_id&&p.attendance_id===id);\n  if(processes.filter(p=>!p.stop_at).length>1)return fail('PROCESS_INCONSISTENT','Więcej niż jeden aktywny proces.',503);\n  const process_updates=[];\n  for(const p of processes){\n    const ps=Date.parse(p.start_at),pe=p.stop_at?Date.parse(p.stop_at):null;\n    if(!Number.isFinite(ps)||(pe!==null&&(!Number.isFinite(pe)||pe<ps)))return fail('PROCESS_INCONSISTENT','Nieprawidłowy czas procesu.',503);\n    if(ps<start||(stop!==null&&(ps>stop||(pe!==null&&pe>stop))))return fail('PROCESS_TIME_CONFLICT','Korekta wyklucza zapisany czas procesu. Wymagana osobna korekta procesu.',409);\n    if(!p.stop_at&&stop!==null)process_updates.push({...p,stop_at:after.stop_at,version:(p.version||0)+1,last_request_id:input.request_id});\n  }\n  if(input.operation==='CORRECT'&&before.start_at===after.start_at&&(before.stop_at||null)===(after.stop_at||null))return fail('NO_CHANGE','Korekta nie zmienia godzin.',409);\n  after={...after,version:after.version+1,last_request_id:input.request_id,moniti_sync:input.moniti_enabled?'PENDING':'NOT_REQUIRED',drive_sync:'PENDING',correction_required:false};\n  const event_type={START:'WORK_STARTED',FINISH:'WORK_FINISHED',REOPEN:'WORK_REOPENED',CORRECT:'ATTENDANCE_CORRECTED'}[input.operation];\n  return {ok:true,before,after,process_updates,event_type,reason:input.operation==='CORRECT'?b.reason.trim():null,notify:input.operation==='CORRECT'||input.operation==='REOPEN',presence_seconds:Math.max(0,Math.floor(((stop??now)-start)/1000))};\n}\n\nif(typeof module!=='undefined')module.exports={planAttendance};\n\nconst i=$('Validate Input').first().json,auth=$('Authorize').first().json,employees=$('Read Employee').all().map(i=>i.json).filter(e=>e.employee_id),employee=employees[0];if(employees.length!==1||employee.active!==true)return [{json:fail(403,'EMPLOYEE_INACTIVE','Pracownik nieaktywny.',i.request_id)}];const commands=$('Read Commands').all().map(i=>i.json).filter(c=>c.request_id),prior=$('Read Request').all().map(i=>i.json).filter(c=>c.request_id);if(prior.length>1)return [{json:fail(503,'COMMAND_INCONSISTENT','Niespójny dziennik komend.',i.request_id)}];const old=prior[0],hash=$('Hash Command').first().json.payload_hash;if(old&&old.payload_hash!==hash)return [{json:fail(409,'REQUEST_ID_CONFLICT','Identyfikator był już użyty do innego żądania.',i.request_id)}];if(old?.status==='COMMITTED')return [{json:JSON.parse(old.response_json).response}];const pending=commands.filter(c=>!['COMMITTED','FAILED'].includes(c.status)&&c.request_id!==i.request_id);if(pending.length)return [{json:fail(503,'RECOVERY_REQUIRED','Poprzedni zapis wymaga dokończenia. Nie rozpoczynaj nowego zapisu.',i.request_id)}];const attendance=$('Read Attendance').all().map(i=>i.json).filter(r=>r.attendance_id),processes=$('Read Processes').all().map(i=>i.json).filter(r=>r.process_session_id);const config={};for(const c of $('Read Config').all().map(i=>i.json))if(c.key)config[c.key]=JSON.parse(c.value_json);if(i.operation==='STATUS'){const selected=attendance.find(r=>r.work_date===i.payload.work_date)||null,open=attendance.filter(r=>r.state==='OPEN');if(open.length>1||new Set(attendance.map(r=>r.work_date)).size!==attendance.length)return [{json:fail(503,'ATTENDANCE_INCONSISTENT','Niespójny stan czasu pracy.')}];return [{json:{http_status:200,body:{ok:true,request_id:'',data:{employee:{employee_id:employee.employee_id,display_name:employee.display_name},work_date:i.payload.work_date,attendance:selected,open_day:open[0]||null,snapshot_version:selected?.version||0,notifications:auth.actor.role==='WORKER'?[]:$('Read Notices').all().map(i=>i.json).filter(n=>n.alert_id&&(n.type==='ATTENDANCE_RECOVERY'||$('Read Notice Commands').all().map(i=>i.json).some(c=>c.request_id===n.dedup_key&&c.status==='COMMITTED'))).slice(-20).map(n=>({employee_id:n.employee_id,type:n.type,opened_at:n.opened_at,details:n.details_json})),moniti_enabled:config.MONITI_ENABLED===true,writes_enabled:config.WRITES_ENABLED===true},meta:{api_version:'2.0',server_time:new Date().toISOString()}}}}];}if(config.WRITES_ENABLED!==true)return [{json:fail(503,'WRITES_DISABLED','Zapisy V2 są wyłączone.',i.request_id)}];if(config.MONITI_ENABLED===true&&(i.payload.work_date!=='2026-09-05'||DateTime.now().setZone('Europe/Warsaw').toISODate()!=='2026-09-05'||![99191,99186,99185].includes(Number(employee.moniti_worker_id))))return [{json:fail(403,'MONITI_TEST_SCOPE','Testy Moniti są ograniczone do uzgodnionych kont i dnia 2026-09-05.',i.request_id)}];if(old){let frozen;try{frozen=JSON.parse(old.response_json);}catch{}if(!frozen?.plan||!frozen?.response)return [{json:fail(503,'COMMAND_INCONSISTENT','Brak planu odzyskiwania.',i.request_id)}];const current=attendance.find(r=>r.attendance_id===frozen.plan.after.attendance_id);if(current&&current.version!==frozen.plan.before?.version&&!(current.version===frozen.plan.after.version&&current.last_request_id===i.request_id))return [{json:fail(503,'RECOVERY_CONFLICT','Nowszy stan blokuje odtworzenie.',i.request_id)}];return [{json:{execute:true,...frozen,employee,request_id:i.request_id,payload_hash:hash,attempts:(old.attempts||0)+1}}];}const now=new Date().toISOString(),plan=planAttendance({now,actor:auth.actor,employee,request_id:i.request_id,operation:i.operation,payload:i.payload,attendance,processes,moniti_enabled:config.MONITI_ENABLED===true});if(!plan.ok)return [{json:fail(plan.http_status,plan.error.code,plan.error.message,i.request_id)}];const moniti_enabled=config.MONITI_ENABLED===true;plan.after.moniti_sync=moniti_enabled?'SYNCED':'NOT_REQUIRED';const response={http_status:200,body:{ok:true,request_id:i.request_id,data:{attendance:plan.after,snapshot_version:plan.after.version},meta:{api_version:'2.0',server_time:now}}};return [{json:{execute:true,plan,response,moniti_enabled,employee,request_id:i.request_id,payload_hash:hash,attempts:1}}];"
+      }
+    },
+    {
+      "id": "execute",
+      "name": "Execute",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        660
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Execute",
+              "leftValue": "={{ $json.execute === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "save-intent",
+      "name": "Save Intent",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        660
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "request_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Input').first().json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request_id": "={{ $('Validate Input').first().json.request_id }}",
+            "actor_id": "={{ $('Authorize').first().json.actor.employee_id }}",
+            "employee_id": "={{ $('Authorize').first().json.target }}",
+            "aggregate_id": "={{ $('Decide').first().json.plan.after.attendance_id }}",
+            "operation": "={{ 'ATTENDANCE_'+$('Validate Input').first().json.operation }}",
+            "source": "={{ $('Validate Input').first().json.source }}",
+            "payload_hash": "={{ $('Decide').first().json.payload_hash }}",
+            "payload_json": "={{ JSON.stringify($('Validate Input').first().json.payload) }}",
+            "status": "RECOVERY_REQUIRED",
+            "response_json": "={{ JSON.stringify({plan:$('Decide').first().json.plan,response:$('Decide').first().json.response,moniti_enabled:$('Decide').first().json.moniti_enabled,source:$('Validate Input').first().json.source,source_context:$('Validate Input').first().json.source_context}) }}",
+            "expected_version": "={{ $('Validate Input').first().json.payload.expected_version }}",
+            "attempts": "={{ $('Decide').first().json.attempts }}",
+            "lease_owner": "={{ String($execution.id) }}",
+            "lease_until": "={{ $now.plus({seconds:180}).toISO() }}",
+            "error_code": ""
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "moniti-required",
+      "name": "Moniti Required",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1560,
+        660
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Moniti Required",
+              "leftValue": "={{ $('Decide').first().json.moniti_enabled === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "moniti-input",
+      "name": "Moniti Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        660
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst d=$('Decide').first().json;return [{json:{mode:'apply',worker_id:d.employee.moniti_worker_id,work_date:d.plan.after.work_date,before:d.plan.before,after:d.plan.after}}];"
+      }
+    },
+    {
+      "id": "moniti-adapter",
+      "name": "Moniti Adapter",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        880
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "3e67SsUOByUi17YV"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "moniti-confirmed",
+      "name": "Moniti Confirmed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        880
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Moniti Confirmed",
+              "leftValue": "={{ $json.ok === true && $json.verified === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "moniti-failure",
+      "name": "Moniti Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        880
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:fail(503,'MONITI_NOT_CONFIRMED','Moniti nie potwierdziło zmiany. Ponów to samo żądanie; zapis wymaga dokończenia.',$('Validate Input').first().json.request_id)}];"
+      }
+    },
+    {
+      "id": "save-audit",
+      "name": "Save Audit",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        880
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SsKw8JJaizeIRoS5"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "event_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.request_id+':attendance' }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "event_id": "={{ $('Decide').first().json.request_id+':attendance' }}",
+            "aggregate_id": "={{ $('Decide').first().json.plan.after.attendance_id }}",
+            "employee_id": "={{ $('Decide').first().json.plan.after.employee_id }}",
+            "event_type": "={{ $('Decide').first().json.plan.event_type }}",
+            "request_id": "={{ $('Decide').first().json.request_id }}",
+            "actor_id": "={{ $('Authorize').first().json.actor.employee_id }}",
+            "source": "={{ $('Validate Input').first().json.source }}",
+            "before_json": "={{ JSON.stringify($('Decide').first().json.plan.before) }}",
+            "after_json": "={{ JSON.stringify($('Decide').first().json.plan.after) }}",
+            "status": "COMMITTING",
+            "occurred_at": "={{ $('Decide').first().json.response.body.meta.server_time }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "close-process",
+      "name": "Close Process",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        880
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Close Process",
+              "leftValue": "={{ $('Decide').first().json.plan.process_updates.length === 1 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "save-process",
+      "name": "Save Process",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        880
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "4di5yA4jpe0ZEmPL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "process_session_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.plan.process_updates[0].process_session_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "process_session_id": "={{ $('Decide').first().json.plan.process_updates[0].process_session_id ?? null }}",
+            "employee_id": "={{ $('Decide').first().json.plan.process_updates[0].employee_id ?? null }}",
+            "attendance_id": "={{ $('Decide').first().json.plan.process_updates[0].attendance_id ?? null }}",
+            "process_code": "={{ $('Decide').first().json.plan.process_updates[0].process_code ?? null }}",
+            "start_at": "={{ $('Decide').first().json.plan.process_updates[0].start_at ?? null }}",
+            "stop_at": "={{ $('Decide').first().json.plan.process_updates[0].stop_at ?? null }}",
+            "version": "={{ $('Decide').first().json.plan.process_updates[0].version ?? null }}",
+            "last_request_id": "={{ $('Decide').first().json.plan.process_updates[0].last_request_id ?? null }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "save-attendance",
+      "name": "Save Attendance",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        880
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "HmJugmYliWT0ERn4"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "attendance_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.plan.after.attendance_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "attendance_id": "={{ $('Decide').first().json.plan.after.attendance_id ?? null }}",
+            "employee_id": "={{ $('Decide').first().json.plan.after.employee_id ?? null }}",
+            "work_date": "={{ $('Decide').first().json.plan.after.work_date ?? null }}",
+            "state": "={{ $('Decide').first().json.plan.after.state ?? null }}",
+            "start_at": "={{ $('Decide').first().json.plan.after.start_at ?? null }}",
+            "stop_at": "={{ $('Decide').first().json.plan.after.stop_at ?? null }}",
+            "version": "={{ $('Decide').first().json.plan.after.version ?? null }}",
+            "last_request_id": "={{ $('Decide').first().json.plan.after.last_request_id ?? null }}",
+            "moniti_sync": "={{ $('Decide').first().json.plan.after.moniti_sync ?? null }}",
+            "drive_sync": "={{ $('Decide').first().json.plan.after.drive_sync ?? null }}",
+            "correction_required": "={{ $('Decide').first().json.plan.after.correction_required ?? null }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "verify-attendance",
+      "name": "Verify Attendance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        880
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst a=$input.first().json,p=$('Decide').first().json.plan.after;if(a.attendance_id!==p.attendance_id||a.version!==p.version||a.last_request_id!==p.last_request_id||Date.parse(a.start_at)!==Date.parse(p.start_at)||(a.stop_at?Date.parse(a.stop_at):null)!==(p.stop_at?Date.parse(p.stop_at):null))throw new Error('ATTENDANCE_WRITE_NOT_CONFIRMED');return [{json:{verified:true}}];"
+      }
+    },
+    {
+      "id": "enqueue-drive",
+      "name": "Enqueue Drive",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        1100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "outbox_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.request_id+':drive' }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "outbox_id": "={{ $('Decide').first().json.request_id+':drive' }}",
+            "request_id": "={{ $('Decide').first().json.request_id }}",
+            "aggregate_id": "={{ $('Decide').first().json.plan.after.attendance_id }}",
+            "type": "ATTENDANCE_DRIVE",
+            "payload_json": "={{ JSON.stringify($('Decide').first().json.plan.after) }}",
+            "status": "PENDING",
+            "attempts": 0,
+            "next_attempt_at": "={{ $now.toISO() }}",
+            "lease_owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z",
+            "last_error": ""
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "enqueue-derived",
+      "name": "Enqueue Derived",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        1100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "outbox_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.request_id+':derived' }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "outbox_id": "={{ $('Decide').first().json.request_id+':derived' }}",
+            "request_id": "={{ $('Decide').first().json.request_id }}",
+            "aggregate_id": "={{ $('Decide').first().json.plan.after.attendance_id }}",
+            "type": "ATTENDANCE_DERIVED",
+            "payload_json": "={{ JSON.stringify({attendance:$('Decide').first().json.plan.after,event_type:$('Decide').first().json.plan.event_type,notify:$('Decide').first().json.plan.notify,reason:$('Decide').first().json.plan.reason}) }}",
+            "status": "PENDING",
+            "attempts": 0,
+            "next_attempt_at": "={{ $now.toISO() }}",
+            "lease_owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z",
+            "last_error": ""
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "commit-audit",
+      "name": "Commit Audit",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        1100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SsKw8JJaizeIRoS5"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "event_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.request_id+':attendance' }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "COMMITTED"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "commit-command",
+      "name": "Commit Command",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        1100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "request_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.request_id }}"
+            },
+            {
+              "keyName": "payload_hash",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.payload_hash }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "COMMITTED",
+            "lease_owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z",
+            "error_code": ""
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "success",
+      "name": "Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        1100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nif($input.first().json.status!=='COMMITTED')throw new Error('COMMAND_COMMIT_NOT_CONFIRMED');return [{json:$('Decide').first().json.response}];"
+      }
+    },
+    {
+      "id": "record-moniti-failure",
+      "name": "Record Moniti Failure",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        1100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "request_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "error_code": "MONITI_NOT_CONFIRMED",
+            "lease_owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "recovery-alert",
+      "name": "Recovery Alert",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        1100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "W5wg5lF0BwjbQQ4g"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "alert_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.request_id+':recovery' }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "alert_id": "={{ $('Decide').first().json.request_id+':recovery' }}",
+            "employee_id": "={{ $('Decide').first().json.plan.after.employee_id }}",
+            "type": "ATTENDANCE_RECOVERY",
+            "dedup_key": "={{ $('Decide').first().json.request_id }}",
+            "opened_at": "={{ $now.toISO() }}",
+            "status": "OPEN",
+            "details_json": "={{ JSON.stringify({request_id:$('Decide').first().json.request_id,error_code:\"MONITI_NOT_CONFIRMED\"}) }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "failure-response",
+      "name": "Failure Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        1100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:$('Moniti Failure').first().json}];"
+      }
+    },
+    {
+      "id": "close-recovery-alert",
+      "name": "Close Recovery Alert",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        1320
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "W5wg5lF0BwjbQQ4g"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "alert_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.request_id+':recovery' }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "CLOSED",
+            "closed_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "notify-manager",
+      "name": "Notify Manager",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        1320
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:{notify:$('Decide').first().json.plan.notify}}];"
+      }
+    },
+    {
+      "id": "needs-notification",
+      "name": "Needs Notification",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        1320
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Needs Notification",
+              "leftValue": "={{ $json.notify === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "manager-alert",
+      "name": "Manager Alert",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        1320
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "W5wg5lF0BwjbQQ4g"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "alert_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide').first().json.request_id+':notice' }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "alert_id": "={{ $('Decide').first().json.request_id+':notice' }}",
+            "employee_id": "={{ $('Decide').first().json.plan.after.employee_id }}",
+            "type": "={{ $('Decide').first().json.plan.event_type }}",
+            "dedup_key": "={{ $('Decide').first().json.request_id }}",
+            "opened_at": "={{ $('Decide').first().json.response.body.meta.server_time }}",
+            "status": "OPEN",
+            "details_json": "={{ JSON.stringify({request_id:$('Decide').first().json.request_id,actor_id:$('Authorize').first().json.actor.employee_id,reason:$('Decide').first().json.plan.reason,work_date:$('Decide').first().json.plan.after.work_date}) }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "recovery-requested",
+      "name": "Recovery Requested",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        1320
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Recovery Requested",
+              "leftValue": "={{ typeof $json.recovery_request_id === 'string' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "read-recovery",
+      "name": "Read Recovery",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        1320
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "request_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Input').first().json.recovery_request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "recovery-context",
+      "name": "Recovery Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        1320
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst cs=$input.all().map(i=>i.json).filter(c=>c.request_id),c=cs[0];if(cs.length!==1||c.status!=='RECOVERY_REQUIRED'||!['ATTENDANCE_START','ATTENDANCE_FINISH','ATTENDANCE_REOPEN','ATTENDANCE_CORRECT'].includes(c.operation)||!['APP','DRIVE_SHEET'].includes(c.source))return [{json:{skip:true}}];return [{json:{source:c.source,source_context:JSON.parse(c.response_json).source_context||null,operation:c.operation.slice(11),recovery_actor_id:c.actor_id,body:{...JSON.parse(c.payload_json),request_id:c.request_id,employee_id:c.employee_id}}}];"
+      }
+    },
+    {
+      "id": "recovery-found",
+      "name": "Recovery Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1820,
+        1320
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Recovery Found",
+              "leftValue": "={{ $json.skip !== true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Input Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Valid": {
+      "main": [
+        [
+          {
+            "node": "Recovery Authorized",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Early Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recovery Authorized": {
+      "main": [
+        [
+          {
+            "node": "Read Actor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Hash Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash Session": {
+      "main": [
+        [
+          {
+            "node": "Read Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Session": {
+      "main": [
+        [
+          {
+            "node": "Check Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Session": {
+      "main": [
+        [
+          {
+            "node": "Session Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Session Valid": {
+      "main": [
+        [
+          {
+            "node": "Read Actor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Early Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Actor": {
+      "main": [
+        [
+          {
+            "node": "Authorize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Authorize": {
+      "main": [
+        [
+          {
+            "node": "Authorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Authorized": {
+      "main": [
+        [
+          {
+            "node": "Hash Command",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Early Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash Command": {
+      "main": [
+        [
+          {
+            "node": "Acquire Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acquire Writer": {
+      "main": [
+        [
+          {
+            "node": "Owns Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owns Writer": {
+      "main": [
+        [
+          {
+            "node": "Read Employee",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busy": {
+      "main": [
+        [
+          {
+            "node": "Early Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Return": {
+      "main": [
+        [
+          {
+            "node": "Release Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Release Writer": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Employee": {
+      "main": [
+        [
+          {
+            "node": "Read Commands",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Commands": {
+      "main": [
+        [
+          {
+            "node": "Read Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Request": {
+      "main": [
+        [
+          {
+            "node": "Read Attendance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Attendance": {
+      "main": [
+        [
+          {
+            "node": "Read Processes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Processes": {
+      "main": [
+        [
+          {
+            "node": "Read Notices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Notices": {
+      "main": [
+        [
+          {
+            "node": "Read Notice Commands",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Notice Commands": {
+      "main": [
+        [
+          {
+            "node": "Read Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Config": {
+      "main": [
+        [
+          {
+            "node": "Decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decide": {
+      "main": [
+        [
+          {
+            "node": "Execute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute": {
+      "main": [
+        [
+          {
+            "node": "Save Intent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Intent": {
+      "main": [
+        [
+          {
+            "node": "Moniti Required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Moniti Required": {
+      "main": [
+        [
+          {
+            "node": "Moniti Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Moniti Input": {
+      "main": [
+        [
+          {
+            "node": "Moniti Adapter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Moniti Adapter": {
+      "main": [
+        [
+          {
+            "node": "Moniti Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Moniti Confirmed": {
+      "main": [
+        [
+          {
+            "node": "Save Audit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Moniti Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Moniti Failure": {
+      "main": [
+        [
+          {
+            "node": "Record Moniti Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Moniti Failure": {
+      "main": [
+        [
+          {
+            "node": "Recovery Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recovery Alert": {
+      "main": [
+        [
+          {
+            "node": "Failure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failure Response": {
+      "main": [
+        [
+          {
+            "node": "Prepare Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Audit": {
+      "main": [
+        [
+          {
+            "node": "Close Process",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Close Process": {
+      "main": [
+        [
+          {
+            "node": "Save Process",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save Attendance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Process": {
+      "main": [
+        [
+          {
+            "node": "Save Attendance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Attendance": {
+      "main": [
+        [
+          {
+            "node": "Verify Attendance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Attendance": {
+      "main": [
+        [
+          {
+            "node": "Enqueue Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enqueue Drive": {
+      "main": [
+        [
+          {
+            "node": "Enqueue Derived",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enqueue Derived": {
+      "main": [
+        [
+          {
+            "node": "Notify Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Manager": {
+      "main": [
+        [
+          {
+            "node": "Needs Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Commit Audit": {
+      "main": [
+        [
+          {
+            "node": "Close Recovery Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Close Recovery Alert": {
+      "main": [
+        [
+          {
+            "node": "Commit Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Commit Command": {
+      "main": [
+        [
+          {
+            "node": "Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success": {
+      "main": [
+        [
+          {
+            "node": "Prepare Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Notification": {
+      "main": [
+        [
+          {
+            "node": "Manager Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Commit Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manager Alert": {
+      "main": [
+        [
+          {
+            "node": "Commit Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input": {
+      "main": [
+        [
+          {
+            "node": "Recovery Requested",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recovery Requested": {
+      "main": [
+        [
+          {
+            "node": "Read Recovery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Recovery": {
+      "main": [
+        [
+          {
+            "node": "Recovery Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recovery Context": {
+      "main": [
+        [
+          {
+            "node": "Recovery Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recovery Found": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Early Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 180,
+    "errorWorkflow": "rnELTCKClbzY8lxZ",
+    "timezone": "Europe/Warsaw",
+    "executionOrder": "v1"
+  }
+}

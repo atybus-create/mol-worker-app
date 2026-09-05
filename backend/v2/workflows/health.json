@@ -73,7 +73,7 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const rows=$input.all().map(i=>i.json).filter(r=>r.key);const cfg={};let valid=true;for(const r of rows){if(Object.hasOwn(cfg,r.key)) valid=false;try{cfg[r.key]=JSON.parse(r.value_json);}catch{valid=false;}}valid=valid&&cfg.SCHEMA_VERSION===1&&cfg.ENVIRONMENT==='test'&&typeof cfg.WRITES_ENABLED==='boolean'&&cfg.WORKER_CORRECTION_DAYS===31;return [{json:{ok:valid,service:'MOL_APP_V2',version:'0.4.0',environment:cfg.ENVIRONMENT||'unknown',writes_enabled:cfg.WRITES_ENABLED===true,stage:4,core_status:valid?'READY':'CONFIG_ERROR',database:valid?'ONLINE':'ERROR',http_status:valid?200:503}}];"
+        "jsCode": "const rows=$input.all().map(i=>i.json).filter(r=>r.key);const cfg={};let valid=true;for(const r of rows){if(Object.hasOwn(cfg,r.key)) valid=false;try{cfg[r.key]=JSON.parse(r.value_json);}catch{valid=false;}}valid=valid&&cfg.SCHEMA_VERSION===1&&cfg.ENVIRONMENT==='test'&&typeof cfg.WRITES_ENABLED==='boolean'&&cfg.WORKER_CORRECTION_DAYS===31;return [{json:{ok:valid,service:'MOL_APP_V2',version:'0.5.0',environment:cfg.ENVIRONMENT||'unknown',writes_enabled:cfg.WRITES_ENABLED===true,stage:5,core_status:valid?'READY':'CONFIG_ERROR',database:valid?'ONLINE':'ERROR',http_status:valid?200:503}}];"
       }
     }
   ],

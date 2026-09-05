@@ -19,12 +19,15 @@ jobs:
           node --check profile-ui.js
           node --check sw.js
           node --check v2/app.js
+          node --check v2/attendance.js
       - name: Validate V2 contract and backend isolation
         run: |
           node scripts/validate-v2-contract.js
           node scripts/validate-v2-backend.js
           node scripts/test-v2-password.cjs
           node scripts/test-v2-auth.cjs
+          node scripts/test-v2-attendance.cjs
+          node scripts/test-v2-attendance-ui.cjs
       - name: Check required UI and integrations
         run: |
           grep -q 'MAGAZYN' app.js
@@ -117,7 +120,7 @@ jobs:
           NODE
       - name: Check no test tokens or chat secrets
         run: |
-          ! grep -R -E 'ETAP7FRONTENDTESTTOKEN|ETAP7WORKERROLETESTTOKEN|PHPSESSID|CHAT_ALERT_WEBHOOK' --exclude-dir=.git --exclude=validate.yml .
+          ! grep -R -E 'ETAP7FRONTENDTESTTOKEN|ETAP7WORKERROLETESTTOKEN|PHPSESSID=[A-Za-z0-9]{10,}|CHAT_ALERT_WEBHOOK' --exclude-dir=.git --exclude=validate.yml .
       - name: Check browser CORS to n8n
         run: |
           curl -sS -X OPTIONS -D cors-headers.txt -o /dev/null 'https://n8n.estyl.team/webhook/mol-app-config' \

@@ -19,16 +19,23 @@ for (const workflow of workflows) {
   const names = new Set(workflow.nodes.map(node => node.name));
   assert.equal(names.size, workflow.nodes.length);
   for (const node of workflow.nodes) {
+    if (node.type === 'n8n-nodes-base.code') {
+      const AsyncFunction = Object.getPrototypeOf(async function() {}).constructor;
+      assert.doesNotThrow(() => new AsyncFunction(node.parameters.jsCode), `Invalid Code node: ${workflow.name}/${node.name}`);
+    }
     if (node.type === 'n8n-nodes-base.dataTable') {
       assert.ok(allowedTables.has(node.parameters.dataTableId.value), `Non-V2 table: ${node.name}`);
     }
     if (node.credentials && Object.keys(node.credentials).length) {
-      assert.equal(node.type, 'n8n-nodes-base.crypto');
-      assert.deepEqual(Object.keys(node.credentials), ['crypto']);
-      assert.equal(node.credentials.crypto.id, manifest.auth.receipt_credential_id);
+      const allowed = {crypto: manifest.auth.receipt_credential_id, httpHeaderAuth:'jDX7MFgk2vvXqZ5f', googleSheetsOAuth2Api:'PffTtJhrPLmJ2ZrI'};
+      for (const [type, credential] of Object.entries(node.credentials)) {
+        assert.ok(Object.hasOwn(allowed, type));
+        assert.equal(credential.id, allowed[type], `Unexpected credential: ${node.name}`);
+        assert.ok(['n8n-nodes-base.crypto','n8n-nodes-base.httpRequest'].includes(node.type));
+      }
     }
     if (node.type === 'n8n-nodes-base.webhook') {
-      assert.ok(['mol-app-v2-health', 'mol-app-v2-stage3-test', 'mol-app-v2-auth-login', 'mol-app-v2-auth-session', 'mol-app-v2-auth-logout'].includes(node.parameters.path));
+      assert.ok(['mol-app-v2-health', 'mol-app-v2-stage3-test', 'mol-app-v2-auth-login', 'mol-app-v2-auth-session', 'mol-app-v2-auth-logout', ...['status','start','finish','reopen','correct'].map(op=>'mol-app-v2-attendance-'+op)].includes(node.parameters.path));
     }
   }
   for (const [source, outputs] of Object.entries(workflow.connections)) {

@@ -95,7 +95,9 @@ Każdy aktywny epizod ma stabilny `dedup_key = employee_id + type + episode_anch
 ## 7. Role
 
 - `WORKER`: własny status, procesy, wiadomości, normy, własne korekty.
-- `LEADER`: funkcje pracownika plus podgląd przypisanego zespołu, komunikaty i historia zespołu.
+- `LEADER`: funkcje pracownika plus dostęp do panelu lidera, podgląd wszystkich danych pracowników dostępnych w aplikacji (czas pracy, procesy, normy, wyniki, historia i raporty) oraz możliwość wysyłania komunikatów do wybranych pracowników lub wszystkich. Zakres nie wymaga przypisywania zespołów. Nie obejmuje administracji konfiguracją, nadawania ról ani dostępu do haseł, tokenów i sekretów technicznych.
 - `ADMIN`: pełny zakres, konfiguracja, raporty i recovery.
 
-Backend filtruje dane według roli i relacji `leader_id`; sam parametr `employee_id` nigdy nie daje dostępu.
+Backend sprawdza rolę: WORKER widzi i zmienia wyłącznie własne dane; LEADER obejmuje wszystkich pracowników w ramach funkcji dostępnych liderowi; ADMIN zachowuje funkcje administracyjne. Sam parametr `employee_id` nigdy nie daje dostępu. Pole `leader_id` pozostaje opcjonalnymi metadanymi, a nie warunkiem autoryzacji.
+
+Zmiana zakresu LEADER została zatwierdzona przez użytkownika podczas etapu 5: dotyczy każdego lidera, w tym konta `asorokopud`.

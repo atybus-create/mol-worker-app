@@ -1,0 +1,43 @@
+(() => {
+  const el=id=>document.getElementById(id), base='https://n8n.estyl.team/webhook/mol-app-v2-attendance-';
+  let token='',employee='',role='',generation=0,readSequence=0,busy=false,snapshot=null,pending=null,sheetProposal=null;
+  const dateAt=d=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Warsaw',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+  const storageKey=()=>`mol.v2.attendance.pending.${employee}`;
+  function savePending(value){pending=value;try{if(value)sessionStorage.setItem(storageKey(),JSON.stringify(value));else sessionStorage.removeItem(storageKey());}catch{}}
+  function buttons(){for(const id of ['workDate','attendanceRefresh','workStart','workFinish','workReopen','correctionStart','correctionStop','correctionReason','correctionSave','sheetCorrectionId','sheetPreviewButton','sheetApproveButton'])el(id).disabled=busy||!!pending;
+    el('attendanceRetry').hidden=!pending;el('attendanceRetry').disabled=busy;
+    const a=snapshot?.attendance;el('workStart').hidden=!!a?.start_at||!!snapshot?.open_day;
+    el('workFinish').hidden=!snapshot?.open_day;el('workReopen').hidden=a?.state!=='CLOSED';
+    el('correctionForm').hidden=!a?.start_at;
+    if(!snapshot||snapshot.writes_enabled!==true)for(const id of ['workStart','workFinish','workReopen','correctionSave'])el(id).disabled=true;
+  }
+  function message(s){el('attendanceMessage').textContent=s;}
+  const time=s=>s?new Date(s).toLocaleString('pl-PL',{timeZone:'Europe/Warsaw',dateStyle:'short',timeStyle:'short'}):'—';
+  function localInput(s){if(!s)return '';const d=new Date(s);return dateAt(d)+'T'+new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Warsaw',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(d);}
+  function toISO(s){if(!s)return null;const matches=['+01:00','+02:00'].map(offset=>new Date(s+':00'+offset)).filter(d=>Number.isFinite(d.getTime())&&localInput(d.toISOString())===s);if(matches.length!==1)throw new Error('Godzina jest nieistniejąca lub niejednoznaczna przy zmianie czasu. Wybierz inną godzinę.');return matches[0].toISOString();}
+  function render(data){if(data.work_date!==el('workDate').value||data.employee?.employee_id!==employee)return;
+    if(snapshot?.work_date===data.work_date&&snapshot.snapshot_version>data.snapshot_version)return;
+    snapshot=data;const a=data.attendance;
+    el('workState').textContent=({OPEN:'W pracy',CLOSED:'Dzień zakończony'})[a?.state]||'Dzień nierozpoczęty';
+    el('workTimes').textContent=`START: ${time(a?.start_at)} · STOP: ${time(a?.stop_at)}`;
+    el('workSync').textContent=`Moniti: ${{SYNCED:'potwierdzone',NOT_REQUIRED:'wyłączone'}[a?.moniti_sync]|| (data.moniti_enabled?'włączone':'wyłączone')} · Drive: ${a?.drive_sync==='SYNCED'?'potwierdzone':a?'oczekuje na synchronizację':'—'}`;
+    el('openDayNote').textContent=data.open_day&&data.open_day.work_date!==data.work_date?`Otwarty dzień: ${data.open_day.work_date}. STOP zakończy ten dzień.`:'';
+    el('managerNotices').textContent=(data.notifications||[]).map(n=>`${n.employee_id}: ${{WORK_REOPENED:'wznowienie dnia',ATTENDANCE_CORRECTED:'korekta godzin',ATTENDANCE_RECOVERY:'zapis wymaga dokończenia'}[n.type]||n.type} (${time(n.opened_at)})`).join('\n');
+    el('correctionStart').value=localInput(a?.start_at);el('correctionStop').value=localInput(a?.stop_at);buttons();
+  }
+  async function request(op,body){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
+    const query=op==='status'?'?'+Object.entries(body||{work_date:el('workDate').value}).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&'):'';
+    try{const response=await fetch(base+op+query,{method:op==='status'?'GET':'POST',cache:'no-store',credentials:'omit',headers:{Authorization:`Bearer ${token}`,...(body&&op!=='status'?{'Content-Type':'application/json'}:{})},body:body&&op!=='status'?JSON.stringify(body):undefined,signal:controller.signal});const envelope=await response.json();if(!response.ok||envelope.ok!==true){const e=new Error(envelope.error?.message||'Brak potwierdzenia operacji.');e.status=response.status;e.code=envelope.error?.code;throw e;}return envelope.data;
+    }catch(e){if(e.name==='AbortError'||e instanceof TypeError)throw new Error('Brak potwierdzenia z serwera. Ponów to samo żądanie.');throw e;}finally{clearTimeout(timer);}}
+  async function refresh(){if(!token||busy)return;const gen=generation,seq=++readSequence;busy=true;buttons();message('Odczyt potwierdzonego stanu…');try{const data=await request('status');if(gen!==generation||seq!==readSequence)return;render(data);message(pending?'Poprzednie żądanie oczekuje na potwierdzenie. Użyj „Ponów zapis”.':'Stan potwierdzony przez backend.');}catch(e){if(gen===generation)message(e.message);}finally{if(gen===generation){busy=false;buttons();}}}
+  async function submit(op,body){if(!token||busy)return;const gen=generation;let failure='';savePending({op,body});busy=true;++readSequence;buttons();message('Zapisywanie i weryfikacja w Moniti…');try{await request(op,body);if(gen!==generation)return;savePending(null);message('Zapis potwierdzony.');}catch(e){if(gen!==generation)return;if(e.status>=400&&e.status<500&&e.code!=='COMMAND_BUSY')savePending(null);failure=e.message;message(e.message+(pending?' Ponów zapis tym samym przyciskiem.':''));}finally{if(gen===generation){busy=false;buttons();if(!pending){await refresh();if(failure&&gen===generation)message(failure);}}}}
+  function command(op){if(!snapshot||busy||pending)return;const a=op==='finish'?snapshot.open_day:snapshot.attendance;submit(op,{request_id:crypto.randomUUID(),work_date:a?.work_date||el('workDate').value,expected_version:a?.version||0});}
+  el('workStart').addEventListener('click',()=>command('start'));el('workFinish').addEventListener('click',()=>command('finish'));el('workReopen').addEventListener('click',()=>command('reopen'));
+  el('attendanceRefresh').addEventListener('click',refresh);el('workDate').addEventListener('change',()=>{snapshot=null;el('workState').textContent='Odczyt…';el('workTimes').textContent='';el('workSync').textContent='';refresh();});
+  el('attendanceRetry').addEventListener('click',()=>{if(pending)submit(pending.op,pending.body);});
+  el('correctionForm').addEventListener('submit',e=>{e.preventDefault();if(!snapshot?.attendance||busy||pending)return;try{submit('correct',{request_id:crypto.randomUUID(),work_date:el('workDate').value,expected_version:snapshot.attendance.version,start_at:toISO(el('correctionStart').value),stop_at:toISO(el('correctionStop').value),reason:el('correctionReason').value.trim()});}catch(error){message(error.message);}});
+  el('sheetPreviewButton').addEventListener('click',async()=>{if(busy||pending)return;const gen=generation;busy=true;sheetProposal=null;el('sheetApproveButton').hidden=true;buttons();try{const data=await request('status',{correction_id:el('sheetCorrectionId').value.trim()});if(gen!==generation)return;sheetProposal=data;const p=data.proposal;el('sheetProposal').textContent=`Pracownik: ${p.employee_id}. Dzień: ${p.work_date}. Wersja: ${p.expected_version}. Nowy START: ${time(p.start_at)}. Nowy STOP: ${p.stop_at?time(p.stop_at):'bez zmiany'}. Powód: ${p.reason}`;el('sheetApproveButton').hidden=false;}catch(e){if(gen===generation)el('sheetProposal').textContent=e.message;}finally{if(gen===generation){busy=false;buttons();}}});
+  el('sheetCorrectionId').addEventListener('input',()=>{sheetProposal=null;el('sheetApproveButton').hidden=true;});
+  el('sheetApproveButton').addEventListener('click',()=>{if(!sheetProposal||busy||pending)return;const data=sheetProposal;sheetProposal=null;el('sheetApproveButton').hidden=true;submit('correct',{request_id:data.proposal.request_id,correction_id:data.proposal.request_id,approved_hash:data.approved_hash});});
+  window.molAttendance={hide(){generation++;token='';snapshot=null;sheetProposal=null;busy=false;el('attendancePanel').hidden=true;},activate(data,t){if(token===t&&employee===data.user.employee_id&&role===data.user.role)return;generation++;token=t;employee=data.user.employee_id;role=data.user.role;busy=false;snapshot=null;pending=null;sheetProposal=null;el('sheetApprovalPanel').hidden=!['LEADER','ADMIN'].includes(data.user.role);el('sheetApproveButton').hidden=true;el('sheetProposal').textContent='';try{const p=JSON.parse(sessionStorage.getItem(storageKey())||'null');if(p?.body?.request_id&&['start','finish','reopen','correct'].includes(p.op))pending=p;}catch{}el('workDate').value=pending?.body?.work_date||dateAt(new Date());el('workDate').max=dateAt(new Date());el('attendancePanel').hidden=false;refresh();}};
+})();

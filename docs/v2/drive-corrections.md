@@ -1,10 +1,10 @@
 # Zatwierdzane korekty czasu z Google Sheets
 
-Status: rozszerzenie etapu 2 zaakceptowane przez użytkownika. Jest to kontrakt do implementacji, nie działająca jeszcze integracja.
+Status: wdrożona integracja czasu pracy etapu 5 w osobnym raporcie testowym V2. Podsumowania norm i procesów pozostają zakresem kolejnych etapów.
 
 ## Obsługa arkusza
 
-Arkusz rozliczeniowy zawiera kolumny: Pracownik, Dzień pracy, Obecny START, Obecny STOP, Skorygowany START, Skorygowany STOP, Powód, Zatwierdź korektę, Status, Szczegóły błędu i Czas synchronizacji. Identyfikator wiersza i wersja obecności są polami systemowymi. Sortowanie wierszy nie zmienia tożsamości korekty.
+Raport ma trzy zakładki: „Czas pracy V2” (stan potwierdzony, godziny, minuty, wersja), „Korekty” (propozycje) i „Wyniki korekt” (wyniki automatu). Propozycja zawiera correction_id (nowy UUID), employee_id, work_date, expected_version, start_at, stop_at i reason. Godziny wymagają ISO 8601 z offsetem, np. 2026-09-05T08:53:00+02:00. Status i szczegóły są pobierane formułą po correction_id, nie numerze wiersza. W polskiej lokalizacji formuły używają separatora średnika. Zatwierdzenie odbywa się w panelu czasu pracy V2: odczyt propozycji, przegląd, osobny przycisk zatwierdzenia.
 
 LEADER/ADMIN wpisuje nowe godziny i powód, a następnie używa uwierzytelnionej akcji „Zatwierdź korektę”. Sama edycja komórki ani wpisanie nazwiska w kolumnie autora nie stanowią zatwierdzenia. Adapter ustala tożsamość zatwierdzającego z uwierzytelnionego kontekstu, mapuje ją na pracownika V2 i sprawdza uprawnienia do danego pracownika. Brak wiarygodnej tożsamości zatrzymuje import. Dostęp do edycji pliku nie zastępuje roli w aplikacji.
 
@@ -13,17 +13,17 @@ Puste pole skorygowanej godziny oznacza „pozostaw bez zmian”. Co najmniej je
 ## Przetwarzanie
 
 1. Zatwierdzenie zamraża treść korekty, autora, czas i wersję bazowego dnia. Powstaje stabilny correction_id i request_id.
-2. Backend sprawdza rolę, zakres zespołu, datę, kolejność godzin, istniejące procesy i expected_version. Nie nadpisuje nowszej zmiany z aplikacji: konflikt wymaga odświeżenia i ponownego zatwierdzenia.
+2. Backend sprawdza rolę, datę, kolejność godzin, istniejące procesy i expected_version. Zgodnie ze zmianą zatwierdzoną w etapie 5 każdy LEADER obejmuje wszystkich pracowników; przypisanie leader_id nie jest wymagane. Nie nadpisuje nowszej zmiany z aplikacji: konflikt wymaga odświeżenia i ponownego zatwierdzenia.
 3. Przy MONITI_ENABLED=true wspólny adapter zapisuje korektę w Moniti i potwierdza ją przez read-back. Brak potwierdzenia zatrzymuje commit w Data Tables. Przy false etap ten otrzymuje NOT_REQUIRED.
 4. Wspólna usługa korekt zapisuje stan w Data Tables i audyt: przed/po, pracownik, autor, powód, źródło DRIVE_SHEET, identyfikatory komendy i arkusza.
-5. Przelicza właściwe podsumowania dnia/miesiąca, aktualizuje wersję snapshotu aplikacji i kolejkuje odświeżenie raportu na Drive. Historyczna klasyfikacja przyrostów ES nie jest zmieniana automatycznie.
+5. Aktualizuje wersję snapshotu oraz minuty dnia i kolejkuje odświeżenie raportu na Drive. Zdarzenie ATTENDANCE_DERIVED czeka na konsumentów procesów/norm/podsumowań w etapach 6–8; nie oznacza już wykonanego przeliczenia tych modułów. Historyczna klasyfikacja przyrostów ES nie jest zmieniana automatycznie.
 6. Outbox zapisuje wynik do arkusza. Pełne zakończenie jest widoczne dopiero po potwierdzeniu wszystkich wymaganych zapisów.
 
 ## Kontrakt wewnętrznej komendy
 
 Wymagane pola: request_id (UUID), correction_id, employee_id, work_date, expected_version, reason, source=DRIVE_SHEET, spreadsheet_id, sheet_id, row_id oraz co najmniej jedno z start_at/stop_at. Pola approved_by i approved_at nadaje zaufany adapter po sprawdzeniu tożsamości; nie są przyjmowane na wiarę z komórek. Hash obejmuje zamrożoną treść i wersję źródłową. Wszystkie pola czasu przekazane do usługi mają format ISO 8601 z offsetem.
 
-Wynik: request_id, correction_id, status, attendance_version, moniti_sync, drive_sync, error_code i updated_at. Identyczna komenda zwraca poprzedni wynik. Zmieniony payload z tym samym request_id daje IDEMPOTENCY_CONFLICT. Nowa świadoma korekta wymaga nowego zatwierdzenia i identyfikatora.
+Wynik: request_id, correction_id, status, attendance_version, moniti_sync, drive_sync, error_code i updated_at. Identyczna komenda zwraca poprzedni wynik. Zmieniony payload z tym samym request_id daje REQUEST_ID_CONFLICT. Nowa świadoma korekta wymaga nowego zatwierdzenia i identyfikatora.
 
 ## Statusy i odporność
 
@@ -38,7 +38,7 @@ Wynik: request_id, correction_id, status, attendance_version, moniti_sync, drive
 | APPLIED_REPORT_PENDING | Data Tables zapisane, Moniti potwierdzone lub wyłączone; raport oczekuje na aktualizację |
 | SYNCED | Data Tables i raport zapisane, Moniti potwierdzone lub NOT_REQUIRED |
 
-Zapisy automatu do raportu nie tworzą nowych korekt. Adapter przetwarza wyłącznie jawne zatwierdzenia i deduplikuje je po correction_id/request_id. Edycja propozycji po zatwierdzeniu nie zmienia komendy w toku. Aktualizacja raportu chroni nowe robocze propozycje w kolumnach korekty. Niepowodzenie zapisu statusu do Drive pozostaje w outboxie; stan komendy w Data Tables pozwala odtworzyć wynik.
+Zapisy automatu do raportu nie tworzą nowych korekt. Adapter przetwarza wyłącznie jawne zatwierdzenia i deduplikuje je po correction_id/request_id. Edycja propozycji po zatwierdzeniu nie zmienia komendy w toku. Aktualizacja raportu chroni nowe robocze propozycje w kolumnach korekty. Niepowodzenie zapisu raportu pozostaje w outboxie. Osobny automat co minutę odtwarza statusy z trwałego rejestru korekt i komend; nie modyfikuje pól propozycji. Retry zapisu biznesowego ma limit 8 prób i odstępy rosnące do 30 minut. Awaria wymagająca ingerencji operatora nie powoduje ślepego przejęcia blokady.
 
 ## Scenariusze odbiorowe implementacji
 

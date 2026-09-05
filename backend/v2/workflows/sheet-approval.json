@@ -1,0 +1,1148 @@
+{
+  "name": "MOL // APP V2 // SHEET CORRECTION APPROVAL",
+  "nodes": [
+    {
+      "id": "input",
+      "name": "Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "validate",
+      "name": "Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst i=$input.first().json,b=i.body||{};if(!['preview','approve'].includes(i.action)||!/^Bearer [0-9a-f]{64}$/.test(i.authorization||''))return [{json:fail(401,'UNAUTHENTICATED','Zaloguj się ponownie.')}];if(typeof b.correction_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(b.correction_id))return [{json:fail(400,'INVALID_CORRECTION_ID','Wpisz UUID korekty z arkusza.')}];if(i.action==='approve'&&(b.request_id!==b.correction_id||!/^[0-9a-f]{64}$/.test(b.approved_hash||'')))return [{json:fail(400,'APPROVAL_REQUIRED','Najpierw odczytaj propozycję, potem zatwierdź.')}];return [{json:{valid:true,correction_id:b.correction_id,approved_hash:b.approved_hash||null}}];"
+      }
+    },
+    {
+      "id": "valid",
+      "name": "Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Valid",
+              "leftValue": "={{ $json.valid === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "session",
+      "name": "Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "onError": "continueRegularOutput",
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://n8n.estyl.team/webhook/mol-app-v2-auth-session",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Input').first().json.authorization }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000
+        }
+      }
+    },
+    {
+      "id": "authorize",
+      "name": "Authorize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst s=$input.first().json;return [{json:s.ok&&['LEADER','ADMIN'].includes(s.data?.user?.role)?{valid:true,actor_id:s.data.user.employee_id}:fail(403,'FORBIDDEN','Korekty z Drive zatwierdza lider lub administrator.')}];"
+      }
+    },
+    {
+      "id": "authorized",
+      "name": "Authorized",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1300,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Authorized",
+              "leftValue": "={{ $json.valid === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "read-proposal",
+      "name": "Read Proposal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "onError": "continueRegularOutput",
+      "position": [
+        1560,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4/values/'Korekty'!A1%3AG1000?valueRenderOption=UNFORMATTED_VALUE",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PffTtJhrPLmJ2ZrI",
+          "name": "Google Sheets ATY"
+        }
+      }
+    },
+    {
+      "id": "proposal",
+      "name": "Proposal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst values=$input.first().json.values;if(!Array.isArray(values)||values[0]?.[0]!=='correction_id')return [{json:fail(503,'SHEET_UNAVAILABLE','Nie można odczytać propozycji.')}];const rows=values.slice(1).filter(v=>v[0]===$('Validate').first().json.correction_id);if(rows.length!==1)return [{json:fail(409,'CORRECTION_NOT_UNIQUE','Brak korekty lub powielony identyfikator.')}];const v=rows[0];if(!/^MOL[0-9]+$/.test(v[1]||'')||typeof v[2]!=='string'||!Number.isInteger(v[3])||v[3]<1||typeof v[6]!=='string'||v[6].trim().length<3)return [{json:fail(400,'INVALID_PROPOSAL','Sprawdź pracownika, datę, wersję i powód korekty.')}];const body={request_id:v[0],employee_id:v[1],work_date:v[2],expected_version:v[3],start_at:v[4]||null,stop_at:v[5]||null,reason:v[6].trim()};const source_context={correction_id:v[0],spreadsheet_id:'1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4',sheet_id:'1',row_id:v[0]};return [{json:{valid:true,body,source_context,canonical:JSON.stringify({body,source_context})}}];"
+      }
+    },
+    {
+      "id": "proposal-valid",
+      "name": "Proposal Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Proposal Valid",
+              "leftValue": "={{ $json.valid === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "hash-proposal",
+      "name": "Hash Proposal",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        260,
+        220
+      ],
+      "parameters": {
+        "action": "hash",
+        "type": "SHA256",
+        "binaryData": false,
+        "value": "={{ $json.canonical }}",
+        "dataPropertyName": "payload_hash",
+        "encoding": "hex"
+      }
+    },
+    {
+      "id": "preview",
+      "name": "Preview",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Preview",
+              "leftValue": "={{ $('Input').first().json.action === 'preview' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "preview-result",
+      "name": "Preview Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        220
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:{http_status:200,body:{ok:true,data:{proposal:$('Proposal').first().json.body,approved_hash:$('Hash Proposal').first().json.payload_hash},meta:{api_version:'2.0',server_time:new Date().toISOString()}}}}];"
+      }
+    },
+    {
+      "id": "same-proposal",
+      "name": "Same Proposal",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Same Proposal",
+              "leftValue": "={{ $('Validate').first().json.approved_hash === $('Hash Proposal').first().json.payload_hash }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "changed",
+      "name": "Changed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        220
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:fail(409,'PROPOSAL_CHANGED','Propozycja zmieniła się. Odczytaj ją i zatwierdź ponownie.')}];"
+      }
+    },
+    {
+      "id": "acquire-approval",
+      "name": "Acquire Approval",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        1560,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "auth-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": ""
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "={{ String($execution.id) }}",
+            "lease_until": "={{ $now.plus({seconds:60}).toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "owns-approval",
+      "name": "Owns Approval",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1820,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Owns Approval",
+              "leftValue": "={{ $json.owner === String($execution.id) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "busy",
+      "name": "Busy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        440
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:fail(409,'COMMAND_BUSY','Trwa inne zatwierdzenie. Ponów to samo żądanie.')}];"
+      }
+    },
+    {
+      "id": "read-frozen",
+      "name": "Read Frozen",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        260,
+        440
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "89iFEkyiyUaThLjU"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "correction_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate').first().json.correction_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      }
+    },
+    {
+      "id": "freeze",
+      "name": "Freeze",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        440
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst rows=$input.all().map(i=>i.json).filter(c=>c.correction_id),old=rows[0],p=$('Proposal').first().json,h=$('Hash Proposal').first().json.payload_hash,actor=$('Authorize').first().json.actor_id;if(rows.length>1||old&&(old.payload_hash!==h||old.approved_by!==actor))return [{json:fail(409,'CORRECTION_ALREADY_APPROVED','Ta korekta ma już inne zatwierdzenie. Nowa treść wymaga nowego UUID.')}];return [{json:{valid:true,record:old||{correction_id:p.body.request_id,request_id:p.body.request_id,spreadsheet_id:'1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4',sheet_id:'1',row_id:p.body.request_id,employee_id:p.body.employee_id,expected_version:p.body.expected_version,approved_by:actor,approved_at:new Date().toISOString(),payload_hash:h,payload_json:p.canonical,status:'PENDING',error_code:''}}}];"
+      }
+    },
+    {
+      "id": "frozen-valid",
+      "name": "Frozen Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        440
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Frozen Valid",
+              "leftValue": "={{ $json.valid === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "save-frozen",
+      "name": "Save Frozen",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        1040,
+        440
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "89iFEkyiyUaThLjU"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "correction_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate').first().json.correction_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "correction_id": "={{ $('Freeze').first().json.record.correction_id ?? null }}",
+            "request_id": "={{ $('Freeze').first().json.record.request_id ?? null }}",
+            "spreadsheet_id": "={{ $('Freeze').first().json.record.spreadsheet_id ?? null }}",
+            "sheet_id": "={{ $('Freeze').first().json.record.sheet_id ?? null }}",
+            "row_id": "={{ $('Freeze').first().json.record.row_id ?? null }}",
+            "employee_id": "={{ $('Freeze').first().json.record.employee_id ?? null }}",
+            "expected_version": "={{ $('Freeze').first().json.record.expected_version ?? null }}",
+            "approved_by": "={{ $('Freeze').first().json.record.approved_by ?? null }}",
+            "approved_at": "={{ $('Freeze').first().json.record.approved_at ?? null }}",
+            "payload_hash": "={{ $('Freeze').first().json.record.payload_hash ?? null }}",
+            "payload_json": "={{ $('Freeze').first().json.record.payload_json ?? null }}",
+            "status": "={{ $('Freeze').first().json.record.status ?? null }}",
+            "error_code": "={{ $('Freeze').first().json.record.error_code ?? null }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "prepare-release",
+      "name": "Prepare Release",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        440
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "release-approval",
+      "name": "Release Approval",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        1560,
+        440
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "auth-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": "={{ String($execution.id) }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "after-release",
+      "name": "After Release",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        440
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:$('Prepare Release').first().json}];"
+      }
+    },
+    {
+      "id": "call-service",
+      "name": "Call Service",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        660
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Call Service",
+              "leftValue": "={{ !!$json.correction_id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "command-input",
+      "name": "Command Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        660
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst p=JSON.parse($('Freeze').first().json.record.payload_json);return [{json:{operation:'CORRECT',authorization:$('Input').first().json.authorization,body:p.body,source:'DRIVE_SHEET',source_context:p.source_context}}];"
+      }
+    },
+    {
+      "id": "attendance-service",
+      "name": "Attendance Service",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        520,
+        660
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "qPVmcfp6pUg3GbzH"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "outcome",
+      "name": "Outcome",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        660
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst result=$input.first().json,old=$('Freeze').first().json.record;const status=result.body?.ok?'APPLIED_REPORT_PENDING':result.http_status===409?'CONFLICT':result.http_status>=500?'RETRY_PENDING':'REJECTED';return [{json:{result,status:['SYNCED','APPLIED_REPORT_PENDING'].includes(old.status)?old.status:status,error_code:result.body?.error?.code||''}}];"
+      }
+    },
+    {
+      "id": "save-outcome",
+      "name": "Save Outcome",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        1040,
+        660
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "89iFEkyiyUaThLjU"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "correction_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate').first().json.correction_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $('Outcome').first().json.status }}",
+            "error_code": "={{ $('Outcome').first().json.error_code }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "return-outcome",
+      "name": "Return Outcome",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        660
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:$('Outcome').first().json.result}];"
+      }
+    },
+    {
+      "id": "return",
+      "name": "Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        660
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn $input.all();"
+      }
+    }
+  ],
+  "connections": {
+    "Input": {
+      "main": [
+        [
+          {
+            "node": "Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate": {
+      "main": [
+        [
+          {
+            "node": "Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid": {
+      "main": [
+        [
+          {
+            "node": "Session",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Session": {
+      "main": [
+        [
+          {
+            "node": "Authorize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Authorize": {
+      "main": [
+        [
+          {
+            "node": "Authorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Authorized": {
+      "main": [
+        [
+          {
+            "node": "Read Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Proposal": {
+      "main": [
+        [
+          {
+            "node": "Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proposal": {
+      "main": [
+        [
+          {
+            "node": "Proposal Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proposal Valid": {
+      "main": [
+        [
+          {
+            "node": "Hash Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash Proposal": {
+      "main": [
+        [
+          {
+            "node": "Preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preview": {
+      "main": [
+        [
+          {
+            "node": "Preview Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Same Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Same Proposal": {
+      "main": [
+        [
+          {
+            "node": "Acquire Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Changed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acquire Approval": {
+      "main": [
+        [
+          {
+            "node": "Owns Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owns Approval": {
+      "main": [
+        [
+          {
+            "node": "Read Frozen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Frozen": {
+      "main": [
+        [
+          {
+            "node": "Freeze",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Freeze": {
+      "main": [
+        [
+          {
+            "node": "Frozen Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frozen Valid": {
+      "main": [
+        [
+          {
+            "node": "Save Frozen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Release",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Frozen": {
+      "main": [
+        [
+          {
+            "node": "Prepare Release",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Release": {
+      "main": [
+        [
+          {
+            "node": "Release Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Release Approval": {
+      "main": [
+        [
+          {
+            "node": "After Release",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "After Release": {
+      "main": [
+        [
+          {
+            "node": "Call Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Service": {
+      "main": [
+        [
+          {
+            "node": "Command Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Command Input": {
+      "main": [
+        [
+          {
+            "node": "Attendance Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attendance Service": {
+      "main": [
+        [
+          {
+            "node": "Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Outcome": {
+      "main": [
+        [
+          {
+            "node": "Save Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Outcome": {
+      "main": [
+        [
+          {
+            "node": "Return Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 180,
+    "errorWorkflow": "rnELTCKClbzY8lxZ",
+    "timezone": "Europe/Warsaw",
+    "executionOrder": "v1"
+  }
+}

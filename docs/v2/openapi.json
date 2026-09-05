@@ -180,7 +180,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AttendanceCorrectionRequest"
+                "$ref": "#/components/schemas/AttendanceWriteRequest"
               }
             }
           }
@@ -478,6 +478,69 @@
           }
         }
       }
+    },
+    "/mol-app-v2-attendance-status": {
+      "get": {
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "attendanceStatus",
+        "description": "Stage 5 confirmed attendance snapshot. correction_id selects Drive proposal preview for LEADER/ADMIN.",
+        "parameters": [
+          {
+            "name": "work_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "employee_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "correction_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Confirmed attendance snapshot or Drive proposal and approved_hash",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data",
+                    "meta"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -555,7 +618,14 @@
           ],
           "operationId": "startAttendance",
           "requestBody": {
-            "$ref": "#/components/requestBodies/Command"
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceCommandRequest"
+                }
+              }
+            }
           },
           "responses": {
             "200": {
@@ -577,7 +647,14 @@
           ],
           "operationId": "finishAttendance",
           "requestBody": {
-            "$ref": "#/components/requestBodies/Command"
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceCommandRequest"
+                }
+              }
+            }
           },
           "responses": {
             "200": {
@@ -599,7 +676,14 @@
           ],
           "operationId": "reopenAttendance",
           "requestBody": {
-            "$ref": "#/components/requestBodies/Command"
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceCommandRequest"
+                }
+              }
+            }
           },
           "responses": {
             "200": {
@@ -854,7 +938,8 @@
         "required": [
           "request_id",
           "work_date",
-          "reason"
+          "reason",
+          "expected_version"
         ],
         "properties": {
           "request_id": {
@@ -882,6 +967,14 @@
             "type": "string",
             "minLength": 3,
             "maxLength": 500
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "employee_id": {
+            "type": "string",
+            "pattern": "^MOL[0-9]+$"
           }
         },
         "anyOf": [
@@ -1254,7 +1347,20 @@
             ],
             "properties": {
               "data": {
-                "$ref": "#/components/schemas/Attendance"
+                "type": "object",
+                "required": [
+                  "attendance",
+                  "snapshot_version"
+                ],
+                "properties": {
+                  "attendance": {
+                    "$ref": "#/components/schemas/Attendance"
+                  },
+                  "snapshot_version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
               }
             }
           }
@@ -1412,6 +1518,69 @@
                 }
               }
             }
+          }
+        ]
+      },
+      "AttendanceCommandRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "request_id",
+          "work_date",
+          "expected_version"
+        ],
+        "properties": {
+          "request_id": {
+            "$ref": "#/components/schemas/RequestId"
+          },
+          "work_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "employee_id": {
+            "type": "string",
+            "pattern": "^MOL[0-9]+$"
+          }
+        }
+      },
+      "SheetApprovalRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "request_id",
+          "correction_id",
+          "approved_hash"
+        ],
+        "properties": {
+          "request_id": {
+            "$ref": "#/components/schemas/RequestId"
+          },
+          "correction_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approved_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "description": "request_id equals correction_id; LEADER/ADMIN approval of the exact previewed proposal."
+      },
+      "AttendanceWriteRequest": {
+        "type": "object",
+        "required": [
+          "request_id"
+        ],
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AttendanceCorrectionRequest"
+          },
+          {
+            "$ref": "#/components/schemas/SheetApprovalRequest"
           }
         ]
       }

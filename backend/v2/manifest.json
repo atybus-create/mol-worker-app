@@ -30,17 +30,39 @@
     "test_harness": "XgHKTS7EmpMi0xz1",
     "auth_login": "hnGAVnAFhCHPXqOZ",
     "auth_session": "li4DQnEefK8DR8hh",
-    "auth_logout": "61xzzGlB9dhGEFKU"
+    "auth_logout": "61xzzGlB9dhGEFKU",
+    "attendance_service": "qPVmcfp6pUg3GbzH",
+    "attendance_moniti": "3e67SsUOByUi17YV",
+    "attendance_drive": "lTGyyMhMJ8PnWzAo",
+    "attendance_recovery": "BvBxkAOt5pCXy3DD",
+    "sheet_approval": "5eA8mKJLInBQSU7w",
+    "sheet_status": "WS3ROx0U3OlYfeAS",
+    "attendance_status": "KYRcXRUuqmjVfkaQ",
+    "attendance_start": "p3j3KhESv7vzF5Cw",
+    "attendance_finish": "sZCi2pQtjhqvGCpP",
+    "attendance_reopen": "3CxXgz8DzL8pNCIs",
+    "attendance_correct": "3i83FN2xZj8sH6Ht"
   },
   "active_versions": {
-    "health": "d0e3969a-db4e-498b-8179-859e7397fce7",
+    "health": "d43ad0ad-7e1b-4dbe-a768-de3bbaabfe94",
     "command": "6f348eb6-f8b3-4d07-ae61-903fcb17d5c6",
     "error_handler": "27b35770-ed05-4b35-abb4-ecb12a3f8367",
     "outbox": "a8906fe3-c6c2-4a58-88c3-acf1f2d074d4",
     "test_harness": null,
     "auth_login": "872fb11a-00bd-4163-a056-04b4d92940d0",
     "auth_session": "d0075043-950f-45b1-99e3-39207707ad62",
-    "auth_logout": "0630e472-9b5d-4593-a171-f8ee119377d5"
+    "auth_logout": "0630e472-9b5d-4593-a171-f8ee119377d5",
+    "attendance_service": "001ab62e-a55b-4548-9eb1-66c2e34be6d1",
+    "attendance_moniti": "56ff0be6-3265-41a2-b0b9-7234c957d6e0",
+    "attendance_drive": "902ff676-6619-4b20-97ba-023d3ec7c5fc",
+    "attendance_recovery": "10976a73-c4e2-4df0-8582-5cef75ac94a0",
+    "sheet_approval": "c1458aa3-ab13-4f5f-9884-0c35b7da53c0",
+    "sheet_status": "f7f00096-8739-4f2c-989b-076dd005a4e9",
+    "attendance_status": "e53e9d54-5261-4b6c-bb7e-1d7f322515cf",
+    "attendance_start": "1c87b119-7687-47d5-b767-ff7613b7a87b",
+    "attendance_finish": "a96a49e0-f88f-432d-83b8-03436fe8af94",
+    "attendance_reopen": "7fa3ea99-c186-4f74-a151-57d903e52555",
+    "attendance_correct": "82d8bffc-afe0-4290-b50b-f8c94cd1f7cc"
   },
   "auth": {
     "receipt_credential_id": "79mc2IFYLaJLMrgJ",
@@ -49,5 +71,18 @@
     "rate_window_minutes": 15,
     "diagnostic_workflow_id": "miTuCQ8nnGD0jTe7",
     "diagnostic_active": false
+  },
+  "attendance": {
+    "moniti_test_date": "2026-09-05",
+    "moniti_test_worker_ids": [
+      99191,
+      99186,
+      99185
+    ],
+    "moniti_precision_seconds": 60,
+    "report_spreadsheet_id": "1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4",
+    "report_url": "https://docs.google.com/spreadsheets/d/1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4/edit?ouid=113962701124300298502",
+    "harness_id": "f9IXrykYauu9FVfi",
+    "harness_active": true
   }
 }

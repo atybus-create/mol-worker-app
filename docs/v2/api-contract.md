@@ -57,8 +57,8 @@ Każdy zapis przyjmuje `request_id` w JSON. Identyczny użytkownik + operacja + 
 | `POST /mol-app-v2-message-ack` | zalogowany | Potwierdzenie wiadomości |
 | `GET /mol-app-v2-norms-daily` | zalogowany | Norma dzienna |
 | `GET /mol-app-v2-norms-monthly` | zalogowany | Ważona norma miesięczna |
-| `GET /mol-app-v2-leader-team` | LEADER/ADMIN | Bieżący stan zespołu |
-| `POST /mol-app-v2-leader-message` | LEADER/ADMIN | Komunikat do zespołu/osób |
+| `GET /mol-app-v2-leader-team` | LEADER/ADMIN | Bieżący stan wszystkich pracowników |
+| `POST /mol-app-v2-leader-message` | LEADER/ADMIN | Komunikat do wybranych pracowników lub wszystkich, bez ograniczenia do przypisanego zespołu |
 | `GET /mol-app-v2-employee-history` | LEADER/ADMIN | Stronicowana historia pracownika |
 | `GET /mol-app-v2-report-attendance` | LEADER/ADMIN | Raport obecności |
 | `GET /mol-app-v2-report-export` | LEADER/ADMIN | Eksport raportu |

@@ -8,7 +8,7 @@
   <title>MOL // Aplikacja V2 — środowisko testowe</title>
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://n8n.estyl.team; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <link rel="stylesheet" href="./styles.css?v=0.4.0">
+  <link rel="stylesheet" href="./styles.css?v=0.5.0">
 </head>
 <body>
   <main class="shell">
@@ -16,7 +16,7 @@
       <p class="eyebrow">MOL // SYSTEM PRACY</p>
       <span class="environment">ŚRODOWISKO TESTOWE V2</span>
       <h1>Twoje konto.<br>Nowy początek.</h1>
-      <p class="lead">Etap 4: logowanie i sesja. To osobna aplikacja testowa — nie zmienia obecności, czasu pracy ani danych w V1.</p>
+      <p class="lead">Etap 5: czas pracy. Oddzielna baza V2. Testy Moniti obejmują 5 września 2026 i konta atybus, dtatarska oraz asorokopud.</p>
     </section>
 
     <section class="auth-card" aria-labelledby="authTitle">
@@ -32,10 +32,46 @@
       </form>
       <div id="sessionPanel" hidden>
         <dl><dt>Pracownik</dt><dd id="userName"></dd><dt>Rola</dt><dd id="userRole"></dd><dt>Sesja ważna do</dt><dd id="sessionExpiry"></dd></dl>
-        <p class="scope-note">Jesteś zalogowany. START/STOP, procesy i normy zostaną dodane w kolejnych etapach.</p>
+        <p class="scope-note">Czas pracy jest dostępny poniżej. Procesy, normy i panel lidera powstaną w kolejnych etapach.</p>
         <button id="logoutButton" type="button">Wyloguj się</button>
       </div>
       <button id="sessionRetry" type="button" hidden>Sprawdź sesję ponownie</button>
+    </section>
+
+    <section id="attendancePanel" class="auth-card" aria-labelledby="attendanceTitle" hidden>
+      <p class="eyebrow">Czas pracy · Europe/Warsaw</p>
+      <h2 id="attendanceTitle">Twój dzień pracy</h2>
+      <p class="scope-note">Przy włączonym Moniti godziny zapisywane są z dokładnością do minuty. START i STOP korzystają z czasu serwera.</p>
+      <label for="workDate">Dzień</label>
+      <input id="workDate" type="date" required>
+      <h3 id="workState">Odczyt…</h3>
+      <p id="workTimes"></p><p id="workSync"></p><p id="openDayNote"></p>
+      <p id="attendanceMessage" role="status" aria-live="polite"></p>
+      <p id="managerNotices" class="scope-note"></p>
+      <div class="work-actions">
+        <button id="workStart" type="button" disabled>START pracy</button>
+        <button id="workFinish" type="button" hidden>STOP pracy</button>
+        <button id="workReopen" type="button" hidden>Wznów dzień</button>
+        <button id="attendanceRefresh" type="button">Odśwież stan</button>
+        <button id="attendanceRetry" type="button" hidden>Ponów zapis</button>
+      </div>
+      <form id="correctionForm" hidden>
+        <h3>Korekta godzin</h3>
+        <label for="correctionStart">START (czas polski)</label><input id="correctionStart" type="datetime-local" step="60">
+        <label for="correctionStop">STOP (czas polski, opcjonalnie)</label><input id="correctionStop" type="datetime-local" step="60">
+        <p class="scope-note">Puste pole nie usuwa godziny. Aby usunąć STOP, użyj „Wznów dzień”. Pracownik koryguje własne dni do 31 dni wstecz.</p>
+        <label for="correctionReason">Powód korekty</label><input id="correctionReason" minlength="3" maxlength="500" required>
+        <button id="correctionSave" type="submit">Zapisz korektę</button>
+      </form>
+      <div id="sheetApprovalPanel" hidden>
+        <h3>Zatwierdź korektę z Drive</h3>
+        <p class="scope-note">W zakładce „Korekty” raportu wpisz propozycję z nowym UUID. Godziny podawaj w ISO z offsetem, np. 2026-09-05T08:00:00+02:00. Następnie odczytaj propozycję tutaj i zatwierdź ją swoim kontem.</p>
+        <p><a href="https://docs.google.com/spreadsheets/d/1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4/edit" target="_blank" rel="noopener noreferrer">Otwórz raport testowy V2</a></p>
+        <label for="sheetCorrectionId">correction_id z arkusza</label><input id="sheetCorrectionId" maxlength="36" placeholder="UUID korekty">
+        <button id="sheetPreviewButton" type="button">Odczytaj propozycję</button>
+        <p id="sheetProposal" role="status" aria-live="polite"></p>
+        <button id="sheetApproveButton" type="button" hidden>Zatwierdź odczytaną korektę</button>
+      </div>
     </section>
 
     <section class="status-card" aria-labelledby="statusTitle">
@@ -48,26 +84,27 @@
     </section>
 
     <section class="grid">
-      <article><span>Frontend</span><strong>V2 0.4.0</strong><small>środowisko odbiorowe</small></article>
+      <article><span>Frontend</span><strong>V2 0.5.0</strong><small>środowisko odbiorowe</small></article>
       <article><span>Backend</span><strong id="backendVersion">—</strong><small>oddzielny workflow n8n</small></article>
       <article><span>Zapisy pracowników</span><strong id="writesState">—</strong><small>oddzielone od testów technicznych</small></article>
       <article><span>Baza V2</span><strong id="databaseState">—</strong><small>odczyt konfiguracji na żywo</small></article>
     </section>
 
     <section class="acceptance">
-      <h2>Etap 4 — sprawdź na swoim koncie</h2>
+      <h2>Etap 5 — sprawdź czas pracy</h2>
       <ul>
-        <li>Zaloguj się na konto atybus dotychczasowym hasłem.</li>
-        <li>Sprawdź imię i rolę. Odśwież stronę — sesja powinna pozostać aktywna.</li>
-        <li>Wyloguj się, a następnie odśwież stronę — formularz logowania powinien pozostać widoczny.</li>
-        <li>Spróbuj błędnego hasła. Zobaczysz komunikat, bez dostępu do konta.</li>
-        <li>Sesja trwa maksymalnie 12 godzin. Po 5 nieudanych próbach obowiązuje blokada do końca 15-minutowego okna.</li>
+        <li>Zaloguj się i sprawdź zapisany dzień 2026-09-05. Dzisiejsze wpisy zawierają dane testowe.</li>
+        <li>Wznów dzień, odśwież stronę i zakończ pracę przyciskiem STOP.</li>
+        <li>Skoryguj godzinę i wpisz powód. Sprawdź dane po ponownym odczycie.</li>
+        <li>Sprawdź zgodność z Moniti oraz raportem V2. Drive aktualizuje się w tle, zwykle w ciągu minuty.</li>
+        <li>Lider i administrator zatwierdzają propozycje z zakładki „Korekty”. Sama zmiana w arkuszu nie wystarcza.</li>
       </ul>
       <button id="retryButton" type="button">Sprawdź ponownie</button>
     </section>
 
-    <footer>V2 0.4.0 · Etap 4 · Bez zmian w V1</footer>
+    <footer>V2 0.5.0 · Etap 5 · Oddzielna baza V2, wspólne Moniti w uzgodnionym zakresie testów</footer>
   </main>
-  <script src="./app.js?v=0.4.0" defer></script>
+  <script src="./attendance.js?v=0.5.0" defer></script>
+  <script src="./app.js?v=0.5.0" defer></script>
 </body>
 </html>

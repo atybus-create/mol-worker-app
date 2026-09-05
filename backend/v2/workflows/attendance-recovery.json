@@ -1,0 +1,168 @@
+{
+  "name": "MOL // APP V2 // ATTENDANCE RECOVERY",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "internal-input",
+      "name": "Internal Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "read-pending",
+      "name": "Read Pending",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "RECOVERY_REQUIRED"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      }
+    },
+    {
+      "id": "choose-due",
+      "name": "Choose Due",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const fail=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message,retryable:status>=500||code==='COMMAND_BUSY'},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst rows=$input.all().map(i=>i.json).filter(c=>c.request_id&&c.operation?.startsWith('ATTENDANCE_')&&(c.attempts||0)<8&&Date.now()-Date.parse(c.updatedAt)>60000*Math.min(30,2**Math.min(c.attempts||0,5)));rows.sort((a,b)=>Date.parse(a.updatedAt)-Date.parse(b.updatedAt));return rows.slice(0,1).map(c=>({json:{recovery_request_id:c.request_id}}));"
+      }
+    },
+    {
+      "id": "recover",
+      "name": "Recover",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "qPVmcfp6pUg3GbzH"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Read Pending",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Pending": {
+      "main": [
+        [
+          {
+            "node": "Choose Due",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choose Due": {
+      "main": [
+        [
+          {
+            "node": "Recover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Internal Input": {
+      "main": [
+        [
+          {
+            "node": "Read Pending",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 180,
+    "errorWorkflow": "rnELTCKClbzY8lxZ",
+    "timezone": "Europe/Warsaw",
+    "executionOrder": "v1"
+  }
+}
