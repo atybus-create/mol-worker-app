@@ -2,8 +2,8 @@
 
 | Etap | Zakres | Test techniczny | Odbiór użytkownika | Status |
 |---:|---|---|---|---|
-| 1 | Zamrożenie V1, inwentaryzacja, izolowany szkielet V2 | Backend 200; 0 błędów; 0 ostrzeżeń; `writes_enabled=false` | Oczekuje | GOTOWE DO ODBIORU |
-| 2 | Finalny model działania i kontrakty API | — | — | NIE ROZPOCZĘTO |
+| 1 | Zamrożenie V1, inwentaryzacja, izolowany szkielet V2 | Backend 200; 0 błędów; 0 ostrzeżeń; `writes_enabled=false` | Potwierdzony 2026-09-05 | ODEBRANY |
+| 2 | Finalny model działania i kontrakty API | PASS: OpenAPI 3.1; 21 endpointów; 21 unikalnych operacji; idempotencja i stany sprawdzone | Oczekuje | GOTOWE DO ODBIORU |
 | 3 | Rdzeń backendu V2 | — | — | NIE ROZPOCZĘTO |
 | 4 | Logowanie i sesja | — | — | NIE ROZPOCZĘTO |
 | 5 | Czas pracy | — | — | NIE ROZPOCZĘTO |
@@ -23,4 +23,4 @@
 4. Sprawdź, czy `Zapisy danych` pokazują `WYŁĄCZONE`.
 5. Kliknij `Sprawdź ponownie` i potwierdź, że status nadal jest `ONLINE`.
 
-Po potwierdzeniu użytkownika status etapu zostanie zmieniony na `ODEBRANY` i dopiero wtedy rozpocznie się etap 2.
+Etap 1 został odebrany przez użytkownika 2026-09-05. V1 pozostała dostępna bez zmian, razem ze znanymi błędami, które nie mogą zostać przeniesione do V2.
