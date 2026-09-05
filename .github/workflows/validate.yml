@@ -23,6 +23,8 @@ jobs:
         run: |
           node scripts/validate-v2-contract.js
           node scripts/validate-v2-backend.js
+          node scripts/test-v2-password.cjs
+          node scripts/test-v2-auth.cjs
       - name: Check required UI and integrations
         run: |
           grep -q 'MAGAZYN' app.js

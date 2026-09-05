@@ -1,0 +1,2 @@
+node_modules/
+backend/v2/auth/*.local.json

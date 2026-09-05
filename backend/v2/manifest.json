@@ -18,20 +18,36 @@
     "MOL_V2_CONFIG": "x66LbXe5CSpdMIkv",
     "MOL_V2_SHEET_CORRECTIONS": "89iFEkyiyUaThLjU",
     "MOL_V2_LOCKS": "uKfyrOkB2zoSEuBH",
-    "MOL_V2_ERRORS": "QMyDe52h9QiRlsOp"
+    "MOL_V2_ERRORS": "QMyDe52h9QiRlsOp",
+    "MOL_V2_AUTH_LIMITS": "XNQosSJXp23l2EBU",
+    "MOL_V2_AUTH_RECEIPTS": "sbWYwBwKoktbD3Yf"
   },
   "workflows": {
     "health": "sfoWeuiJBN2qvCRF",
     "command": "tsyGl8RnqKipKDx1",
     "error_handler": "rnELTCKClbzY8lxZ",
     "outbox": "BC5qZVnvzpMaXfp4",
-    "test_harness": "XgHKTS7EmpMi0xz1"
+    "test_harness": "XgHKTS7EmpMi0xz1",
+    "auth_login": "hnGAVnAFhCHPXqOZ",
+    "auth_session": "li4DQnEefK8DR8hh",
+    "auth_logout": "61xzzGlB9dhGEFKU"
   },
   "active_versions": {
-    "health": "d09a6b85-e619-4714-b50b-afcb44c05d26",
+    "health": "d0e3969a-db4e-498b-8179-859e7397fce7",
     "command": "6f348eb6-f8b3-4d07-ae61-903fcb17d5c6",
-    "error_handler": "49347107-24ba-4b15-b273-2c10e6bb6197",
+    "error_handler": "27b35770-ed05-4b35-abb4-ecb12a3f8367",
     "outbox": "a8906fe3-c6c2-4a58-88c3-acf1f2d074d4",
-    "test_harness": null
+    "test_harness": null,
+    "auth_login": "872fb11a-00bd-4163-a056-04b4d92940d0",
+    "auth_session": "d0075043-950f-45b1-99e3-39207707ad62",
+    "auth_logout": "0630e472-9b5d-4593-a171-f8ee119377d5"
+  },
+  "auth": {
+    "receipt_credential_id": "79mc2IFYLaJLMrgJ",
+    "session_hours": 12,
+    "max_failed_attempts": 5,
+    "rate_window_minutes": 15,
+    "diagnostic_workflow_id": "miTuCQ8nnGD0jTe7",
+    "diagnostic_active": false
   }
 }

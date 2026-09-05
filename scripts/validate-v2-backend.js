@@ -8,7 +8,7 @@ const schema = read('schema.json');
 const manifest = read('manifest.json');
 const allowedTables = new Set(Object.values(manifest.tables));
 const workflows = fs.readdirSync(path.join(root, 'workflows')).map(file => read(`workflows/${file}`));
-assert.equal(schema.tables.length, 17);
+assert.equal(schema.tables.length, 19);
 for (const table of schema.tables) {
   assert.ok(table.name.startsWith('MOL_V2_'));
   assert.ok(manifest.tables[table.name]);
@@ -22,9 +22,13 @@ for (const workflow of workflows) {
     if (node.type === 'n8n-nodes-base.dataTable') {
       assert.ok(allowedTables.has(node.parameters.dataTableId.value), `Non-V2 table: ${node.name}`);
     }
-    assert.ok(!node.credentials || Object.keys(node.credentials).length === 0, 'Unexpected external credential');
+    if (node.credentials && Object.keys(node.credentials).length) {
+      assert.equal(node.type, 'n8n-nodes-base.crypto');
+      assert.deepEqual(Object.keys(node.credentials), ['crypto']);
+      assert.equal(node.credentials.crypto.id, manifest.auth.receipt_credential_id);
+    }
     if (node.type === 'n8n-nodes-base.webhook') {
-      assert.ok(['mol-app-v2-health', 'mol-app-v2-stage3-test'].includes(node.parameters.path));
+      assert.ok(['mol-app-v2-health', 'mol-app-v2-stage3-test', 'mol-app-v2-auth-login', 'mol-app-v2-auth-session', 'mol-app-v2-auth-logout'].includes(node.parameters.path));
     }
   }
   for (const [source, outputs] of Object.entries(workflow.connections)) {

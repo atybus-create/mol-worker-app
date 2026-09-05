@@ -1,0 +1,179 @@
+{
+  "stage": 4,
+  "date": "2026-09-05",
+  "tests": [
+    {
+      "test": "login",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "test": "login replay exact response",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "test": "valid session",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "test": "missing session",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "forged session",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "logout",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "test": "logout repeated",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "test": "session after logout",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "bad password 1",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "bad password 2",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "bad password 3",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "bad password 4",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "bad password 5",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "bad password 6",
+      "status": 429,
+      "pass": true
+    },
+    {
+      "test": "expired session",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "unknown login",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "malformed request",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "test": "revoked login replay",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "expired login replay",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "inactive existing session",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "inactive login",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "test": "recover session from encrypted receipt",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "test": "logout identical replay",
+      "pass": true
+    }
+  ],
+  "race": [
+    {
+      "status": 200,
+      "code": "OK"
+    },
+    {
+      "status": 409,
+      "code": "AUTH_BUSY"
+    },
+    {
+      "status": 409,
+      "code": "AUTH_BUSY"
+    },
+    {
+      "status": 409,
+      "code": "AUTH_BUSY"
+    }
+  ],
+  "race_session_count": 1,
+  "password_vectors": "PASS (independent node:crypto PBKDF2)",
+  "ui_unit_tests": "PASS",
+  "live_browser": "PENDING",
+  "diagnostic_active": false,
+  "cors_origin": "https://atybus-create.github.io",
+  "validation": [
+    {
+      "workflow": "login",
+      "totalNodes": 36,
+      "enabledNodes": 36,
+      "triggerNodes": 1,
+      "validConnections": 43,
+      "invalidConnections": 0,
+      "expressionsValidated": 36,
+      "errorCount": 0,
+      "warningCount": 0
+    },
+    {
+      "workflow": "session",
+      "totalNodes": 10,
+      "enabledNodes": 10,
+      "triggerNodes": 1,
+      "validConnections": 11,
+      "invalidConnections": 0,
+      "expressionsValidated": 7,
+      "errorCount": 0,
+      "warningCount": 0
+    },
+    {
+      "workflow": "logout",
+      "totalNodes": 17,
+      "enabledNodes": 17,
+      "triggerNodes": 1,
+      "validConnections": 20,
+      "invalidConnections": 0,
+      "expressionsValidated": 14,
+      "errorCount": 0,
+      "warningCount": 0
+    }
+  ]
+}

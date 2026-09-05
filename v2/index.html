@@ -6,15 +6,36 @@
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="theme-color" content="#071b3d">
   <title>MOL // Aplikacja V2 — środowisko testowe</title>
-  <link rel="stylesheet" href="./styles.css?v=0.1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://n8n.estyl.team; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <link rel="stylesheet" href="./styles.css?v=0.4.0">
 </head>
 <body>
   <main class="shell">
     <section class="hero">
       <p class="eyebrow">MOL // SYSTEM PRACY</p>
       <span class="environment">ŚRODOWISKO TESTOWE V2</span>
-      <h1>Budujemy nową aplikację jako jedną spójną całość.</h1>
-      <p class="lead">Etap 3: fundament backendu jest przygotowany. Testujemy zapis, ochronę przed duplikatami i odzyskiwanie po błędach. Funkcje pracowników uruchamiamy w kolejnych etapach.</p>
+      <h1>Twoje konto.<br>Nowy początek.</h1>
+      <p class="lead">Etap 4: logowanie i sesja. To osobna aplikacja testowa — nie zmienia obecności, czasu pracy ani danych w V1.</p>
+    </section>
+
+    <section class="auth-card" aria-labelledby="authTitle">
+      <p class="eyebrow">Dostęp do V2</p>
+      <h2 id="authTitle">Sprawdzanie sesji…</h2>
+      <p id="authMessage" role="status" aria-live="polite"></p>
+      <form id="loginForm" hidden>
+        <label for="login">Login</label>
+        <input id="login" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="100" required>
+        <label for="password">Hasło</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" maxlength="200" required>
+        <button id="loginButton" type="submit">Zaloguj się</button>
+      </form>
+      <div id="sessionPanel" hidden>
+        <dl><dt>Pracownik</dt><dd id="userName"></dd><dt>Rola</dt><dd id="userRole"></dd><dt>Sesja ważna do</dt><dd id="sessionExpiry"></dd></dl>
+        <p class="scope-note">Jesteś zalogowany. START/STOP, procesy i normy zostaną dodane w kolejnych etapach.</p>
+        <button id="logoutButton" type="button">Wyloguj się</button>
+      </div>
+      <button id="sessionRetry" type="button" hidden>Sprawdź sesję ponownie</button>
     </section>
 
     <section class="status-card" aria-labelledby="statusTitle">
@@ -27,27 +48,26 @@
     </section>
 
     <section class="grid">
-      <article><span>Frontend</span><strong>V2 0.3.0</strong><small>środowisko odbiorowe</small></article>
+      <article><span>Frontend</span><strong>V2 0.4.0</strong><small>środowisko odbiorowe</small></article>
       <article><span>Backend</span><strong id="backendVersion">—</strong><small>oddzielny workflow n8n</small></article>
       <article><span>Zapisy pracowników</span><strong id="writesState">—</strong><small>oddzielone od testów technicznych</small></article>
       <article><span>Baza V2</span><strong id="databaseState">—</strong><small>odczyt konfiguracji na żywo</small></article>
     </section>
 
     <section class="acceptance">
-      <h2>Etap 3 — odbiór fundamentu backendu</h2>
+      <h2>Etap 4 — sprawdź na swoim koncie</h2>
       <ul>
-        <li>Backend pokazuje ONLINE i wersję 0.3.0.</li>
-        <li>Baza V2 pokazuje ONLINE po rzeczywistym odczycie konfiguracji.</li>
-        <li>Zapisy pracowników pozostają WYŁĄCZONE do wdrożenia funkcji.</li>
-        <li>Przygotowano 17 osobnych tabel V2.</li>
-        <li>Testy duplikatów, konfliktów, równoczesnych zapisów i odzyskiwania przeszły poprawnie.</li>
-        <li>Logowanie i sesje będą przedmiotem etapu 4 po Twoim odbiorze.</li>
+        <li>Zaloguj się na konto atybus dotychczasowym hasłem.</li>
+        <li>Sprawdź imię i rolę. Odśwież stronę — sesja powinna pozostać aktywna.</li>
+        <li>Wyloguj się, a następnie odśwież stronę — formularz logowania powinien pozostać widoczny.</li>
+        <li>Spróbuj błędnego hasła. Zobaczysz komunikat, bez dostępu do konta.</li>
+        <li>Sesja trwa maksymalnie 12 godzin. Po 5 nieudanych próbach obowiązuje blokada do końca 15-minutowego okna.</li>
       </ul>
       <button id="retryButton" type="button">Sprawdź ponownie</button>
     </section>
 
-    <footer>V2 0.3.0 · Etap 3 · 05.09.2026</footer>
+    <footer>V2 0.4.0 · Etap 4 · Bez zmian w V1</footer>
   </main>
-  <script src="./app.js?v=0.3.0" defer></script>
+  <script src="./app.js?v=0.4.0" defer></script>
 </body>
 </html>

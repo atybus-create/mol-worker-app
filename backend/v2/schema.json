@@ -715,6 +715,48 @@
           "type": "date"
         }
       ]
+    },
+    {
+      "name": "MOL_V2_AUTH_LIMITS",
+      "columns": [
+        {
+          "name": "limit_key",
+          "type": "string"
+        },
+        {
+          "name": "attempts",
+          "type": "number"
+        },
+        {
+          "name": "window_start",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_AUTH_RECEIPTS",
+      "columns": [
+        {
+          "name": "request_id",
+          "type": "string"
+        },
+        {
+          "name": "employee_id",
+          "type": "string"
+        },
+        {
+          "name": "encrypted_response",
+          "type": "string"
+        },
+        {
+          "name": "token_hash",
+          "type": "string"
+        },
+        {
+          "name": "expires_at",
+          "type": "date"
+        }
+      ]
     }
   ]
 }
