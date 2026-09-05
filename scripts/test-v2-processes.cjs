@@ -1,11 +1,26 @@
 const assert=require('node:assert/strict');
-const {planProcess,processSnapshot}=require('../backend/v2/processes/domain.js');
+const {
+  planProcess,
+  processSnapshot,
+  parseAllowedProcesses,
+  processPermission,
+  canUseProcess,
+  visibleProcessCatalog,
+}=require('../backend/v2/processes/domain.js');
 const {planAttendance}=require('../backend/v2/attendance/domain.js');
-const employee={employee_id:'MOL004',active:true,role:'WORKER'};
+
+const allowed=['PAK','PICK','PRZERWA'];
+const employee={employee_id:'MOL004',active:true,role:'WORKER',allowed_processes:JSON.stringify(allowed)};
 const attendance={attendance_id:'MOL004:2026-09-05',employee_id:'MOL004',work_date:'2026-09-05',state:'OPEN',start_at:'2026-09-05T06:00:00Z',stop_at:null,version:1,moniti_sync:'SYNCED'};
-const base={now:'2026-09-05T08:00:35Z',actor:employee,employee,attendance:[attendance],processes:[],catalog:[{process_code:'PAK',active:true},{process_code:'PICK',active:true},{process_code:'PRZERWA',active:true}],operation:'PROCESS_START',request_id:'req1',payload:{work_date:'2026-09-05',expected_version:1,process_code:'PAK'},moniti_enabled:true};
-let n=0;const check=(i,code='OK')=>{const r=planProcess(i);assert.equal(r.error?.code||'OK',code);n++;return r;};
-const started=check(base);assert.equal(started.active_process.start_at,'2026-09-05T08:00:00.000Z');assert.equal(started.no_process_seconds,7200);assert.equal(started.after.moniti_sync,'SYNCED');
+const catalog=[...allowed,'BIURO'].map(process_code=>({process_code,active:true}));
+const base={now:'2026-09-05T08:00:35Z',actor:employee,employee,attendance:[attendance],processes:[],catalog,operation:'PROCESS_START',request_id:'req1',payload:{work_date:'2026-09-05',expected_version:1,process_code:'PAK'},moniti_enabled:true};
+let n=0;
+const check=(input,code='OK')=>{const result=planProcess(input);assert.equal(result.error?.code||'OK',code);n++;return result;};
+
+const started=check(base);
+assert.equal(started.active_process.start_at,'2026-09-05T08:00:00.000Z');
+assert.equal(started.no_process_seconds,7200);
+assert.equal(started.after.moniti_sync,'SYNCED');
 check({...base,actor:{...employee,employee_id:'MOL015',role:'ADMIN'}},'FORBIDDEN');
 check({...base,actor:{...employee,active:false}},'UNAUTHENTICATED');
 check({...base,employee:{...employee,active:false}},'EMPLOYEE_INACTIVE');
@@ -17,20 +32,58 @@ check({...base,payload:{...base.payload,process_code:'MISSING'}},'PROCESS_UNAVAI
 check({...base,catalog:[{process_code:'PAK',active:false}]},'PROCESS_UNAVAILABLE');
 check({...base,operation:'PROCESS_LOGOUT'},'PROCESS_NOT_ACTIVE');
 check({...base,operation:'PROCESS_CHANGE'},'PROCESS_NOT_ACTIVE');
+
 const active={...base,now:'2026-09-05T08:30:20Z',attendance:[started.after],processes:started.process_updates,payload:{...base.payload,expected_version:2},request_id:'req2'};
 check(active,'PROCESS_ALREADY_ACTIVE');
 check({...active,operation:'PROCESS_CHANGE'},'PROCESS_UNCHANGED');
 const changed=check({...active,operation:'PROCESS_CHANGE',payload:{...active.payload,process_code:'PICK'}});
-assert.equal(changed.process_updates.length,2);assert.equal(changed.process_updates[0].stop_at,changed.process_updates[1].start_at);assert.equal(changed.active_process.process_code,'PICK');
-const ended=check({...active,operation:'PROCESS_LOGOUT'});assert.equal(ended.after.state,'OPEN');assert.equal(ended.active_process,null);assert.equal(ended.process_seconds,1800);assert.equal(ended.no_process_seconds,7220);
-const finish=planAttendance({...active,operation:'FINISH'});assert.equal(finish.ok,true);assert.equal(finish.process_updates[0].stop_at,finish.after.stop_at);n++;
+assert.equal(changed.process_updates.length,2);
+assert.equal(changed.process_updates[0].stop_at,changed.process_updates[1].start_at);
+assert.equal(changed.active_process.process_code,'PICK');
+const ended=check({...active,operation:'PROCESS_LOGOUT'});
+assert.equal(ended.after.state,'OPEN');
+assert.equal(ended.active_process,null);
+assert.equal(ended.process_seconds,1800);
+assert.equal(ended.no_process_seconds,7220);
+const finish=planAttendance({...active,operation:'FINISH'});
+assert.equal(finish.ok,true);
+assert.equal(finish.process_updates[0].stop_at,finish.after.stop_at);
+n++;
 check({...active,processes:[...active.processes,{...active.processes[0],process_session_id:'duplicate'}]},'PROCESS_INCONSISTENT');
 check({...active,processes:[{...active.processes[0],attendance_id:'other'}]},'PROCESS_INCONSISTENT');
 check({...base,now:'bad'},'SERVER_TIME_INVALID');
 check({...base,attendance:[{...attendance,start_at:'2026-09-05T09:00:00Z'}]},'PROCESS_TIME_CONFLICT');
 check({...base,attendance:[attendance,{...attendance,work_date:'2026-09-04'}]},'ATTENDANCE_INCONSISTENT');
-const pause=check({...base,payload:{...base.payload,process_code:'PRZERWA'}});assert.equal(pause.active_process.process_code,'PRZERWA');
-const midnight=check({...active,now:'2026-09-05T22:30:00Z',operation:'PROCESS_LOGOUT'});assert.equal(midnight.after.work_date,'2026-09-05');
-const off=check({...base,moniti_enabled:false});assert.equal(off.active_process.start_at,'2026-09-05T08:00:35.000Z');
+const pause=check({...base,payload:{...base.payload,process_code:'PRZERWA'}});
+assert.equal(pause.active_process.process_code,'PRZERWA');
+const midnight=check({...active,now:'2026-09-05T22:30:00Z',operation:'PROCESS_LOGOUT'});
+assert.equal(midnight.after.work_date,'2026-09-05');
+const off=check({...base,moniti_enabled:false});
+assert.equal(off.active_process.start_at,'2026-09-05T08:00:35.000Z');
 assert.equal(processSnapshot({attendance:null,now:base.now}).presence_seconds,0);
-console.log(`Processes domain PASS: ${n} cases; atomic switch, roles, precision, midnight, pause, STOP integration and accounting.`);
+
+assert.equal(parseAllowedProcesses(null).reason,'MISSING');n++;
+assert.equal(parseAllowedProcesses('not-json').reason,'INVALID');n++;
+assert.equal(parseAllowedProcesses('["PAK","PAK"]').codes.size,1);n++;
+assert.equal(parseAllowedProcesses('["pak"]').valid,false);n++;
+assert.equal(canUseProcess(employee,'PAK'),true);n++;
+assert.equal(canUseProcess(employee,'BIURO'),false);n++;
+assert.equal(processPermission({...employee,allowed_processes:'["PAK","BIURO"]'},'BIURO').reason,'ROLE');n++;
+assert.deepEqual(visibleProcessCatalog(catalog,employee).map(p=>p.process_code),allowed);n++;
+check({...base,employee:{...employee,allowed_processes:null}},'PROCESS_PERMISSION_CONFIG_INVALID');
+check({...base,employee:{...employee,allowed_processes:'not-json'}},'PROCESS_PERMISSION_CONFIG_INVALID');
+check({...base,employee:{...employee,allowed_processes:'["PICK"]'}},'PROCESS_FORBIDDEN');
+check({...base,employee:{...employee,allowed_processes:'["PAK","BIURO"]'},payload:{...base.payload,process_code:'BIURO'}},'PROCESS_FORBIDDEN');
+
+const leader={employee_id:'MOL014',active:true,role:'LEADER',allowed_processes:JSON.stringify([...allowed,'BIURO'])};
+const leaderAttendance={...attendance,attendance_id:'MOL014:2026-09-05',employee_id:'MOL014'};
+const leaderStart=check({...base,actor:leader,employee:leader,attendance:[leaderAttendance],payload:{...base.payload,process_code:'BIURO'}});
+assert.equal(leaderStart.active_process.process_code,'BIURO');
+const admin={employee_id:'MOL015',active:true,role:'ADMIN',allowed_processes:JSON.stringify([...allowed,'BIURO'])};
+const adminAttendance={...attendance,attendance_id:'MOL015:2026-09-05',employee_id:'MOL015'};
+const adminStart=check({...base,actor:admin,employee:admin,attendance:[adminAttendance],payload:{...base.payload,process_code:'BIURO'}});
+assert.equal(adminStart.active_process.process_code,'BIURO');
+assert.equal(visibleProcessCatalog(catalog,leader).some(p=>p.process_code==='BIURO'),true);n++;
+assert.equal(visibleProcessCatalog(catalog,admin).some(p=>p.process_code==='BIURO'),true);n++;
+
+console.log(`Processes domain PASS: ${n} cases; atomic switch, role and allowlist permissions, precision, midnight, pause, STOP integration and accounting.`);
