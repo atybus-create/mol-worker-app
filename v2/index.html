@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#071b3d">
+  <title>MOL // Aplikacja V2 — środowisko testowe</title>
+  <link rel="stylesheet" href="./styles.css?v=0.1.0">
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">MOL // SYSTEM PRACY</p>
+      <span class="environment">ŚRODOWISKO TESTOWE V2</span>
+      <h1>Budujemy nową aplikację jako jedną spójną całość.</h1>
+      <p class="lead">Ta wersja jest całkowicie oddzielona od aktywnej V1. Na etapie 1 nie zapisuje żadnych danych pracowników.</p>
+    </section>
+
+    <section class="status-card" aria-labelledby="statusTitle">
+      <div>
+        <p class="eyebrow">Stan środowiska</p>
+        <h2 id="statusTitle">Sprawdzanie backendu V2…</h2>
+        <p id="statusDescription">Łączenie z odseparowanym endpointem kontrolnym.</p>
+      </div>
+      <span id="statusChip" class="status-chip is-loading">SPRAWDZANIE</span>
+    </section>
+
+    <section class="grid">
+      <article><span>Frontend</span><strong>V2 0.1.0</strong><small>oddzielny katalog i adres</small></article>
+      <article><span>Backend</span><strong id="backendVersion">—</strong><small>oddzielny workflow n8n</small></article>
+      <article><span>Zapisy danych</span><strong id="writesState">WYŁĄCZONE</strong><small>ochrona V1 podczas budowy</small></article>
+      <article><span>V1</span><strong>AKTYWNA</strong><small>punkt powrotu zachowany</small></article>
+    </section>
+
+    <section class="acceptance">
+      <h2>Etap 1 — kryteria odbioru</h2>
+      <ul>
+        <li>V1 nadal działa pod dotychczasowym adresem.</li>
+        <li>V2 ma osobny frontend i osobny endpoint backendowy.</li>
+        <li>Backend V2 odpowiada statusem 200.</li>
+        <li>Zapisy danych w V2 są wyłączone.</li>
+        <li>Wersje workflowów, tabele i integracje V1 są zinwentaryzowane.</li>
+      </ul>
+      <button id="retryButton" type="button">Sprawdź ponownie</button>
+    </section>
+
+    <footer>V2 0.1.0 · Etap 1 · 05.09.2026</footer>
+  </main>
+  <script src="./app.js?v=0.1.0" defer></script>
+</body>
+</html>
