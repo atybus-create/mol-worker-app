@@ -7,6 +7,8 @@ on:
       - 'backend/v2/attendance/**'
       - 'backend/v2/manifest.json'
       - 'backend/v2/schema.json'
+      - 'scripts/test-v2-processes.cjs'
+      - '.github/workflows/stage6-sync.yml'
 permissions:
   contents: write
 jobs:
