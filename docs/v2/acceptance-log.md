@@ -7,17 +7,19 @@
 | 3 | Rdzeń backendu V2 | PASS: 17 schematów; 5 workflowów bez błędów/ostrzeżeń; testy idempotencji, konfliktów, współbieżności i recovery | Potwierdzony przez użytkownika | ODEBRANY |
 | 4 | Logowanie i sesja | PASS: backend, idempotencja, race, expiry, rate-limit, testy UI i przeglądarka na atybus | Potwierdzony przez użytkownika | ODEBRANY |
 | 5 | Czas pracy | PASS: 39 testów domeny, UI, trzy role, Moniti/Drive, retry, recovery, race; granice w stage-5-acceptance.md | Potwierdzony przez użytkownika po udanej korekcie Drive | ODEBRANY |
-| 6 | Procesy pracownika i uprawnienia BIURO | Zakres testow i ograniczenia: stage-6-closeout-20260905.md | Jawnie odebrany przez uzytkownika w tej rozmowie 2026-09-05 | ODEBRANY |
-| 7 | ES, normy i spojny status | Implementacja i testy w toku: stage-7-progress.md | Oczekuje na koncowy protokol | W TRAKCIE |
+| 6 | Procesy pracownika i uprawnienia BIURO | Zakres testów i ograniczenia: stage-6-closeout-20260905.md | Jawnie odebrany przez użytkownika w tej rozmowie 2026-09-05 | ODEBRANY |
+| 7 | ES, normy i spójny status | 276 izolowanych przypadków PASS, raport Sheets i publiczne API sprawdzone; niezaliczone: dodatnia produkcja ES, zalogowany E2E i test wizualny. Protokół: stage-7-acceptance.md; publikacja: stage-7-release.md | Oczekuje na decyzję po zapoznaniu z ograniczeniami | DO ODBIORU — E2E OTWARTE |
 | 8 | Alerty i komunikacja | — | — | NIE ROZPOCZĘTO |
 | 9 | Panel lidera i raporty | — | — | NIE ROZPOCZĘTO |
 | 10 | Spójny frontend V2 | — | — | NIE ROZPOCZĘTO |
 | 11 | Test równoległy V1 kontra V2 | — | — | NIE ROZPOCZĘTO |
 | 12 | Przełączenie produkcji | — | — | NIE ROZPOCZĘTO |
 
-## Domknięcie etapu 6
+## Domknięcie etapu 6 i brama etapu 7
 
-Protokół: [stage-6-closeout-20260905.md](stage-6-closeout-20260905.md). BIURO jest ograniczone do LEADER/ADMIN, a listy procesów są sterowane danymi ról i osób w MOL_V2_CONFIG. Nie utworzono fizycznej kolumny allowed_processes w EMPLOYEES; różnica względem literalnego pola jest jawna. Testów fixture nie traktujemy jako nowego odbioru przeglądarkowego lub zalogowanego API. Etap 7 pozostaje zamknięty do decyzji użytkownika.
+Protokół: [stage-6-closeout-20260905.md](stage-6-closeout-20260905.md). BIURO jest ograniczone do LEADER/ADMIN, a listy procesów są sterowane danymi ról i osób w MOL_V2_CONFIG. Nie utworzono fizycznej kolumny allowed_processes w EMPLOYEES; różnica względem literalnego pola jest jawna. Testów fixture nie traktujemy jako nowego odbioru przeglądarkowego lub zalogowanego API. Użytkownik jawnie odebrał etap 6 i zlecił etap 7 dnia 2026-09-05; nie wymagamy ponownego odbioru etapu 6.
+
+Etap 7 nie został jeszcze odebrany przez użytkownika. Wdrożenie kodu i zaliczenie testów automatycznych nie zamykają niewykonanych scenariuszy E2E. Przejście do etapu 8 wymaga jawnej decyzji użytkownika po przedstawieniu protokołu i ograniczeń. ALERT_DERIVED pozostaje zadaniem dla etapu 8, nie dowodem wdrożenia komunikatów.
 
 ## Wymagania odbiorowe roli LEADER — etapy 8 i 9
 
@@ -29,7 +31,7 @@ Zatwierdzone doprecyzowanie użytkownika: każdy lider ma dostęp do panelu lide
 4. Konto WORKER nie uzyskuje panelu lidera ani cudzych danych, również przez bezpośrednie wywołanie API.
 5. Lider nie uzyskuje administracji konfiguracją, nadawania ról, haseł ani tokenów. Podgląd nie nadaje dodatkowych praw edycji poza zatwierdzonymi korektami czasu pracy.
 
-## Test odbiorowy etapu 1
+## Historyczny test odbiorowy etapu 1
 
 1. Otwórz produkcyjną V1 i potwierdź, że ekran logowania działa jak wcześniej.
 2. Otwórz testową V2 pod adresem `/v2/`.
@@ -37,4 +39,4 @@ Zatwierdzone doprecyzowanie użytkownika: każdy lider ma dostęp do panelu lide
 4. Sprawdź, czy `Zapisy danych` pokazują `WYŁĄCZONE`.
 5. Kliknij `Sprawdź ponownie` i potwierdź, że status nadal jest `ONLINE`.
 
-Etap 1 został odebrany przez użytkownika 2026-09-05. V1 pozostała dostępna bez zmian, razem ze znanymi błędami, które nie mogą zostać przeniesione do V2.
+Etap 1 został odebrany przez użytkownika 2026-09-05. Powyższe oczekiwania dotyczą tamtego etapu, nie bieżących flag integracji. V1 nie jest zmieniana podczas realizacji V2 bez osobnej zgody.
