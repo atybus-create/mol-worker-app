@@ -1,0 +1,32 @@
+name: V2 preflight diagnostics
+on:
+  push:
+    branches: [codex/stage6-closeout-permissions]
+    paths: ['.github/workflows/v2-preflight-check.yml']
+permissions: {}
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read public CORS responses without credentials or business writes
+        shell: bash
+        run: |
+          set -u
+          origin='https://atybus-create.github.io'
+          failed=0
+          for spec in 'mol-app-config GET authorization' 'mol-app-v2-attendance-status GET authorization' 'mol-app-v2-process-start POST authorization,content-type' 'mol-app-v2-auth-login POST content-type'; do
+            read -r endpoint method requested_headers <<< "$spec"
+            echo "CHECK $endpoint"
+            status=$(curl -sS --connect-timeout 10 --max-time 25 -X OPTIONS \
+              -D /tmp/cors-headers -o /tmp/cors-body -w '%{http_code}' \
+              "https://n8n.estyl.team/webhook/$endpoint" \
+              -H "Origin: $origin" \
+              -H "Access-Control-Request-Method: $method" \
+              -H "Access-Control-Request-Headers: $requested_headers") || status='NETWORK_ERROR'
+            echo "HTTP $status"
+            cat /tmp/cors-headers
+            if [[ "$status" != '200' && "$status" != '204' ]]; then failed=1; continue; fi
+            if ! grep -Eqi '^access-control-allow-origin: (https://atybus-create.github.io|\*)\r?$' /tmp/cors-headers; then failed=1; fi
+          done
+          exit "$failed"
