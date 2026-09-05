@@ -81,8 +81,12 @@ Na instancji znajduje się łącznie 151 workflowów. 36 nazw zaczyna się od `M
 
 - Specyfikacja V2: `1zDbsapsu7W2tkD_AGWPHk0RbP4YJ7jMaNYO_62pR6to`
 - Arkusz czasu: `1aZL4aBKd0Muzbv_7wy1MmyE9-E_cGm4fLh3dnYfiQxQ`, tytuł `MOL_APP_CZAS_PRACY`
+- Arkusz norm: `13ViNjIrG4uoQBkIfoyUprZUR7kKiVJ6EI5RakF_HfKU`, tytuł `MOL // APP / NORMY`
+- Arkusz komunikatów: `1d6RGhTsBlHq_knFkBxbARb2cZPCTQPK4Mro_tzzMonA`, tytuł `MOL // APP / Komunikaty`
 - Credential Moniti: referencja `jDX7MFgk2vvXqZ5f`, bez odczytu sekretu
 - Credential Google Sheets: referencja `PffTtJhrPLmJ2ZrI`, bez odczytu sekretu
+- Zewnętrzny sub-workflow odczytu ES: `pOllPUXcKbtX9MG8`, tytuł `ES Sub-workflow - ciasteczka ES`
+- API Moniti używane przez V1: domena `admin.moniti.app`; szczegółowy adres i dane sesyjne pozostają wyłącznie w n8n.
 - Publiczne API n8n nie zezwala na listowanie credentiali (`403`); zależności ustalono na podstawie aktywnych grafów workflowów.
 
 ## Zasady izolacji V2
