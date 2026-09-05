@@ -1,0 +1,112 @@
+{
+  "date": "2026-09-05",
+  "version": "0.7.0",
+  "stage": 7,
+  "stage6_user_accepted": true,
+  "stage7_user_accepted": false,
+  "stage8_started": false,
+  "acceptance_status": "DO ODBIORU - E2E NOT FULLY CONFIRMED",
+  "tested_code_commit": "3e0620a52a9f60ab73a1d1972d9a5601d658484b",
+  "baseline_main": "63c3f6faf0ac52151636be95c224ea5161cbf4b9",
+  "backup_branch": "backup/pre-stage7-20260905",
+  "release_record": "stage-7-release.md",
+  "ci": {
+    "workflow": "Stage 7 verification",
+    "run_id": 33987252174,
+    "job_id": 101363013377,
+    "conclusion": "success",
+    "sources_exports_tests": "PASS",
+    "public_api_and_preflight_without_auth": "PASS",
+    "note": "This is the candidate revision check. Main deployment is recorded separately; legacy V1 CI is not represented as passed."
+  },
+  "isolated_tests": {
+    "metrics": 71,
+    "attendance": 39,
+    "processes": 41,
+    "generated_permissions": 23,
+    "norms_dom_ui": 24,
+    "mirror": 16,
+    "worker_view": 22,
+    "persistence_recovery": 19,
+    "summary_input": 10,
+    "scheduler": 11,
+    "total_counted": 276,
+    "result": "PASS",
+    "additional_pass": ["password", "auth", "attendance_ui", "syntax", "contract", "isolation", "reproducible_exports"],
+    "contract_endpoints": 23,
+    "schema_tables": 24,
+    "reproducible_workflow_exports": 34,
+    "not_equivalent_to": ["authenticated_live_E2E", "real_positive_ES_production", "production_load_test", "visual_browser_acceptance"]
+  },
+  "n8n_validation": {
+    "attendance_service": {"id":"qPVmcfp6pUg3GbzH","nodes":76,"connections":91,"expressions":121,"errors":0,"warnings":16},
+    "es_ingest": {"id":"i4MdwSwbjUkEosk4","nodes":47,"connections":53,"expressions":15,"errors":0,"warnings":10},
+    "summary_recalculator": {"id":"pBYXQiiTNxhK9IGq","nodes":38,"connections":40,"expressions":16,"errors":0,"warnings":11},
+    "norm_drive": {"id":"25EgiHZmEcqxxTvG","nodes":41,"connections":45,"expressions":29,"errors":0,"warnings":5},
+    "total_errors": 0,
+    "total_warnings": 42,
+    "warning_type": "intentional executeOnce on read nodes"
+  },
+  "public_live_checks": {
+    "worker_status": {"http_status":401,"code":"UNAUTHENTICATED","checked_at":"2026-09-05T19:25:59Z"},
+    "norms_daily": {"http_status":401,"code":"UNAUTHENTICATED","checked_at":"2026-09-05T19:26:05Z"},
+    "norms_monthly": {"http_status":401,"code":"UNAUTHENTICATED","checked_at":"2026-09-05T19:26:10Z"},
+    "origin": "https://atybus-create.github.io",
+    "cache_control": "no-store",
+    "health_published_version": "0.7.0",
+    "health_published_stage": 7,
+    "health_active_version": "fca803c6-7984-4c26-a108-f593c4e958d8"
+  },
+  "es_source": {
+    "format": "cumulative daily operator counters; not individual event timestamps",
+    "test_employees": ["MOL004", "MOL014", "MOL015"],
+    "observed_error": "ES_OPERATOR_NOT_FOUND",
+    "last_good_at": null,
+    "positive_real_delta_test": "NOT_CONFIRMED",
+    "zero_production_inferred_from_missing_operator": false,
+    "baseline_covers_earlier_production": false,
+    "boundary_rule": "trusted frozen PAK/PICK switch; same checkpoint; committed command required",
+    "boundary_source_failure": "explicit coverage gap and rebaseline, no invented history"
+  },
+  "sheets": {
+    "spreadsheet_id": "1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4",
+    "daily_sheet_id": 7,
+    "monthly_sheet_id": 8,
+    "columns": 25,
+    "direct_cells_read": ["monthly A1:Y4", "daily A6:Y6", "daily A37:Y37", "daily A68:Y68"],
+    "employees_checked": 3,
+    "bundle_version": 2,
+    "first_successful_write_executions": ["584218", "584318"],
+    "unavailable_percentage_cells": "blank, not zero",
+    "native_sheets_visual_review": "NOT_CLAIMED"
+  },
+  "operational_read_1933_1935_utc": {
+    "unfinished_attendance_derived": 0,
+    "unfinished_es_derived": 0,
+    "unfinished_norm_drive": 0,
+    "commands_recovery_required": 0,
+    "es_batches_prepared": 0,
+    "active_processes_query": 0,
+    "alert_derived": "PENDING_FOR_STAGE_8 - retained, not counted as completed",
+    "attendance": [
+      {"employee_id":"MOL004","state":"CLOSED","version":36,"start_at":"2026-09-05T06:52:00.000Z","stop_at":"2026-09-05T16:39:00.000Z","moniti_sync":"SYNCED","drive_sync":"SYNCED"},
+      {"employee_id":"MOL014","state":"CLOSED","version":25,"start_at":"2026-09-05T07:02:00.000Z","stop_at":"2026-09-05T16:40:00.000Z","moniti_sync":"SYNCED","drive_sync":"SYNCED"},
+      {"employee_id":"MOL015","state":"CLOSED","version":15,"start_at":"2026-09-05T05:00:00.000Z","stop_at":"2026-09-05T16:38:00.000Z","moniti_sync":"SYNCED","drive_sync":"SYNCED"}
+    ],
+    "note": "Fresh read, not a reset to stage 6 versions 31/20/10. A scheduler execution briefly held command-writer; no lease was stolen."
+  },
+  "disabled_diagnostics": [
+    {"id":"5QQkZWLqVDzx5it5","active":false},
+    {"id":"vqpQl7orcv75JNC5","active":false}
+  ],
+  "limits": {
+    "authenticated_role_E2E": "NOT_RUN - previous tool safety block not bypassed",
+    "visual_browser": "BLOCKED_BY_ENVIRONMENT - ERR_BLOCKED_BY_ADMINISTRATOR before scenario",
+    "positive_real_ES_full_day": "NOT_CONFIRMED",
+    "production_concurrency_load_restart": "NOT_RUN",
+    "legacy_validate_frontend": "previous V1 mol-app-config HTTP 500/CORS failure retained",
+    "new_moniti_writes_during_final_verification_and_publication": 0,
+    "v1_changed": false,
+    "secrets_in_this_evidence": false
+  }
+}
