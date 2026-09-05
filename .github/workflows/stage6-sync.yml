@@ -22,7 +22,12 @@ jobs:
         with:
           node-version: 24
       - name: Regenerate attendance service export
-        run: node backend/v2/processes/build-workflows.mjs > backend/v2/workflows/attendance-service.json
+        run: |
+          if [ -f backend/v2/metrics/build-all.mjs ]; then
+            node backend/v2/metrics/build-all.mjs
+          else
+            node backend/v2/processes/build-workflows.mjs > backend/v2/workflows/attendance-service.json
+          fi
       - name: Run backend tests
         run: |
           node --check backend/v2/processes/domain.js

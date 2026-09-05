@@ -2,7 +2,7 @@ name: Stage 7 verification
 on:
   push:
     branches: [codex/stage7-es-norms, main]
-    paths: ['v2/**', 'backend/v2/**', 'scripts/**', '.github/workflows/stage7-verify.yml']
+    paths: ['v2/**', 'backend/v2/**', 'scripts/**', 'docs/v2/**', '.github/workflows/stage7-verify.yml']
 permissions:
   contents: read
 concurrency:
@@ -16,14 +16,33 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Syntax and regression
+      - name: Validate exact sources and regenerated exports
         run: |
           node --check v2/attendance.js
           node --check v2/norms.js
           node scripts/validate-v2-contract.js
           node scripts/validate-v2-backend.js
           for f in scripts/test-v2-*.cjs; do node "$f"; done
+          git diff --exit-code -- backend/v2/workflows
           git diff --check
+      - name: Public API and browser preflight only - no login or business writes
+        run: |
+          node --input-type=module - <<'NODE'
+          import assert from 'node:assert/strict';
+          const base='https://n8n.estyl.team/webhook/mol-app-v2-', origin='https://atybus-create.github.io';
+          const health=await fetch(base+'health',{signal:AbortSignal.timeout(20000)});
+          assert.equal(health.status,200);console.log('Health:',await health.json());
+          for(const path of ['worker-status','norms-daily?date=2026-09-05','norms-monthly?month=2026-09']) {
+            const denied=await fetch(base+path,{headers:{Origin:origin},signal:AbortSignal.timeout(20000)});
+            assert.equal(denied.status,401,path+' must require authentication');
+            assert.equal((await denied.json()).error.code,'UNAUTHENTICATED');
+            const r=await fetch(base+path.split('?')[0],{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'GET','Access-Control-Request-Headers':'authorization'},signal:AbortSignal.timeout(20000)});
+            assert.ok([200,204].includes(r.status));assert.equal(r.headers.get('access-control-allow-origin'),origin);
+            assert.ok(r.headers.get('access-control-allow-methods').includes('GET'));
+            assert.ok(r.headers.get('access-control-allow-headers').toLowerCase().includes('authorization'));
+            console.log('PASS unauthenticated 401 and preflight:',path);
+          }
+          NODE
       - name: Prepare exact source archive
         run: tar --exclude=.git -cf /tmp/stage7-source.tar .
       - uses: actions/upload-artifact@v4

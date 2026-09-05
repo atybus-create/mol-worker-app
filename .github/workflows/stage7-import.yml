@@ -29,17 +29,20 @@ jobs:
           exact={'.github/workflows/stage6-sync.yml','.github/workflows/stage7-verify.yml'}
           with tarfile.open(fileobj=io.BytesIO(data),mode='r:xz') as archive:
               entries=archive.getmembers()
-              assert len(entries)==32
-              assert len({m.name for m in entries})==len(entries)
+              assert len(entries)==32 and len({m.name for m in entries})==32
               for m in entries:
                   p=PurePosixPath(m.name)
                   assert m.isfile() and not p.is_absolute() and '..' not in p.parts
                   assert m.name in exact or m.name.startswith(('backend/v2/','docs/v2/','scripts/','v2/'))
                   target=(root/m.name).resolve()
                   assert root in target.parents
+                  content=archive.extractfile(m).read()
+                  if m.name in exact:
+                      assert target.read_bytes()==content, 'CI files require authorized connector update; runner will not change them'
+                      continue
                   target.parent.mkdir(parents=True,exist_ok=True)
-                  target.write_bytes(archive.extractfile(m).read())
-          print('Verified and materialized 32 reviewed source files; V1 paths excluded.')
+                  target.write_bytes(content)
+          print('Verified package; materialized 30 source files and confirmed 2 already-authorized CI files.')
           PY
       - name: Generate complete V2 exports and run regression
         run: |
@@ -49,10 +52,11 @@ jobs:
           for f in scripts/test-v2-*.cjs; do node "$f"; done
           git diff --check
           ! grep -R -E 'PHPSESSID=[A-Za-z0-9]{10,}|ghp_[A-Za-z0-9]{20,}|BEGIN (RSA |EC )?PRIVATE KEY' backend/v2 docs/v2 scripts v2
-      - name: Commit plain source files and remove transport files
+          git diff --exit-code -- .github/workflows
+      - name: Commit only source files within contents permission
         run: |
-          git rm -- .stage7-transfer/part-* .github/workflows/stage7-import.yml
-          git add -- backend/v2 docs/v2 scripts v2 .github/workflows/stage6-sync.yml .github/workflows/stage7-verify.yml
+          git rm -- .stage7-transfer/part-*
+          git add -- backend/v2 docs/v2 scripts v2
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'build(v2): materialize tested stage 7 generators, exports and regression suite'
