@@ -13,6 +13,8 @@ Wykonano 2026-09-05. Status: gotowe do odbioru użytkownika.
 
 Workflowy i ich opublikowane wersje: `backend/v2/manifest.json`. Eksporty grafów: `backend/v2/workflows/`. Wyniki automatycznych kontroli: `stage-3-evidence.json`.
 
+Odbiór przeglądarkowy opublikowanej strony potwierdził Backend 0.3.0 ONLINE, Bazę V2 ONLINE i wyłączone zapisy pracowników. W kontroli CI poprawiono dwa nieaktualne oczekiwania wersji V1 (0.7.24 → zamrożona 0.7.28); pliki aplikacji V1 pozostały niezmienione.
+
 ## Wyniki prób wykonania
 
 | Próba | Wynik |
