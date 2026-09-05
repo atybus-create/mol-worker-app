@@ -2,16 +2,16 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const source=fs.readFileSync(require('node:path').join(__dirname,'../v2/attendance.js'),'utf8');
 const settle=()=>new Promise(r=>setImmediate(r));
 function browser(storage=new Map()){
-  const elements=new Map(),el=id=>{if(!elements.has(id))elements.set(id,{value:'',hidden:false,disabled:false,textContent:'',replaceChildren(){},addEventListener(event,fn){this[event]=fn;}});return elements.get(id);};
+  const elements=new Map(),el=id=>{if(!elements.has(id))elements.set(id,{value:'',hidden:false,disabled:false,textContent:'',dataset:{},replaceChildren(){},addEventListener(event,fn){this[event]=fn;}});return elements.get(id);};
   const window={},calls=[],modes={offline:false,delayed:null},state={attendance:null,snapshot_version:0},timers=[];
-  const context=vm.createContext({window,document:{getElementById:el,createElement:()=>({})},Intl,Date,JSON,TypeError,Error,AbortController,crypto:{randomUUID:()=> 'a7500000-1000-4000-8000-000000000001'},setInterval:()=>1,setTimeout:()=>1,clearTimeout(){},sessionStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},fetch:async(url,options)=>{calls.push({url,body:options.body?JSON.parse(options.body):null});if(modes.delayed)await modes.delayed;if(modes.offline)throw new TypeError('offline');if(modes.reject&&options.body)return {ok:false,status:409,json:async()=>({ok:false,error:{code:'VERSION_CONFLICT',message:'Wersja dnia zmieniła się.'}})};return {ok:true,json:async()=>({ok:true,data:url.includes('status')?{employee:{employee_id:'MOL004'},work_date:el('workDate').value,open_day:null,writes_enabled:true,...state}:{attendance:{},snapshot_version:1}})};}});
+  const context=vm.createContext({window,document:{getElementById:el,createElement:()=>({})},Intl,Date,JSON,TypeError,Error,AbortController,crypto:{randomUUID:()=> 'a7500000-1000-4000-8000-000000000001'},setInterval:()=>1,setTimeout:()=>1,clearTimeout(){},sessionStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},fetch:async(url,options)=>{calls.push({url,body:options.body?JSON.parse(options.body):null});if(modes.delayed)await modes.delayed;if(modes.offline)throw new TypeError('offline');if(modes.reject&&options.body)return {ok:false,status:409,json:async()=>({ok:false,error:{code:'VERSION_CONFLICT',message:'Wersja dnia zmieniła się.'}})};return {ok:true,json:async()=>({ok:true,data:url.includes('status')?{user:{employee_id:'MOL004'},month:el('normMonth').value,attendance_version:state.attendance?.version||0,norm:{freshness:'UNAVAILABLE',pak_percent:null,pick_percent:null,combined_percent:null,calculated_at:'2026-09-05T10:00:00Z'},monthly_norm:{freshness:'UNAVAILABLE',pak_percent:null,pick_percent:null,combined_percent:null,calculated_at:'2026-09-05T10:00:00Z'},employee:{employee_id:'MOL004'},work_date:el('workDate').value,open_day:null,writes_enabled:true,...state}:{attendance:{},snapshot_version:1}})};}});
   context.setTimeout=(fn,ms)=>{if(ms<45000)timers.push(fn);return 1;};
   const normalFetch=context.fetch;
   context.fetch=async(url,options)=>{
     if(options.body&&modes.busy>0){modes.busy--;calls.push({url,body:JSON.parse(options.body)});return {ok:false,status:409,json:async()=>({ok:false,error:{code:'COMMAND_BUSY',message:'Trwa zapis.'}})};}
     return normalFetch(url,options);
   };
-  vm.runInContext(source,context);return {el,window,calls,modes,state,storage,timers};
+  vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../v2/norms.js'),'utf8'),context);vm.runInContext(source,context);return {el,window,calls,modes,state,storage,timers};
 }
 (async()=>{
   const b=browser(),profile={user:{employee_id:'MOL004',role:'WORKER'}},token='a'.repeat(64);

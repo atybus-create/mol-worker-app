@@ -1,0 +1,33 @@
+name: Stage 7 verification
+on:
+  push:
+    branches: [codex/stage7-es-norms, main]
+    paths: ['v2/**', 'backend/v2/**', 'scripts/**', '.github/workflows/stage7-verify.yml']
+permissions:
+  contents: read
+concurrency:
+  group: stage7-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Syntax and regression
+        run: |
+          node --check v2/attendance.js
+          node --check v2/norms.js
+          node scripts/validate-v2-contract.js
+          node scripts/validate-v2-backend.js
+          for f in scripts/test-v2-*.cjs; do node "$f"; done
+          git diff --check
+      - name: Prepare exact source archive
+        run: tar --exclude=.git -cf /tmp/stage7-source.tar .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stage7-source
+          path: /tmp/stage7-source.tar
+          retention-days: 7

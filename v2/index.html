@@ -9,6 +9,7 @@
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://n8n.estyl.team; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <link rel="stylesheet" href="./styles.css?v=0.6.0">
+  <link rel="stylesheet" href="./norms.css?v=0.7.0">
 </head>
 <body>
   <main class="shell">
@@ -16,9 +17,8 @@
       <p class="eyebrow">MOL // SYSTEM PRACY</p>
       <span class="environment">ŚRODOWISKO TESTOWE V2</span>
       <h1>Twoje konto.<br>Nowy początek.</h1>
-      <p class="lead">Etap 6: procesy pracownika. Oddzielna baza V2. Testy Moniti obejmują 5 września 2026 i konta atybus, dtatarska oraz asorokopud.</p>
+      <p class="lead">Etap 7: wyniki ES i normy pracy. Oddzielna baza V2. Testy Moniti obejmują 5 września 2026 i konta atybus, dtatarska oraz asorokopud.</p>
     </section>
-
     <section class="auth-card" aria-labelledby="authTitle">
       <p class="eyebrow">Dostęp do V2</p>
       <h2 id="authTitle">Sprawdzanie sesji…</h2>
@@ -32,22 +32,19 @@
       </form>
       <div id="sessionPanel" hidden>
         <dl><dt>Pracownik</dt><dd id="userName"></dd><dt>Rola</dt><dd id="userRole"></dd><dt>Sesja ważna do</dt><dd id="sessionExpiry"></dd></dl>
-        <p class="scope-note">Czas pracy jest dostępny poniżej. Normy i panel lidera powstaną w kolejnych etapach.</p>
+        <p class="scope-note">Czas pracy jest dostępny poniżej. Normy dzienne i miesięczne są poniżej. Pełny panel lidera powstanie w kolejnych etapach.</p>
         <button id="logoutButton" type="button">Wyloguj się</button>
       </div>
       <button id="sessionRetry" type="button" hidden>Sprawdź sesję ponownie</button>
     </section>
-
     <section id="attendancePanel" class="auth-card" aria-labelledby="attendanceTitle" hidden>
       <p class="eyebrow">Czas pracy · Europe/Warsaw</p>
       <h2 id="attendanceTitle">Twój dzień pracy</h2>
       <p class="scope-note">Przy włączonym Moniti godziny zapisywane są z dokładnością do minuty. START i STOP korzystają z czasu serwera.</p>
-      <label for="workDate">Dzień</label>
-      <input id="workDate" type="date" required>
+      <label for="workDate">Dzień</label><input id="workDate" type="date" required>
       <h3 id="workState">Odczyt…</h3>
       <p id="workTimes"></p><p id="workSync"></p><p id="openDayNote"></p>
-      <p id="attendanceMessage" role="status" aria-live="polite"></p>
-      <p id="managerNotices" class="scope-note"></p>
+      <p id="attendanceMessage" role="status" aria-live="polite"></p><p id="managerNotices" class="scope-note"></p>
       <div class="work-actions">
         <button id="workStart" type="button" disabled>START pracy</button>
         <button id="workFinish" type="button" hidden>STOP pracy</button>
@@ -65,10 +62,8 @@
       </form>
       <section id="processPanel" aria-labelledby="processTitle">
         <h3 id="processTitle">Proces pracownika</h3>
-        <p id="processState">Odczyt…</p>
-        <p id="processTotals"></p>
-        <label for="processChoice">Wybierz proces</label>
-        <select id="processChoice"></select>
+        <p id="processState">Odczyt…</p><p id="processTotals"></p>
+        <label for="processChoice">Wybierz proces</label><select id="processChoice"></select>
         <div class="work-actions">
           <button id="processStart" type="button" disabled>Rozpocznij proces</button>
           <button id="processChange" type="button" hidden>Zmień proces</button>
@@ -77,38 +72,41 @@
         <p class="scope-note">Zakończenie procesu pozostawia dzień otwarty. STOP pracy zamyka również proces. PRZERWA jest osobnym procesem; czas bez procesu liczymy oddzielnie. Liczniki bazują na ostatnim potwierdzonym stanie — po pracy w innej karcie użyj „Odśwież stan”.</p>
         <p id="processHistory" class="scope-note"></p>
       </section>
+      <section id="normPanel" aria-labelledby="normTitle">
+        <h3 id="normTitle">Wyniki i normy</h3>
+        <p class="scope-note">PAK: 70/h · PICK: 210/h. Norma łączna: (PAK + PICK/3) / (godziny PAK + PICK) / 70. Miesiąc liczymy z sum, nie ze średniej procentów dni. Przerwa i procesy niemierzalne nie wchodzą do czasu normy.</p>
+        <label for="normMonth">Miesiąc do porównania</label><input id="normMonth" type="month" required>
+        <div class="norm-grid">
+          <article><h4 id="normDayLabel">Dzień</h4><strong id="normDayPercent" class="norm-percent">—</strong><p id="normDayFreshness" class="norm-freshness"></p><p id="normDayDetails" class="norm-details"></p><p id="normDayNote" class="scope-note"></p><small id="normDayTime"></small></article>
+          <article><h4 id="normMonthLabel">Miesiąc</h4><strong id="normMonthPercent" class="norm-percent">—</strong><p id="normMonthFreshness" class="norm-freshness"></p><p id="normMonthDetails" class="norm-details"></p><p id="normMonthNote" class="scope-note"></p><small id="normMonthTime"></small></article>
+        </div>
+        <p id="normConnection" class="scope-note" role="status" aria-live="polite"></p>
+        <p class="scope-note">Widok odświeża się co 30 sekund, gdy karta jest widoczna. Nie przerywa wpisywania korekty. Wyniki wylicza backend; lokalny licznik czasu nie przelicza procentów. Brak danych oznaczamy kreską, nie zerem.</p>
+      </section>
       <div id="sheetApprovalPanel" hidden>
         <h3>Zatwierdź korektę z Drive</h3>
         <p class="scope-note">W zakładce „Korekty” raportu wpisz propozycję z nowym UUID. Godziny podawaj w ISO z offsetem, np. 2026-09-05T08:00:00+02:00. Następnie odczytaj propozycję tutaj i zatwierdź ją swoim kontem.</p>
         <p><a href="https://docs.google.com/spreadsheets/d/1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4/edit" target="_blank" rel="noopener noreferrer">Otwórz raport testowy V2</a></p>
         <label for="sheetCorrectionId">correction_id z arkusza</label><input id="sheetCorrectionId" maxlength="36" placeholder="UUID korekty">
         <button id="sheetPreviewButton" type="button">Odczytaj propozycję</button>
-        <p id="sheetProposal" role="status" aria-live="polite"></p>
-        <button id="sheetApproveButton" type="button" hidden>Zatwierdź odczytaną korektę</button>
+        <p id="sheetProposal" role="status" aria-live="polite"></p><button id="sheetApproveButton" type="button" hidden>Zatwierdź odczytaną korektę</button>
       </div>
     </section>
-
     <section class="status-card" aria-labelledby="statusTitle">
-      <div>
-        <p class="eyebrow">Stan środowiska</p>
-        <h2 id="statusTitle">Sprawdzanie backendu V2…</h2>
-        <p id="statusDescription">Łączenie z odseparowanym endpointem kontrolnym.</p>
-      </div>
+      <div><p class="eyebrow">Stan środowiska</p><h2 id="statusTitle">Sprawdzanie backendu V2…</h2><p id="statusDescription">Łączenie z odseparowanym endpointem kontrolnym.</p></div>
       <span id="statusChip" class="status-chip is-loading">SPRAWDZANIE</span>
     </section>
-
     <section class="grid">
-      <article><span>Frontend</span><strong>V2 0.6.0</strong><small>środowisko odbiorowe</small></article>
+      <article><span>Frontend</span><strong>V2 0.7.0</strong><small>środowisko odbiorowe</small></article>
       <article><span>Backend</span><strong id="backendVersion">—</strong><small>oddzielny workflow n8n</small></article>
       <article><span>Zapisy pracowników</span><strong id="writesState">—</strong><small>oddzielone od testów technicznych</small></article>
       <article><span>Baza V2</span><strong id="databaseState">—</strong><small>odczyt konfiguracji na żywo</small></article>
     </section>
-
     <section class="acceptance">
-      <h2>Etap 6 — sprawdź procesy pracownika</h2>
+      <h2>Etap 7 — sprawdź wyniki i spójność danych</h2>
       <ul>
         <li>Zaloguj się i sprawdź zapisany dzień 2026-09-05. Dzisiejsze wpisy zawierają dane testowe.</li>
-        <li>Wznów dzień, rozpocznij Pakowanie, zmień na Kompletację i odśwież stronę.</li>
+        <li>Porównaj dzienną i miesięczną normę, czas PAK/PICK oraz oznaczenie świeżości. Przy braku odczytu ES wynik nie jest przedstawiany jako 0%.</li>
         <li>Zakończ tylko proces — dzień powinien pozostać otwarty. Włącz Przerwę i naciśnij STOP pracy — oba stany powinny się zakończyć.</li>
         <li>Skoryguj godzinę i wpisz powód. Sprawdź dane po ponownym odczycie.</li>
         <li>Sprawdź zgodność z Moniti oraz raportem V2. Drive aktualizuje się w tle, zwykle w ciągu minuty.</li>
@@ -116,10 +114,10 @@
       </ul>
       <button id="retryButton" type="button">Sprawdź ponownie</button>
     </section>
-
-    <footer>V2 0.6.0 · Etap 6 · Oddzielna baza V2, wspólne Moniti w uzgodnionym zakresie testów</footer>
+    <footer>V2 0.7.0 · Etap 7 · Oddzielna baza V2, wspólne Moniti w uzgodnionym zakresie testów</footer>
   </main>
-  <script src="./attendance.js?v=0.6.0-r2" defer></script>
+  <script src="./norms.js?v=0.7.0" defer></script>
+  <script src="./attendance.js?v=0.7.0" defer></script>
   <script src="./app.js?v=0.6.0" defer></script>
 </body>
 </html>
