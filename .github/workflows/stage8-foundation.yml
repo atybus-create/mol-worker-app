@@ -13,7 +13,48 @@ concurrency:
   group: stage8-foundation-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  verify:
+  regression:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - validate-v2-contract.js
+          - validate-v2-backend.js
+          - test-v2-password.cjs
+          - test-v2-auth.cjs
+          - test-v2-attendance.cjs
+          - test-v2-attendance-ui.cjs
+          - test-v2-processes.cjs
+          - test-v2-process-permissions-service.cjs
+          - test-v2-metrics.cjs
+          - test-v2-metrics-writer.cjs
+          - test-v2-summary-input.cjs
+          - test-v2-scheduler.cjs
+          - test-v2-worker-view.cjs
+          - test-v2-norm-mirror.cjs
+          - test-v2-norms-ui.cjs
+          - test-v2-metrics-reproducible.cjs
+          - test-v2-communication.cjs
+          - test-v2-communication-workflows.cjs
+          - test-v2-communication-worker-view.cjs
+          - test-v2-communication-ui.cjs
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Prepare deterministic foundation
+        run: |
+          node backend/v2/communication/register-foundation.mjs
+          node backend/v2/communication/build-foundation.mjs
+      - name: Run ${{ matrix.test }}
+        run: node scripts/${{ matrix.test }}
+
+  sync:
+    needs: regression
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,9 +67,16 @@ jobs:
         run: |
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
-      - name: Verify foundation and stage 4-7 regression
-        run: |
-          node scripts/verify-v2-stage8-foundation.cjs
+          cp backend/v2/schema.json /tmp/schema.json
+          cp backend/v2/manifest.json /tmp/manifest.json
+          cp backend/v2/workflows/comm-record-writer.json /tmp/comm-record-writer.json
+          cp backend/v2/workflows/comm-batch-service.json /tmp/comm-batch-service.json
+          node backend/v2/communication/register-foundation.mjs
+          node backend/v2/communication/build-foundation.mjs
+          cmp /tmp/schema.json backend/v2/schema.json
+          cmp /tmp/manifest.json backend/v2/manifest.json
+          cmp /tmp/comm-record-writer.json backend/v2/workflows/comm-record-writer.json
+          cmp /tmp/comm-batch-service.json backend/v2/workflows/comm-batch-service.json
           git diff --check
       - name: Verify exports on main without mutation
         if: github.ref == 'refs/heads/main'
