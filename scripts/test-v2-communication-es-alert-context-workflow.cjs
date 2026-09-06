@@ -1,0 +1,17 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const w=JSON.parse(fs.readFileSync('backend/v2/workflows/comm-es-alert-context.json','utf8'));
+let count=0;const test=(name,fn)=>{fn();count++;console.log('PASS '+name);};
+const node=name=>w.nodes.find(n=>n.name===name);
+test('workflow has reviewed internal name and ten nodes',()=>{assert.equal(w.name,'MOL // APP V2 // COMM ES ALERT CONTEXT');assert.equal(w.nodes.length,10);});
+test('workflow has only internal trigger',()=>{assert.equal(w.nodes.filter(n=>n.type==='n8n-nodes-base.executeWorkflowTrigger').length,1);assert.equal(w.nodes.some(n=>['n8n-nodes-base.webhook','n8n-nodes-base.scheduleTrigger'].includes(n.type)),false);});
+test('every Data Table node is read-only get',()=>{const rows=w.nodes.filter(n=>n.type==='n8n-nodes-base.dataTable');assert.equal(rows.length,7);for(const n of rows)assert.equal(n.parameters.operation,'get');});
+test('workflow reads reviewed V2 tables only',()=>{const ids=w.nodes.filter(n=>n.type==='n8n-nodes-base.dataTable').map(n=>n.parameters.dataTableId.value).sort();assert.deepEqual(ids,['42jIxvSmSVGdlxB8','4di5yA4jpe0ZEmPL','4pJlgFine6QhUQxX','GT4Ritsrue5U57NA','GT4Ritsrue5U57NA','HmJugmYliWT0ERn4','npCr4h1LjhVL205w'].sort());});
+test('batch delta read is exact PAK/PICK key lookup',()=>{const f=node('Read Batch Deltas').parameters.filters.conditions;assert.equal(node('Read Batch Deltas').parameters.matchType,'anyCondition');assert.equal(f.length,2);assert.ok(f.every(x=>x.keyName==='delta_id'&&x.condition==='eq'));assert.ok(f.some(x=>String(x.keyValue).includes("':PAK'")));assert.ok(f.some(x=>String(x.keyValue).includes("':PICK'")));});
+test('activity delta read is scoped to active process session',()=>{const f=node('Read Activity Deltas').parameters.filters.conditions;assert.equal(f.length,1);assert.equal(f[0].keyName,'process_session_id');assert.ok(String(f[0].keyValue).includes('active_process_id'));assert.equal(node('Read Activity Deltas').parameters.returnAll,true);});
+test('norm source is existing snapshot not reimplemented freshness polling',()=>{const n=node('Read Norm Snapshot');assert.equal(n.parameters.dataTableId.value,'4pJlgFine6QhUQxX');const code=node('Build Context').parameters.jsCode;assert.ok(code.includes("day.freshness==='FRESH'"));assert.ok(code.includes("day.coverage==='COMPLETE'"));});
+test('NO_ACTIVITY anchor uses real eligible deltas',()=>{const c=node('Build Context').parameters.jsCode;assert.ok(c.includes("ELIGIBLE_ACTIVITY=new Set(['MATCH_PROCESS','BOUNDARY_PAK_PICK'])"));assert.ok(c.includes('activity_anchor_at'));});
+test('workflow has no persistence, HTTP or lock write path',()=>assert.equal(w.nodes.some(n=>['n8n-nodes-base.executeWorkflow','n8n-nodes-base.httpRequest'].includes(n.type)),false));
+test('successful executions are not retained',()=>assert.equal(w.settings.saveDataSuccessExecution,'none'));
+console.log('TOTAL '+count);
