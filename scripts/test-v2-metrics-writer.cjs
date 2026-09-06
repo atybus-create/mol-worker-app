@@ -33,4 +33,5 @@ test('Alert handoff is suppressed while all automatic rules are disabled',()=>as
 test('Alert handoff is enabled when an automatic rule is enabled',()=>assert.equal(ackDecision('LIVE',true).alert_handoff,true));
 test('Alert handoff is suppressed when communication module is OFF',()=>assert.equal(ackDecision('OFF',true).alert_handoff,false));
 test('Disabled alert handoff still completes the metrics source job',()=>{assert.equal(ack.connections['Alert Enabled'].main[1][0].node,'Update Job');assert.equal(ackDecision('LIVE',false).status,'DONE');});
+test('Enabled alert handoff is routed through the alert writer',()=>{assert.ok(ack.nodes.some(n=>n.name==='Read Communication Config'));assert.equal(ack.connections['Alert Enabled'].main[0][0].node,'Alert Handoff');assert.equal(ack.connections['Alert Handoff'].main[0][0].node,'Save Handoff');});
 console.log('Metrics writer/recovery PASS: '+count+' isolated generated-node tests.');
