@@ -4,4 +4,5 @@ const before=new Map(fs.readdirSync(dir).map(n=>[n,fs.readFileSync(path.join(dir
 execFileSync(process.execPath,[path.join(__dirname,'../backend/v2/metrics/build-all.mjs')],{stdio:'pipe'});
 for(const [n,s]of before)assert.equal(fs.readFileSync(path.join(dir,n),'utf8'),s,'Generator not reproducible: '+n);
 const w=JSON.parse(before.get('attendance-service.json'));assert.equal(w.nodes.length,79);assert.ok(w.nodes.some(n=>n.name==='ES Boundary Capture'));assert.ok(w.nodes.some(n=>n.name==='Build Worker View'));assert.ok(w.nodes.some(n=>n.name==='Read Comm Unread'));assert.ok(w.nodes.some(n=>n.name==='Read Comm Any'));assert.ok(w.nodes.some(n=>n.name==='Read Comm Event'));
+const es=JSON.parse(before.get('es-report-read.json')),normalize=es.nodes.find(n=>n.name==='Normalize Operators');assert.ok(normalize);assert.ok(normalize.parameters.jsCode.includes("error_code:'ES_REPORT_EMPTY'"),'Empty ES report must be source-unavailable, not operator-not-found');
 console.log('Stage 8 deterministic exports PASS: '+before.size+' workflows; stage 6 process logic and stage 7 metrics retained.');
