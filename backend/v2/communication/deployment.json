@@ -60,8 +60,8 @@
     "comm_es_alert_record_reader": "b7da1214-9b8b-42bf-82e1-63ccec90299d",
     "comm_es_alert_bundle_persistence": "845432d1-30fc-4f24-ab26-cf0ea755e687",
     "comm_es_alert_coordinator": "b831e7ed-e799-413f-98ad-80a8653145e9",
-    "attendance_service": "69f461a0-0cb9-4a2f-a35b-a16768130c83",
-    "attendance_moniti": "c2040c1d-cb7d-42c8-a4ee-8ac8c199d3c8",
+    "attendance_service": "1275f1a8-a361-4184-8420-9804fd5568cb",
+    "attendance_moniti": "7c2bb56d-9f5c-4fe7-b74e-9f480e814840",
     "worker_status": "8837d66d-7a39-4131-9768-9472860e2ac2"
   },
   "communication": {
