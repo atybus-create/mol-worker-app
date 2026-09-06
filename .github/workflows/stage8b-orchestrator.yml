@@ -3,11 +3,18 @@ on:
   push:
     branches: [codex/stage8b-es-orchestrator]
   workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: stage8b-orchestrator-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -19,6 +26,7 @@ jobs:
           node --check backend/v2/communication/build-es-alert-rule-router.mjs
           node --check backend/v2/communication/build-es-alert-orchestrator-workflow.mjs
           node --check backend/v2/communication/build-es-alert-bundle-workflow.mjs
+          node --check backend/v2/release/finalize-stage8.mjs
           node --check scripts/test-v2-communication-es-alert-bundle-runtime.cjs
           node --check scripts/test-v2-communication-alert-source-gate-stage8b.cjs
           node --check scripts/test-v2-communication-stage8b-live-contract.cjs
@@ -35,3 +43,31 @@ jobs:
           node scripts/test-v2-communication-alert-source.cjs
           node scripts/test-v2-communication-es-alert-persistence-runtime.cjs
           node scripts/test-v2-communication-es-alert-persistence-workflow.cjs
+  sync_metadata:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Generate Stage 8B release metadata twice and verify determinism
+        run: |
+          node backend/v2/release/finalize-stage8.mjs
+          cp backend/v2/manifest.json /tmp/manifest.json
+          cp v2/index.html /tmp/index.html
+          node backend/v2/release/finalize-stage8.mjs
+          cmp /tmp/manifest.json backend/v2/manifest.json
+          cmp /tmp/index.html v2/index.html
+          git diff --check
+      - name: Commit generated metadata when changed
+        run: |
+          if [ -z "$(git status --porcelain -- backend/v2/manifest.json v2/index.html)" ]; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add backend/v2/manifest.json v2/index.html
+          git commit -m 'build(v2): synchronize tested stage 8B release metadata'
+          git push origin HEAD:codex/stage8b-es-orchestrator
+# No n8n calls, credentials, employee-data mutations, Moniti writes or live message delivery.
