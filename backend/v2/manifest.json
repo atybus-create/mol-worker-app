@@ -90,8 +90,8 @@
     "auth_login": "872fb11a-00bd-4163-a056-04b4d92940d0",
     "auth_session": "d0075043-950f-45b1-99e3-39207707ad62",
     "auth_logout": "0630e472-9b5d-4593-a171-f8ee119377d5",
-    "attendance_service": "69f461a0-0cb9-4a2f-a35b-a16768130c83",
-    "attendance_moniti": "c2040c1d-cb7d-42c8-a4ee-8ac8c199d3c8",
+    "attendance_service": "1275f1a8-a361-4184-8420-9804fd5568cb",
+    "attendance_moniti": "7c2bb56d-9f5c-4fe7-b74e-9f480e814840",
     "attendance_drive": "902ff676-6619-4b20-97ba-023d3ec7c5fc",
     "attendance_recovery": "10976a73-c4e2-4df0-8582-5cef75ac94a0",
     "sheet_approval": "c1458aa3-ab13-4f5f-9884-0c35b7da53c0",
@@ -142,7 +142,7 @@
     "diagnostic_active": false
   },
   "attendance": {
-    "moniti_test_date": "2026-09-05",
+    "moniti_test_date": "2026-09-06",
     "moniti_test_worker_ids": [
       99191,
       99186,
