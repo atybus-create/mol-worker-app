@@ -73,7 +73,12 @@
     "comm_ack": "HQBhMCEhQqujQbos",
     "comm_list": "7HfWqIshFLgpGeoW",
     "comm_recipients": "hBO6ShOy2MH3FCI4",
-    "comm_no_process_rules": "EsCycMxoypbudrE7"
+    "comm_no_process_rules": "EsCycMxoypbudrE7",
+    "comm_attendance_correction_rules": "jv7WUWyuwngD7FFe",
+    "comm_forgotten_stop_rules": "NHPqesBIjOwZHth4",
+    "comm_wrong_process_rules": "XYQziIf4NkjcNKhP",
+    "comm_work_outside_app_rules": "wnkjKWWLBGefGytg",
+    "comm_no_activity_rules": "UjpB45UX6384rTMW"
   },
   "active_versions": {
     "health": "fca803c6-7984-4c26-a108-f593c4e958d8",
@@ -84,7 +89,7 @@
     "auth_login": "872fb11a-00bd-4163-a056-04b4d92940d0",
     "auth_session": "d0075043-950f-45b1-99e3-39207707ad62",
     "auth_logout": "0630e472-9b5d-4593-a171-f8ee119377d5",
-    "attendance_service": "a30a1d99-5f38-40a8-b498-947fc448e3a6",
+    "attendance_service": "4e65bd22-0379-45ea-8b3a-3591a0ef01a3",
     "attendance_moniti": "56ff0be6-3265-41a2-b0b9-7234c957d6e0",
     "attendance_drive": "902ff676-6619-4b20-97ba-023d3ec7c5fc",
     "attendance_recovery": "10976a73-c4e2-4df0-8582-5cef75ac94a0",
@@ -119,7 +124,12 @@
     "comm_ack": "2d4395f5-d5fe-4c34-80b0-3842fb33c64b",
     "comm_list": "c24f16c7-dbb4-40e7-8c71-e8713ce53536",
     "comm_recipients": "d5e57619-929f-4603-9282-b32933410981",
-    "comm_no_process_rules": "a2ae8ad0-33c8-4593-9d3b-19cb5f16ddae"
+    "comm_no_process_rules": "a2ae8ad0-33c8-4593-9d3b-19cb5f16ddae",
+    "comm_attendance_correction_rules": "7e186044-5a28-4477-9cc0-a6c4b389446a",
+    "comm_forgotten_stop_rules": "2886d59d-dfbc-443c-b8fb-52f3338248cd",
+    "comm_wrong_process_rules": "62d4ba5c-dc31-4b95-be3c-5fd970088dbc",
+    "comm_work_outside_app_rules": "e37b9b88-6e33-44df-980d-1702cd7fa9ce",
+    "comm_no_activity_rules": "5d422c92-34da-4ad6-8170-5350b9739563"
   },
   "auth": {
     "receipt_credential_id": "79mc2IFYLaJLMrgJ",
@@ -153,21 +163,21 @@
     "version": "0.7.0",
     "generator": "metrics/build-all.mjs",
     "source_of_truth": "NORM_SNAPSHOTS monthly atomic bundle",
-    "snapshot_version": "per actor, employee, work_date and selected month; not attendance.version",
+    "snapshot_version": "per actor, employee, work_date and selected month; includes communication fields in stage 8",
     "report_spreadsheet_id": "1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4",
     "report_sheets": {"daily": 7, "monthly": 8},
     "stage8_alert_handoff": "ALERT_DERIVED",
-    "schema_migration": "additive 5 tables; original schema version 1 preserved",
+    "schema_migration": "additive 5 stage-7 tables plus 2 stage-8 communication tables; original schema version 1 preserved",
     "export_note": "Deterministic deployment graphs reconstructed from reviewed live nodes; layout/defaults may differ. Not claimed as raw byte-for-byte API exports.",
     "diagnostics": {
       "controlled_read": {"workflow_id": "5QQkZWLqVDzx5it5", "active": false},
       "persistence_test": {"workflow_id": "vqpQl7orcv75JNC5", "active": false}
     },
-    "version_reference_note": "Stage 7 references updated from published graphs read on 2026-09-05. Unchanged stage 3-6 references retain their earlier verification date."
+    "version_reference_note": "Stage 8 worker-status attendance service active version read back on 2026-09-06."
   },
   "communication": {
-    "revision": "stage8-no-process-engine-live-1",
-    "status": "MANUAL_LIVE_AUTOMATIC_GATED",
+    "revision": "stage8-worker-status-live-1",
+    "status": "MANUAL_LIVE_AUTOMATIC_GATED_WORKER_STATUS_READY",
     "config_key": "COMMUNICATIONS_CONFIG",
     "manual_enabled": true,
     "automatic_rules_enabled": false,
@@ -175,14 +185,19 @@
     "ui_implemented": false,
     "es_rules_enabled": false,
     "history_policy": "HOLD",
-    "generator": "communication/build-api-candidate.mjs",
-    "no_process": {
-      "rules_workflow_id": "EsCycMxoypbudrE7",
-      "active": true,
-      "rule_enabled": false,
-      "threshold_seconds": null,
-      "ack_required": null
+    "poll_seconds": null,
+    "worker_status": {
+      "communication_counters_live": true,
+      "snapshot_version_includes_communication": true,
+      "full_history_loaded": false,
+      "polling_enabled": false
     },
-    "probe": {"workflow_id": "5zOHDQDFXoG7O4QK", "active": false, "execution_id": "588980"}
+    "no_process": {"rules_workflow_id":"EsCycMxoypbudrE7","active":true,"rule_enabled":false,"threshold_seconds":null,"ack_required":null},
+    "attendance_correction": {"rules_workflow_id":"jv7WUWyuwngD7FFe","active":true,"rule_enabled":false,"ack_required":null},
+    "forgotten_stop": {"rules_workflow_id":"NHPqesBIjOwZHth4","active":true,"rule_enabled":false,"at_local":null,"escalate_after_seconds":null,"ack_required":null,"automatic_stop":false},
+    "wrong_process": {"rules_workflow_id":"XYQziIf4NkjcNKhP","active":true,"rule_enabled":false,"requires_es_verified":true},
+    "work_outside_app": {"rules_workflow_id":"wnkjKWWLBGefGytg","active":true,"rule_enabled":false,"requires_es_verified":true},
+    "no_activity": {"rules_workflow_id":"UjpB45UX6384rTMW","active":true,"rule_enabled":false,"threshold_seconds":null,"ack_required":null,"requires_es_verified":true,"source_unavailable_is_not_inactivity":true},
+    "probe": {"workflow_id":"5zOHDQDFXoG7O4QK","active":false,"execution_id":"588980"}
   }
 }
