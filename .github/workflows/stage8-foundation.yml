@@ -38,6 +38,7 @@ jobs:
           - test-v2-norms-ui.cjs
           - test-v2-metrics-reproducible.cjs
           - test-v2-communication.cjs
+          - test-v2-communication-alert-cutover.cjs
           - test-v2-communication-workflows.cjs
           - test-v2-communication-worker-view.cjs
           - test-v2-communication-ui.cjs
