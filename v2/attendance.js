@@ -4,12 +4,14 @@
   const dateAt=d=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Warsaw',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
   const storageKey=()=>`mol.v2.attendance.pending.${employee}`;
   function savePending(value){pending=value;try{if(value)sessionStorage.setItem(storageKey(),JSON.stringify(value));else sessionStorage.removeItem(storageKey());}catch{}}
+  const pendingButton=()=>({start:'workStart',finish:'workFinish',reopen:'workReopen','process-start':'processStart','process-change':'processChange','process-logout':'processLogout'}[pending?.op]||null);
   function buttons(){for(const id of ['workDate','normMonth','attendanceRefresh','workStart','workFinish','workReopen','correctionStart','correctionStop','correctionReason','correctionSave','sheetCorrectionId','sheetPreviewButton','sheetApproveButton','processChoice','processStart','processChange','processLogout'])el(id).disabled=busy||!!pending;
     el('attendanceRetry').hidden=!pending;el('attendanceRetry').disabled=busy;
     const a=snapshot?.attendance;const active=snapshot?.active_process;el('processStart').hidden=!!active;el('processChange').hidden=!active;el('processLogout').hidden=!active;for(const id of ['processChoice','processStart','processChange','processLogout'])if(!snapshot||a?.state!=='OPEN'||snapshot.writes_enabled!==true)el(id).disabled=true;el('workStart').hidden=!!a?.start_at||!!snapshot?.open_day;
     el('workFinish').hidden=!snapshot?.open_day;el('workReopen').hidden=a?.state!=='CLOSED';
     el('correctionForm').hidden=!a?.start_at;
     if(!snapshot||snapshot.writes_enabled!==true)for(const id of ['workStart','workFinish','workReopen','correctionSave'])el(id).disabled=true;
+    const retry=pendingButton();if(retry&&!busy)el(retry).disabled=false;
   }
   function clearDisplay(){window.molNorms?.reset();editingCorrection=false;for(const id of ['workTimes','workSync','openDayNote','managerNotices','sheetProposal','processState','processTotals','processHistory'])el(id).textContent='';for(const id of ['correctionStart','correctionStop','correctionReason','sheetCorrectionId'])el(id).value='';el('workState').textContent='Odczyt…';el('sheetApproveButton').hidden=true;}
   function message(s){el('attendanceMessage').textContent=s;}
@@ -36,7 +38,7 @@
     const endpoint=viewRead?base.replace('attendance-','')+'worker-status':(op.startsWith('process-')?base.replace('attendance-','')+op:base+op);
     try{const response=await fetch(endpoint+query,{method:op==='status'?'GET':'POST',cache:'no-store',credentials:'omit',headers:{Authorization:`Bearer ${token}`,...(body&&op!=='status'?{'Content-Type':'application/json'}:{})},body:body&&op!=='status'?JSON.stringify(body):undefined,signal:controller.signal});const envelope=await response.json();if(!response.ok||envelope.ok!==true){const e=new Error(envelope.error?.message||'Brak potwierdzenia operacji.');e.status=response.status;e.code=envelope.error?.code;throw e;}return envelope.data;
     }catch(e){if(e.name==='AbortError'||e instanceof TypeError)throw new Error('Brak potwierdzenia z serwera. Ponów to samo żądanie.');throw e;}finally{clearTimeout(timer);}}
-  async function refresh(silent=false){if(!token||busy)return;const gen=generation,seq=++readSequence;busy=true;buttons();if(!silent)message('Odczyt potwierdzonego stanu…');try{const data=await request('status');if(gen!==generation||seq!==readSequence)return;if(!render(data))return;message(pending?'Poprzednie żądanie oczekuje na potwierdzenie. Użyj „Ponów zapis”.':'Stan potwierdzony przez backend.');}catch(e){if(gen===generation){message(e.message);window.molNorms?.disconnected(e.message);}}finally{if(gen===generation){busy=false;buttons();}}}
+  async function refresh(silent=false){if(!token||busy)return;const gen=generation,seq=++readSequence;busy=true;buttons();if(!silent)message('Odczyt potwierdzonego stanu…');try{const data=await request('status');if(gen!==generation||seq!==readSequence)return;if(!render(data))return;message(pending?'Poprzednie żądanie oczekuje na potwierdzenie. Użyj tego samego przycisku albo „Ponów zapis”.':'Stan potwierdzony przez backend.');}catch(e){if(gen===generation){message(e.message);window.molNorms?.disconnected(e.message);}}finally{if(gen===generation){busy=false;buttons();}}}
   async function submit(op,body){if(!token||busy)return;const gen=generation;let failure='';savePending({op,body});busy=true;++readSequence;buttons();message(op.startsWith('process-')?'Zapisywanie procesu…':'Zapisywanie i weryfikacja w Moniti…');try{
     for(let attempt=0;;attempt++){
       if(gen!==generation)return;
@@ -47,13 +49,13 @@
         await new Promise(resolve=>setTimeout(resolve,2000*2**attempt));
       }
     }
-    if(gen!==generation)return;savePending(null);message('Zapis potwierdzony.');}catch(e){if(gen!==generation)return;if(e.status>=400&&e.status<500&&e.code!=='COMMAND_BUSY')savePending(null);failure=e.message;message(e.message+(pending?' Ponów zapis tym samym przyciskiem.':''));}finally{if(gen===generation){busy=false;buttons();if(!pending){await refresh();if(failure&&gen===generation)message(failure);}}}}
+    if(gen!==generation)return;savePending(null);message('Zapis potwierdzony.');}catch(e){if(gen!==generation)return;if(e.status>=400&&e.status<500&&e.code!=='COMMAND_BUSY')savePending(null);failure=e.message;message(e.message+(pending?' Ponów zapis tym samym przyciskiem lub użyj „Ponów zapis”.':''));}finally{if(gen===generation){busy=false;buttons();if(!pending){await refresh();if(failure&&gen===generation)message(failure);}}}}
   const duration=s=>{s=Math.max(0,Math.floor(s||0));return [Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(x=>String(x).padStart(2,'0')).join(':');};
   function tickProcesses(){if(!snapshot)return;const delta=snapshot.attendance?.state==='OPEN'?Math.max(0,Math.floor((Date.now()-confirmedAt)/1000)):0;el('processTotals').textContent=`W procesach: ${duration((snapshot.process_seconds||0)+(snapshot.active_process?delta:0))} · Bez procesu: ${duration((snapshot.no_process_seconds||0)+(snapshot.active_process?0:delta))}`;}
   setInterval(tickProcesses,1000);
-  function processCommand(op){if(busy||pending||snapshot?.attendance?.state!=='OPEN')return;submit('process-'+op,{request_id:crypto.randomUUID(),work_date:snapshot.work_date,expected_version:snapshot.attendance.version,...(op==='logout'?{}:{process_code:el('processChoice').value})});}
+  function processCommand(op){if(busy)return;const full='process-'+op;if(pending){if(pending.op===full)submit(pending.op,pending.body);return;}if(snapshot?.attendance?.state!=='OPEN')return;submit(full,{request_id:crypto.randomUUID(),work_date:snapshot.work_date,expected_version:snapshot.attendance.version,...(op==='logout'?{}:{process_code:el('processChoice').value})});}
   el('processStart').addEventListener('click',()=>processCommand('start'));el('processChange').addEventListener('click',()=>processCommand('change'));el('processLogout').addEventListener('click',()=>processCommand('logout'));
-  function command(op){if(!snapshot||busy||pending)return;const a=op==='finish'?snapshot.open_day:snapshot.attendance;submit(op,{request_id:crypto.randomUUID(),work_date:a?.work_date||el('workDate').value,expected_version:a?.version||0});}
+  function command(op){if(!snapshot||busy)return;if(pending){if(pending.op===op)submit(pending.op,pending.body);return;}const a=op==='finish'?snapshot.open_day:snapshot.attendance;submit(op,{request_id:crypto.randomUUID(),work_date:a?.work_date||el('workDate').value,expected_version:a?.version||0});}
   el('workStart').addEventListener('click',()=>command('start'));el('workFinish').addEventListener('click',()=>command('finish'));el('workReopen').addEventListener('click',()=>command('reopen'));
   el('attendanceRefresh').addEventListener('click',()=>{editingCorrection=false;refresh();});el('workDate').addEventListener('change',()=>{snapshot=null;clearDisplay();el('normMonth').value=el('workDate').value.slice(0,7);refresh();});
   el('normMonth').addEventListener('change',()=>{snapshot=null;clearDisplay();refresh();});
