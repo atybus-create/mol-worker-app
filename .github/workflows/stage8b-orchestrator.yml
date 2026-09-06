@@ -17,10 +17,13 @@ jobs:
           node --check backend/v2/communication/es-alert-bundle.cjs
           node --check backend/v2/communication/build-es-alert-rule-router.mjs
           node --check backend/v2/communication/build-es-alert-orchestrator-workflow.mjs
-      - name: Domain tests
+          node --check backend/v2/communication/build-es-alert-bundle-workflow.mjs
+          node --check scripts/test-v2-communication-es-alert-bundle-runtime.cjs
+      - name: Domain and parity tests
         run: |
           node scripts/test-v2-communication-es-alert-orchestrator.cjs
           node scripts/test-v2-communication-es-alert-bundle.cjs
+          node scripts/test-v2-communication-es-alert-bundle-runtime.cjs
           node scripts/test-v2-communication-es-alert-persistence.cjs
       - name: Existing Stage 8 regression
         run: |
