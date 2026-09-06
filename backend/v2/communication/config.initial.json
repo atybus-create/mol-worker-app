@@ -6,6 +6,8 @@
   "es_verified": false,
   "poll_seconds": null,
   "history_policy": "HOLD",
+  "auto_alert_consumer_enabled": false,
+  "alert_cutover_outbox_id": null,
   "rules": {
     "NO_PROCESS": {"enabled": false, "threshold_seconds": null, "ack_required": null},
     "NO_ACTIVITY": {"enabled": false, "threshold_seconds": null, "ack_required": null},
