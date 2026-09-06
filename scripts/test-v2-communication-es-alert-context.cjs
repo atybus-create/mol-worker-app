@@ -31,7 +31,7 @@ test('multiple active processes fail closed',()=>throws(()=>C.build(base({proces
 test('duplicate delta id fails closed',()=>throws(()=>C.build(base({deltas:[wrong,{...wrong}]})),'COMM_ES_CONTEXT_DELTA_DUPLICATE'));
 test('duplicate episode id fails closed',()=>{const ep={episode_id:'MOL004|NO_ACTIVITY|ps-1',employee_id:'MOL004',type:'NO_ACTIVITY',status:'OPEN'},rec={record_key:'e',kind:'EPISODE',scope_id:'MOL004',payload_json:JSON.stringify(ep)};throws(()=>C.build(base({comm_records:[rec,{...rec,record_key:'e2'}]})),'COMM_ES_CONTEXT_EPISODE_DUPLICATE');});
 test('inactive or missing employee fails closed',()=>throws(()=>C.build(base({employees:[{...employee,active:false}]})),'COMM_ES_CONTEXT_EMPLOYEE_INVALID'));
-test('invalid source handoff is rejected',()=>throws(()=>C.build(base({source:{...source,source_row_id:7689}}).source),'COMM_ES_CONTEXT_SOURCE_INVALID'));
+test('invalid source handoff is rejected',()=>throws(()=>C.build(base({source:{...source,source_row_id:-1}})),'COMM_ES_CONTEXT_SOURCE_INVALID'));
 test('snapshot duplicate fails closed',()=>throws(()=>C.build(base({norm_snapshots:[snapshot,{...snapshot}]})),'COMM_ES_CONTEXT_SNAPSHOT_DUPLICATE'));
 test('snapshot invalid JSON fails closed',()=>throws(()=>C.build(base({norm_snapshots:[{...snapshot,payload_json:'{'}]})),'COMM_ES_CONTEXT_SNAPSHOT_INVALID'));
 console.log('TOTAL '+count);
