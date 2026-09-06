@@ -3,6 +3,7 @@
 const D=require('./domain.cjs');
 const need=D.requireValue;
 const TYPES=new Set(['WRONG_PROCESS','WORK_OUTSIDE_APP','NO_ACTIVITY']);
+const MUTATING_STATUSES=new Set(['OPEN','RESOLVED','CLEAR','BELOW_THRESHOLD','SOURCE_UNAVAILABLE']);
 const ident=x=>typeof x==='string'&&/^MOL[0-9]+$/.test(x);
 
 function validateInvocation(x){
@@ -15,10 +16,16 @@ function validateInvocation(x){
 function validateRuleResult(type,result){
   need(TYPES.has(type)&&result&&typeof result==='object'&&!Array.isArray(result),'COMM_ES_RULE_RESULT_INVALID');
   if(result.ok!==true){
-    need(typeof result.error_code==='string'&&/^COMM_[A-Z0-9_]+$/.test(result.error_code),'COMM_ES_RULE_RESULT_INVALID');
+    need(result.ok===false&&typeof result.error_code==='string'&&/^COMM_[A-Z0-9_]+$/.test(result.error_code),'COMM_ES_RULE_RESULT_INVALID');
     return {ok:false,error_code:result.error_code};
   }
-  need(typeof result.status==='string'&&Array.isArray(result.resolve)&&typeof result.deliver==='boolean','COMM_ES_RULE_RESULT_INVALID');
+  need(typeof result.status==='string','COMM_ES_RULE_RESULT_INVALID');
+  if(result.status==='DISABLED'){
+    need(typeof result.reason==='string'&&result.reason.length>0,'COMM_ES_RULE_RESULT_INVALID');
+    return {ok:true,status:'DISABLED',reason:result.reason,open:null,resolve:[],deliver:false};
+  }
+  need(MUTATING_STATUSES.has(result.status),'COMM_ES_RULE_RESULT_INVALID');
+  need(Array.isArray(result.resolve)&&typeof result.deliver==='boolean','COMM_ES_RULE_RESULT_INVALID');
   need(result.open===null||D.object(result.open),'COMM_ES_RULE_RESULT_INVALID');
   return result;
 }
