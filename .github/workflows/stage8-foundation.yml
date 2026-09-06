@@ -40,6 +40,7 @@ jobs:
           - test-v2-communication.cjs
           - test-v2-communication-alert-cutover.cjs
           - test-v2-communication-alert-source.cjs
+          - test-v2-communication-alert-source-workflow.cjs
           - test-v2-communication-workflows.cjs
           - test-v2-communication-worker-view.cjs
           - test-v2-communication-ui.cjs
@@ -54,6 +55,7 @@ jobs:
         run: |
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
+          node backend/v2/communication/build-alert-source-gate.mjs
           node backend/v2/communication/register-openapi.mjs
           node backend/v2/release/finalize-stage8.mjs
       - name: Run ${{ matrix.test }}
@@ -74,6 +76,7 @@ jobs:
         run: |
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
+          node backend/v2/communication/build-alert-source-gate.mjs
           node backend/v2/metrics/build-all.mjs
           node backend/v2/communication/register-openapi.mjs
           node backend/v2/release/finalize-stage8.mjs
@@ -84,6 +87,7 @@ jobs:
           cp v2/index.html /tmp/index.html
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
+          node backend/v2/communication/build-alert-source-gate.mjs
           node backend/v2/metrics/build-all.mjs
           node backend/v2/communication/register-openapi.mjs
           node backend/v2/release/finalize-stage8.mjs
@@ -95,11 +99,11 @@ jobs:
           git diff --check
       - name: Verify generated artifacts on main without mutation
         if: github.ref == 'refs/heads/main'
-        run: git diff --exit-code -- backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows docs/v2/openapi.json v2/index.html
+        run: test -z "$(git status --porcelain -- backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows docs/v2/openapi.json v2/index.html)"
       - name: Commit generated artifacts on work branch only
         if: github.ref == 'refs/heads/codex/stage8-alerts-messages'
         run: |
-          if git diff --quiet -- backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows docs/v2/openapi.json v2/index.html; then exit 0; fi
+          if [ -z "$(git status --porcelain -- backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows docs/v2/openapi.json v2/index.html)" ]; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows docs/v2/openapi.json v2/index.html
