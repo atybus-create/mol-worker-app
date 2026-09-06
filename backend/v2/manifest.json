@@ -141,7 +141,11 @@
   },
   "attendance": {
     "moniti_test_date": "2026-09-05",
-    "moniti_test_worker_ids": [99191, 99186, 99185],
+    "moniti_test_worker_ids": [
+      99191,
+      99186,
+      99185
+    ],
     "moniti_precision_seconds": 60,
     "report_spreadsheet_id": "1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4",
     "report_url": "https://docs.google.com/spreadsheets/d/1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4/edit?ouid=113962701124300298502",
@@ -154,7 +158,10 @@
     "role_key_prefix": "ALLOWED_PROCESSES_ROLE_",
     "employee_key_prefix": "ALLOWED_PROCESSES_EMPLOYEE_",
     "precedence": "explicit employee entry replaces role entry, including an empty array",
-    "office_roles": ["LEADER", "ADMIN"],
+    "office_roles": [
+      "LEADER",
+      "ADMIN"
+    ],
     "employee_column_created": false,
     "configuration_snapshot": "processes/permissions-config.json",
     "revision": "stage6-closeout-20260905"
@@ -165,13 +172,22 @@
     "source_of_truth": "NORM_SNAPSHOTS monthly atomic bundle",
     "snapshot_version": "per actor, employee, work_date and selected month; includes communication fields in stage 8",
     "report_spreadsheet_id": "1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4",
-    "report_sheets": {"daily": 7, "monthly": 8},
+    "report_sheets": {
+      "daily": 7,
+      "monthly": 8
+    },
     "stage8_alert_handoff": "ALERT_DERIVED",
     "schema_migration": "additive 5 stage-7 tables plus 2 stage-8 communication tables; original schema version 1 preserved",
     "export_note": "Deterministic deployment graphs reconstructed from reviewed live nodes; layout/defaults may differ. Not claimed as raw byte-for-byte API exports.",
     "diagnostics": {
-      "controlled_read": {"workflow_id": "5QQkZWLqVDzx5it5", "active": false},
-      "persistence_test": {"workflow_id": "vqpQl7orcv75JNC5", "active": false}
+      "controlled_read": {
+        "workflow_id": "5QQkZWLqVDzx5it5",
+        "active": false
+      },
+      "persistence_test": {
+        "workflow_id": "vqpQl7orcv75JNC5",
+        "active": false
+      }
     },
     "version_reference_note": "Stage 8 worker-status attendance service active version read back on 2026-09-06."
   },
@@ -186,18 +202,65 @@
     "es_rules_enabled": false,
     "history_policy": "HOLD",
     "poll_seconds": null,
+    "generator": "communication/build-api-candidate.mjs",
     "worker_status": {
       "communication_counters_live": true,
-      "snapshot_version_includes_communication": true,
+      "unread_query": "actor scoped DELIVERY rows with shown_at=null; expired messages excluded in assembly",
+      "messages_available_query": "one actor scoped DELIVERY row",
+      "communication_revision_query": "latest actor scoped EVENT revision",
       "full_history_loaded": false,
+      "snapshot_version_includes_communication": true,
       "polling_enabled": false
     },
-    "no_process": {"rules_workflow_id":"EsCycMxoypbudrE7","active":true,"rule_enabled":false,"threshold_seconds":null,"ack_required":null},
-    "attendance_correction": {"rules_workflow_id":"jv7WUWyuwngD7FFe","active":true,"rule_enabled":false,"ack_required":null},
-    "forgotten_stop": {"rules_workflow_id":"NHPqesBIjOwZHth4","active":true,"rule_enabled":false,"at_local":null,"escalate_after_seconds":null,"ack_required":null,"automatic_stop":false},
-    "wrong_process": {"rules_workflow_id":"XYQziIf4NkjcNKhP","active":true,"rule_enabled":false,"requires_es_verified":true},
-    "work_outside_app": {"rules_workflow_id":"wnkjKWWLBGefGytg","active":true,"rule_enabled":false,"requires_es_verified":true},
-    "no_activity": {"rules_workflow_id":"UjpB45UX6384rTMW","active":true,"rule_enabled":false,"threshold_seconds":null,"ack_required":null,"requires_es_verified":true,"source_unavailable_is_not_inactivity":true},
-    "probe": {"workflow_id":"5zOHDQDFXoG7O4QK","active":false,"execution_id":"588980"}
+    "no_process": {
+      "rules_workflow_id": "EsCycMxoypbudrE7",
+      "active": true,
+      "rule_enabled": false,
+      "threshold_seconds": null,
+      "ack_required": null
+    },
+    "attendance_correction": {
+      "rules_workflow_id": "jv7WUWyuwngD7FFe",
+      "active": true,
+      "rule_enabled": false,
+      "ack_required": null,
+      "recipients": "all active LEADER/ADMIN",
+      "episode_resolution": "resolved on committed correction/reopen; ACK remains independent"
+    },
+    "forgotten_stop": {
+      "rules_workflow_id": "NHPqesBIjOwZHth4",
+      "active": true,
+      "rule_enabled": false,
+      "at_local": null,
+      "escalate_after_seconds": null,
+      "ack_required": null,
+      "automatic_stop": false
+    },
+    "wrong_process": {
+      "rules_workflow_id": "XYQziIf4NkjcNKhP",
+      "active": true,
+      "rule_enabled": false,
+      "requires_es_verified": true
+    },
+    "work_outside_app": {
+      "rules_workflow_id": "wnkjKWWLBGefGytg",
+      "active": true,
+      "rule_enabled": false,
+      "requires_es_verified": true
+    },
+    "no_activity": {
+      "rules_workflow_id": "UjpB45UX6384rTMW",
+      "active": true,
+      "rule_enabled": false,
+      "threshold_seconds": null,
+      "ack_required": null,
+      "requires_es_verified": true,
+      "source_unavailable_is_not_inactivity": true
+    },
+    "probe": {
+      "workflow_id": "5zOHDQDFXoG7O4QK",
+      "active": false,
+      "execution_id": "588980"
+    }
   }
 }
