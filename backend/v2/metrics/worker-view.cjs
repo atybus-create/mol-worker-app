@@ -1,12 +1,12 @@
 'use strict';
-// Pure assembly of an authenticated, locked attendance snapshot and published norms.
+// Pure assembly of an authenticated, locked attendance snapshot, published norms and bounded communication state.
 function viewNeed(value, code) { if (!value) throw new Error(code); }
 function viewCanonical(value) {
   if (Array.isArray(value)) return '[' + value.map(viewCanonical).join(',') + ']';
   if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map(k => JSON.stringify(k)+':'+viewCanonical(value[k])).join(',') + '}';
   return JSON.stringify(value);
 }
-function assembleWorkerView({base, actor, month, bundles=[], previous=null, now, stale_seconds=180}) {
+function assembleWorkerView({base, actor, month, bundles=[], previous=null, comm_rows=[], comm_any=[], comm_events=[], now, stale_seconds=180}) {
   viewNeed(base?.employee?.employee_id && actor?.employee_id, 'VIEW_IDENTITY_INVALID');
   viewNeed(['WORKER','LEADER','ADMIN'].includes(actor.role), 'VIEW_ROLE_INVALID');
   viewNeed(actor.role!=='WORKER'||actor.employee_id===base.employee.employee_id, 'VIEW_FORBIDDEN');
@@ -52,12 +52,17 @@ function assembleWorkerView({base, actor, month, bundles=[], previous=null, now,
     if(month===work_date.slice(0,7)&&monthly_norm.has_value)monthly_norm={...monthly_norm,freshness:'STALE',source_error};
   }
   const a=base.attendance||{attendance_id:employee_id+':'+work_date,employee_id,work_date,state:'NOT_STARTED',version:0,start_at:null,stop_at:null,moniti_sync:base.moniti_enabled?'PENDING':'NOT_REQUIRED',drive_sync:'NOT_REQUIRED'};
+  const commNow=Date.parse(now), unread_messages=comm_rows.filter(r=>r.kind==='DELIVERY').map(r=>{try{return JSON.parse(r.payload_json);}catch{return null;}}).filter(d=>d&&d.recipient_id===actor.employee_id&&!d.shown_at&&(!d.valid_until||Date.parse(d.valid_until)>commNow)).length;
+  const messages_available=comm_any.some(r=>r.kind==='DELIVERY'&&r.scope_id===actor.employee_id);
+  const eventRows=comm_events.filter(r=>r.kind==='EVENT'&&r.scope_id===actor.employee_id&&Number.isSafeInteger(r.revision));
+  viewNeed(eventRows.length<=1,'COMM_STATUS_DUPLICATE');
+  const communication_revision=eventRows[0]?.revision||0;
   const data={user:{employee_id:actor.employee_id,display_name:actor.display_name||actor.employee_id,role:actor.role},employee:base.employee,work_date,month,
     attendance:a,attendance_version,open_day:base.open_day||null,active_process:base.active_process||null,
     process:base.active_process?{state:'ACTIVE',process_session_id:base.active_process.process_session_id,process_code:base.active_process.process_code,start_at:base.active_process.start_at}:{state:'NONE',process_session_id:null,process_code:null,start_at:null},
     process_sessions:base.process_sessions||[],process_catalog:base.process_catalog||[],process_permission_error:base.process_permission_error||null,
     presence_seconds:base.presence_seconds||0,process_seconds:base.process_seconds||0,no_process_seconds:base.no_process_seconds||0,between_process_seconds:base.no_process_seconds||0,
-    norm,monthly_norm,notifications:base.notifications||[],unread_messages:0,messages_available:false,
+    norm,monthly_norm,notifications:base.notifications||[],unread_messages,messages_available,communication_revision,
     moniti_enabled:base.moniti_enabled===true,writes_enabled:base.writes_enabled===true,
     calculated_at:now,snapshot_version:0};
   const fingerprint=viewCanonical({...data,calculated_at:null,snapshot_version:0});
