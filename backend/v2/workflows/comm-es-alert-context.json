@@ -1,0 +1,400 @@
+{
+  "name": "MOL // APP V2 // COMM ES ALERT CONTEXT",
+  "nodes": [
+    {
+      "id": "input",
+      "name": "Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "employee",
+      "name": "Read Employee",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        0
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "npCr4h1LjhVL205w"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "employee_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Input').first().json.employee_id }}"
+            }
+          ]
+        },
+        "limit": 2
+      }
+    },
+    {
+      "id": "attendance",
+      "name": "Read Attendance",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        0
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "HmJugmYliWT0ERn4"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "employee_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Input').first().json.employee_id }}"
+            },
+            {
+              "keyName": "work_date",
+              "condition": "eq",
+              "keyValue": "={{ $('Input').first().json.work_date }}"
+            }
+          ]
+        },
+        "limit": 2
+      }
+    },
+    {
+      "id": "processes",
+      "name": "Read Processes",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        0
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "4di5yA4jpe0ZEmPL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "employee_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Input').first().json.employee_id }}"
+            },
+            {
+              "keyName": "attendance_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Input').first().json.employee_id + ':' + $('Input').first().json.work_date }}"
+            }
+          ]
+        },
+        "returnAll": false,
+        "limit": 1001
+      }
+    },
+    {
+      "id": "active",
+      "name": "Active Process Key",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const rows=$input.all().map(x=>x.json).filter(x=>x.process_session_id),active=rows.filter(x=>!x.stop_at);if(active.length>1)throw Error('COMM_ES_CONTEXT_ACTIVE_PROCESS_DUPLICATE');return [{json:{active_process_id:active[0]?.process_session_id||'__NONE__'}}];"
+      }
+    },
+    {
+      "id": "batch-deltas",
+      "name": "Read Batch Deltas",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        -80
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "GT4Ritsrue5U57NA"
+        },
+        "matchType": "anyCondition",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "delta_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Input').first().json.batch_id + ':' + $('Input').first().json.employee_id + ':PAK' }}"
+            },
+            {
+              "keyName": "delta_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Input').first().json.batch_id + ':' + $('Input').first().json.employee_id + ':PICK' }}"
+            }
+          ]
+        },
+        "limit": 3
+      }
+    },
+    {
+      "id": "activity-deltas",
+      "name": "Read Activity Deltas",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        80
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "GT4Ritsrue5U57NA"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "process_session_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Active Process Key').first().json.active_process_id }}"
+            }
+          ]
+        },
+        "returnAll": true
+      }
+    },
+    {
+      "id": "norm",
+      "name": "Read Norm Snapshot",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        0
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "4pJlgFine6QhUQxX"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "employee_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Input').first().json.employee_id }}"
+            },
+            {
+              "keyName": "month",
+              "condition": "eq",
+              "keyValue": "={{ $('Input').first().json.work_date.slice(0,7) }}"
+            }
+          ]
+        },
+        "limit": 2
+      }
+    },
+    {
+      "id": "episodes",
+      "name": "Read Comm Episodes",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        0
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "42jIxvSmSVGdlxB8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "scope_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Input').first().json.employee_id }}"
+            },
+            {
+              "keyName": "kind",
+              "condition": "eq",
+              "keyValue": "EPISODE"
+            }
+          ]
+        },
+        "returnAll": false,
+        "limit": 100
+      }
+    },
+    {
+      "id": "build",
+      "name": "Build Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "'use strict';\nconst ES_TYPES=new Set(['WRONG_PROCESS','WORK_OUTSIDE_APP','NO_ACTIVITY']);\nconst MEASURED={PAKOWANIE:'PAK',KOMPLETACJA:'PICK'};\nconst ELIGIBLE_ACTIVITY=new Set(['MATCH_PROCESS','BOUNDARY_PAK_PICK']);\nfunction fail(code){const e=new Error(code);e.code=code;throw e;}\nfunction need(test,code){if(!test)fail(code);}\nconst ident=x=>typeof x==='string'&&/^MOL[0-9]+$/.test(x);\nconst validDay=x=>typeof x==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(x)&&new Date(x+'T00:00:00Z').toISOString().slice(0,10)===x;\nconst time=x=>{const n=Date.parse(x);need(Number.isFinite(n),'COMM_ES_CONTEXT_TIME_INVALID');return n;};\nconst copy=x=>JSON.parse(JSON.stringify(x));\nfunction unique(rows,key,code){need(new Set(rows.map(r=>r[key])).size===rows.length,code);}\nfunction one(rows,code){need(rows.length<=1,code);return rows[0]||null;}\nfunction deltaMetric(d){const p=Number(d?.pak_count)||0,k=Number(d?.pick_count)||0;if(p>0&&k===0)return 'PAK';if(k>0&&p===0)return 'PICK';return null;}\nfunction parseEpisodes(records,employee_id){\n const out=[];\n for(const r of records||[]){if(r.kind!=='EPISODE'||r.scope_id!==employee_id)continue;let p;try{p=JSON.parse(r.payload_json);}catch{fail('COMM_ES_CONTEXT_RECORD_INVALID');}if(!p||!ES_TYPES.has(p.type)||p.employee_id!==employee_id||!['OPEN','RESOLVED'].includes(p.status))continue;out.push(p);}\n unique(out,'episode_id','COMM_ES_CONTEXT_EPISODE_DUPLICATE');return out;\n}\nfunction dailyFromSnapshot(rows,employee_id,work_date){\n const matching=(rows||[]).filter(r=>r.employee_id===employee_id&&r.month===work_date.slice(0,7));need(matching.length<=1,'COMM_ES_CONTEXT_SNAPSHOT_DUPLICATE');if(!matching.length)return null;let p;try{p=JSON.parse(matching[0].payload_json);}catch{fail('COMM_ES_CONTEXT_SNAPSHOT_INVALID');}need(p?.employee_id===employee_id&&p.month===work_date.slice(0,7)&&Array.isArray(p.days),'COMM_ES_CONTEXT_SNAPSHOT_INVALID');const days=p.days.filter(d=>d.work_date===work_date);need(days.length<=1,'COMM_ES_CONTEXT_DAY_DUPLICATE');return days[0]||null;\n}\nfunction normalizeSource(source){need(source&&Number.isSafeInteger(source.source_row_id)&&source.source_row_id>=0&&typeof source.source_outbox_id==='string'&&source.source_outbox_id.length>0&&ident(source.employee_id)&&validDay(source.work_date)&&/^ES-[0-9]+$/.test(source.batch_id||''),'COMM_ES_CONTEXT_SOURCE_INVALID');time(source.observed_at);return copy(source);}\nfunction activitySource({active_process,deltas,day,now}){\n if(!active_process||!MEASURED[active_process.process_code])return null;\n const metric=MEASURED[active_process.process_code],start=time(active_process.start_at),clock=time(now);need(start<=clock,'COMM_ES_CONTEXT_PROCESS_TIME_INVALID');\n let anchor=start;\n for(const d of deltas){if(d.process_session_id!==active_process.process_session_id||deltaMetric(d)!==metric||!ELIGIBLE_ACTIVITY.has(d.classification))continue;const t=time(d.source_time);if(t>=start&&t<=clock&&t>anchor)anchor=t;}\n const verified=!!day&&day.freshness==='FRESH'&&day.has_value===true&&typeof day.es_last_good_at==='string';\n const coverage_ready=verified&&day.coverage==='COMPLETE';\n return {status:verified?'FRESH':'UNAVAILABLE',verified,coverage_ready,metric,activity_anchor_at:new Date(anchor).toISOString()};\n}\nfunction build({source,employees=[],attendance=[],processes=[],deltas=[],norm_snapshots=[],comm_records=[],now}){\n const s=normalizeSource(source),clock=time(now);need(clock>=time(s.observed_at),'COMM_ES_CONTEXT_TIME_ORDER');\n const people=employees.filter(e=>e.employee_id===s.employee_id);need(people.length===1&&people[0].active===true,'COMM_ES_CONTEXT_EMPLOYEE_INVALID');const employee=copy(people[0]);\n const days=attendance.filter(a=>a.employee_id===s.employee_id&&a.work_date===s.work_date);const dayAttendance=one(days,'COMM_ES_CONTEXT_ATTENDANCE_DUPLICATE');if(dayAttendance){need(dayAttendance.attendance_id===s.employee_id+':'+s.work_date,'COMM_ES_CONTEXT_ATTENDANCE_INVALID');}\n const sessions=(processes||[]).filter(p=>p.employee_id===s.employee_id&&(!dayAttendance||p.attendance_id===dayAttendance.attendance_id));unique(sessions,'process_session_id','COMM_ES_CONTEXT_PROCESS_DUPLICATE');const active=one(sessions.filter(p=>!p.stop_at),'COMM_ES_CONTEXT_ACTIVE_PROCESS_DUPLICATE');if(active)need(dayAttendance?.state==='OPEN'&&!dayAttendance.stop_at&&active.attendance_id===dayAttendance.attendance_id,'COMM_ES_CONTEXT_ACTIVE_PROCESS_INVALID');\n const employeeDeltas=(deltas||[]).filter(d=>d.employee_id===s.employee_id&&d.attendance_id===s.employee_id+':'+s.work_date);unique(employeeDeltas,'delta_id','COMM_ES_CONTEXT_DELTA_DUPLICATE');const current=employeeDeltas.filter(d=>d.delta_id.startsWith(s.batch_id+':'+s.employee_id+':'));\n const episodes=parseEpisodes(comm_records,s.employee_id),normDay=dailyFromSnapshot(norm_snapshots,s.employee_id,s.work_date);\n const wrong=current.filter(d=>d.classification==='WRONG_PROCESS'&&active&&d.process_session_id===active.process_session_id&&deltaMetric(d));\n const wrongInvocations=(wrong.length?wrong:[null]).map(delta=>({type:'WRONG_PROCESS',source:{employee,delta:delta?copy(delta):null,active_process:active?copy(active):null},episodes:copy(episodes)}));\n const outside=current.filter(d=>d.classification==='NO_APP'&&deltaMetric(d)).sort((a,b)=>a.delta_id.localeCompare(b.delta_id));\n const outsideInvocation={type:'WORK_OUTSIDE_APP',source:{employee,delta:outside[0]?copy(outside[0]):null,attendance:dayAttendance?copy(dayAttendance):null},episodes:copy(episodes)};\n const noActivityInvocation={type:'NO_ACTIVITY',source:{employee,attendance:dayAttendance?copy(dayAttendance):null,active_process:active?copy(active):null,source:activitySource({active_process:active,deltas:employeeDeltas,day:normDay,now})},episodes:copy(episodes)};\n return {source:s,employee,attendance:dayAttendance?copy(dayAttendance):null,active_process:active?copy(active):null,norm_day:normDay?copy(normDay):null,current_batch_deltas:copy(current),invocations:[...wrongInvocations,outsideInvocation,noActivityInvocation]};\n}\n\n\nconst source=$('Input').first().json;const merge=new Map();for(const r of [...$('Read Batch Deltas').all(),...$('Read Activity Deltas').all()].map(x=>x.json).filter(x=>x.delta_id))merge.set(r.delta_id,r);const result=build({source,employees:$('Read Employee').all().map(x=>x.json).filter(x=>x.employee_id),attendance:$('Read Attendance').all().map(x=>x.json).filter(x=>x.attendance_id),processes:$('Read Processes').all().map(x=>x.json).filter(x=>x.process_session_id),deltas:[...merge.values()],norm_snapshots:$('Read Norm Snapshot').all().map(x=>x.json).filter(x=>x.summary_id),comm_records:$('Read Comm Episodes').all().map(x=>x.json).filter(x=>x.record_key),now:new Date().toISOString()});return [{json:result}];"
+      }
+    }
+  ],
+  "connections": {
+    "Input": {
+      "main": [
+        [
+          {
+            "node": "Read Employee",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Employee": {
+      "main": [
+        [
+          {
+            "node": "Read Attendance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Attendance": {
+      "main": [
+        [
+          {
+            "node": "Read Processes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Processes": {
+      "main": [
+        [
+          {
+            "node": "Active Process Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Active Process Key": {
+      "main": [
+        [
+          {
+            "node": "Read Batch Deltas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Batch Deltas": {
+      "main": [
+        [
+          {
+            "node": "Read Activity Deltas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Activity Deltas": {
+      "main": [
+        [
+          {
+            "node": "Read Norm Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Norm Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Read Comm Episodes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Comm Episodes": {
+      "main": [
+        [
+          {
+            "node": "Build Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "executionTimeout": 30,
+    "errorWorkflow": "rnELTCKClbzY8lxZ"
+  }
+}
