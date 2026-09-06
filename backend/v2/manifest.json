@@ -25,7 +25,9 @@
     "MOL_V2_ES_BATCHES": "fj3jJKgoY06BVtu5",
     "MOL_V2_NORM_SNAPSHOTS": "4pJlgFine6QhUQxX",
     "MOL_V2_STATUS_SNAPSHOTS": "8GZIQBgGlH0dGTAJ",
-    "MOL_V2_REPORT_INDEX": "SqNZloUkfNSg1TuG"
+    "MOL_V2_REPORT_INDEX": "SqNZloUkfNSg1TuG",
+    "MOL_V2_COMM_RECORDS": "42jIxvSmSVGdlxB8",
+    "MOL_V2_COMM_COMMANDS": "7JVuBY9l6ISR2YBz"
   },
   "workflows": {
     "health": "sfoWeuiJBN2qvCRF",
@@ -61,7 +63,9 @@
     "norms_daily": "7OJ48TN6IEkQqrMW",
     "norms_monthly": "ZenbZql84avHIz9b",
     "norm_mirror_rules": "KtpOu0qejqaKBwuv",
-    "norm_drive": "25EgiHZmEcqxxTvG"
+    "norm_drive": "25EgiHZmEcqxxTvG",
+    "comm_record_writer": "TJiDDKw10Ue3UKWO",
+    "comm_batch_service": "J3qIFff05cYGDW7C"
   },
   "active_versions": {
     "health": "fca803c6-7984-4c26-a108-f593c4e958d8",
@@ -97,7 +101,9 @@
     "summary_recalculator": "a1fc14e8-1c54-4656-9a2d-0a6efdd2680e",
     "metrics_scheduler": "dc42cf51-c0ac-4194-8718-3baf218c6763",
     "norm_mirror_rules": "1761c5dd-9189-4c87-b3a9-0aaa0692e3b2",
-    "norm_drive": "11721c2e-bae1-4d55-b1a3-fcd462cb9f09"
+    "norm_drive": "11721c2e-bae1-4d55-b1a3-fcd462cb9f09",
+    "comm_record_writer": "b03f92a0-51ee-4fa0-855c-bca747245959",
+    "comm_batch_service": "8e82e176-249e-48a9-b1de-29fc6bbf3aab"
   },
   "auth": {
     "receipt_credential_id": "79mc2IFYLaJLMrgJ",
@@ -158,5 +164,22 @@
       }
     },
     "version_reference_note": "Stage 7 references updated from published graphs read on 2026-09-05. Unchanged stage 3-6 references retain their earlier verification date."
+  },
+  "communication": {
+    "revision": "stage8-foundation-1",
+    "status": "FOUNDATION_ONLY",
+    "config_key": "COMMUNICATIONS_CONFIG",
+    "initial_mode": "OFF",
+    "public_api_implemented": false,
+    "ui_implemented": false,
+    "es_rules_enabled": false,
+    "history_policy": "HOLD",
+    "generator": "communication/build-foundation.mjs",
+    "probe": {
+      "workflow_id": "5zOHDQDFXoG7O4QK",
+      "active": false,
+      "execution_id": "588980"
+    },
+    "source_note": "Only stage 8 foundations; earlier active_versions keep their earlier verification dates. Generated graphs, not raw API dumps."
   }
 }

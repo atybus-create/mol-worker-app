@@ -930,6 +930,80 @@
           "type": "number"
         }
       ]
+    },
+    {
+      "name": "MOL_V2_COMM_RECORDS",
+      "columns": [
+        {
+          "name": "record_key",
+          "type": "string"
+        },
+        {
+          "name": "kind",
+          "type": "string"
+        },
+        {
+          "name": "scope_id",
+          "type": "string"
+        },
+        {
+          "name": "version",
+          "type": "number"
+        },
+        {
+          "name": "revision",
+          "type": "number"
+        },
+        {
+          "name": "payload_json",
+          "type": "string"
+        },
+        {
+          "name": "last_request_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "MOL_V2_COMM_COMMANDS",
+      "columns": [
+        {
+          "name": "request_id",
+          "type": "string"
+        },
+        {
+          "name": "payload_hash",
+          "type": "string"
+        },
+        {
+          "name": "actor_id",
+          "type": "string"
+        },
+        {
+          "name": "operation",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "plan_json",
+          "type": "string"
+        },
+        {
+          "name": "response_json",
+          "type": "string"
+        },
+        {
+          "name": "prepared_at",
+          "type": "date"
+        },
+        {
+          "name": "committed_at",
+          "type": "date"
+        }
+      ]
     }
   ]
 }
