@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const load=n=>JSON.parse(fs.readFileSync(path.join(__dirname,'../backend/v2/workflows/'+n+'.json')));
-const writer=load('metrics-record-writer'),ingest=load('es-ingest'),service=load('attendance-service');
+const writer=load('metrics-record-writer'),ingest=load('es-ingest'),service=load('attendance-service'),ack=load('metrics-task-ack');
 const run=(w,name,input,nodes={})=>new Function('$input','$','$execution',w.nodes.find(n=>n.name===name).parameters.jsCode)({first:()=>({json:input}),all:()=>Array.isArray(input)?input.map(json=>({json})):[{json:input}]},n=>({first:()=>({json:(nodes[n]||[])[0]||{}}),all:()=> (nodes[n]||[]).map(json=>({json}))}),{id:'123'})[0].json;
 let count=0;const test=(n,f)=>{f();count++;console.log('PASS '+n);};
 test('No lock owner is rejected',()=>assert.throws(()=>run(writer,'Validate Record',{noop:true}),/METRICS_LOCK_REQUIRED/));
@@ -27,4 +27,10 @@ test('Duplicate prepared batches rejected',()=>assert.equal(choice({'Read Pendin
 test('Committed boundary receipt avoids second ES read',()=>assert.equal(choice({'Context':[{origin:'BOUNDARY',boundary_request_id:'uuid',batch_id:'ESB-uuid'}],'Read Pending Commands':[{request_id:'uuid'}],'Read Boundary Receipt':[{batch_id:'ESB-uuid',status:'COMMITTED'}]}).replayed,true));
 test('Derived outbox precedes ES commit',()=>assert.equal(ingest.connections['Save Derived'].main[0][0].node,'Commit Item'));
 test('API status does not bypass auth',()=>{for(const n of ['worker-status','norms-daily','norms-monthly'])assert.equal(load(n).nodes.find(x=>x.name==='Service').parameters.workflowId.value,'qPVmcfp6pUg3GbzH');});
+const ackCtx={result:'success',summary_version:1},ackJob={outbox_id:'ES-1:MOL004:2026-09-06:derived',request_id:'ES-1',aggregate_id:'MOL004:2026-09-06',status:'PENDING',attempts:0,next_attempt_at:'2026-09-06T00:00:00.000Z',source_key:'batch_id'},ackSource={batch_id:'ES-1',status:'COMMITTED'},ackPublication={summary_id:'MOL004:2026-09',version:1,payload_json:JSON.stringify({days:[{summary_id:'MOL004:2026-09-06'}]})};
+const ackDecision=(mode,enabled)=>run(ack,'Decision',[{key:'COMMUNICATIONS_CONFIG',value_json:JSON.stringify({mode,rules:{NO_PROCESS:{enabled}}})}],{'Context':[ackCtx],'Job':[ackJob],'Read Source':[ackSource],'Read Publication':[ackPublication]});
+test('Alert handoff is suppressed while all automatic rules are disabled',()=>assert.equal(ackDecision('LIVE',false).alert_handoff,false));
+test('Alert handoff is enabled when an automatic rule is enabled',()=>assert.equal(ackDecision('LIVE',true).alert_handoff,true));
+test('Alert handoff is suppressed when communication module is OFF',()=>assert.equal(ackDecision('OFF',true).alert_handoff,false));
+test('Disabled alert handoff still completes the metrics source job',()=>{assert.equal(ack.connections['Alert Enabled'].main[1][0].node,'Update Job');assert.equal(ackDecision('LIVE',false).status,'DONE');});
 console.log('Metrics writer/recovery PASS: '+count+' isolated generated-node tests.');
