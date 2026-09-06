@@ -21,6 +21,7 @@ jobs:
           node --check backend/v2/communication/build-es-alert-bundle-workflow.mjs
           node --check scripts/test-v2-communication-es-alert-bundle-runtime.cjs
           node --check scripts/test-v2-communication-alert-source-gate-stage8b.cjs
+          node --check scripts/test-v2-communication-stage8b-live-contract.cjs
       - name: Domain and parity tests
         run: |
           node scripts/test-v2-communication-es-alert-orchestrator.cjs
@@ -28,6 +29,7 @@ jobs:
           node scripts/test-v2-communication-es-alert-bundle-runtime.cjs
           node scripts/test-v2-communication-es-alert-persistence.cjs
           node scripts/test-v2-communication-alert-source-gate-stage8b.cjs
+          node scripts/test-v2-communication-stage8b-live-contract.cjs
       - name: Existing Stage 8 regression
         run: |
           node scripts/test-v2-communication-alert-source.cjs
