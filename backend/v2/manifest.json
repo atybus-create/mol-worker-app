@@ -82,7 +82,7 @@
     "comm_drive_mirror": "NdRo0Umetu6SYpIk"
   },
   "active_versions": {
-    "health": "fca803c6-7984-4c26-a108-f593c4e958d8",
+    "health": "5d289c40-b4cf-4695-9fe5-944bb2cec5c2",
     "command": "6f348eb6-f8b3-4d07-ae61-903fcb17d5c6",
     "error_handler": "93d1354d-d7ea-4611-afa0-1fc29681ed53",
     "outbox": "a8906fe3-c6c2-4a58-88c3-acf1f2d074d4",
@@ -278,5 +278,14 @@
       "active": false,
       "execution_id": "588980"
     }
+  },
+  "release": {
+    "version": "0.8.0",
+    "stage": 8,
+    "environment": "test",
+    "health_workflow_id": "sfoWeuiJBN2qvCRF",
+    "health_active_version": "5d289c40-b4cf-4695-9fe5-944bb2cec5c2",
+    "health_verified_at": "2026-09-06",
+    "frontend_status": "READY_FOR_MAIN"
   }
 }
