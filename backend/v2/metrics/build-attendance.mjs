@@ -10,6 +10,11 @@ export function metricsAttendance() {
  const g=Object.assign(new Graph('ATTENDANCE SERVICE'),base),node=n=>g.nodes.find(x=>x.name===n);
  const patch=(name,find,replace)=>{const p=node(name).parameters;if(!p.jsCode.includes(find))throw Error('Missing stage-7 source anchor: '+name);p.jsCode=p.jsCode.replace(find,replace);};
  const code=(name,jsCode)=>g.node(name,'code',{jsCode});
+ // The live Moniti test window was explicitly extended to 2026-09-06.
+ // Keep the accepted stage-6 source untouched and patch only the generated deployment graph.
+ patch('Decide',"i.payload.work_date!=='2026-09-05'","i.payload.work_date!=='2026-09-06'");
+ patch('Decide',"toISODate()!=='2026-09-05'","toISODate()!=='2026-09-06'");
+ patch('Decide',"dnia 2026-09-05.","dnia 2026-09-06.");
  patch('Validate Input',"op=i.operation;", "include_metrics=i.operation==='WORKER_STATUS',op=include_metrics?'STATUS':i.operation;");
  patch('Validate Input',"?['work_date','employee_id']:","?['work_date','employee_id',...(include_metrics?['month']:[])]:");
  patch('Validate Input',"const payload=",String.raw`const month=include_metrics?(b.month||work_date.slice(0,7)):null;if(include_metrics&&(typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||month>DateTime.now().setZone('Europe/Warsaw').toISODate().slice(0,7)))return [{json:fail(400,'INVALID_MONTH','Nieprawidlowy miesiac.')}];const payload=`);
