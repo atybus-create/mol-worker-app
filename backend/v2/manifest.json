@@ -65,7 +65,14 @@
     "norm_mirror_rules": "KtpOu0qejqaKBwuv",
     "norm_drive": "25EgiHZmEcqxxTvG",
     "comm_record_writer": "TJiDDKw10Ue3UKWO",
-    "comm_batch_service": "J3qIFff05cYGDW7C"
+    "comm_batch_service": "J3qIFff05cYGDW7C",
+    "comm_api_rules": "F199c1dBaCT9CDAy",
+    "comm_api_service": "YlTLPRWmIeOnrRzz",
+    "comm_send": "eys7PhOVvCzXsgMr",
+    "comm_shown": "cPRymemz7EC09Ox3",
+    "comm_ack": "HQBhMCEhQqujQbos",
+    "comm_list": "7HfWqIshFLgpGeoW",
+    "comm_recipients": "hBO6ShOy2MH3FCI4"
   },
   "active_versions": {
     "health": "fca803c6-7984-4c26-a108-f593c4e958d8",
@@ -103,7 +110,14 @@
     "norm_mirror_rules": "1761c5dd-9189-4c87-b3a9-0aaa0692e3b2",
     "norm_drive": "11721c2e-bae1-4d55-b1a3-fcd462cb9f09",
     "comm_record_writer": "b03f92a0-51ee-4fa0-855c-bca747245959",
-    "comm_batch_service": "8e82e176-249e-48a9-b1de-29fc6bbf3aab"
+    "comm_batch_service": "fd2e842b-35e0-48c3-9963-1ddeb22a315e",
+    "comm_api_rules": "17dce36d-1b72-428b-b856-98a82eb79506",
+    "comm_api_service": "87ab6d93-7ead-40a0-a2c5-ac8eac63f4fb",
+    "comm_send": "d86019d7-c5a2-4283-8c05-864e86e561e9",
+    "comm_shown": "b9d9350f-86bd-464c-b365-91f9c1c274bf",
+    "comm_ack": "2d4395f5-d5fe-4c34-80b0-3842fb33c64b",
+    "comm_list": "c24f16c7-dbb4-40e7-8c71-e8713ce53536",
+    "comm_recipients": "d5e57619-929f-4603-9282-b32933410981"
   },
   "auth": {
     "receipt_credential_id": "79mc2IFYLaJLMrgJ",
@@ -115,11 +129,7 @@
   },
   "attendance": {
     "moniti_test_date": "2026-09-05",
-    "moniti_test_worker_ids": [
-      99191,
-      99186,
-      99185
-    ],
+    "moniti_test_worker_ids": [99191, 99186, 99185],
     "moniti_precision_seconds": 60,
     "report_spreadsheet_id": "1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4",
     "report_url": "https://docs.google.com/spreadsheets/d/1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4/edit?ouid=113962701124300298502",
@@ -132,10 +142,7 @@
     "role_key_prefix": "ALLOWED_PROCESSES_ROLE_",
     "employee_key_prefix": "ALLOWED_PROCESSES_EMPLOYEE_",
     "precedence": "explicit employee entry replaces role entry, including an empty array",
-    "office_roles": [
-      "LEADER",
-      "ADMIN"
-    ],
+    "office_roles": ["LEADER", "ADMIN"],
     "employee_column_created": false,
     "configuration_snapshot": "processes/permissions-config.json",
     "revision": "stage6-closeout-20260905"
@@ -146,40 +153,27 @@
     "source_of_truth": "NORM_SNAPSHOTS monthly atomic bundle",
     "snapshot_version": "per actor, employee, work_date and selected month; not attendance.version",
     "report_spreadsheet_id": "1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4",
-    "report_sheets": {
-      "daily": 7,
-      "monthly": 8
-    },
+    "report_sheets": {"daily": 7, "monthly": 8},
     "stage8_alert_handoff": "ALERT_DERIVED",
     "schema_migration": "additive 5 tables; original schema version 1 preserved",
     "export_note": "Deterministic deployment graphs reconstructed from reviewed live nodes; layout/defaults may differ. Not claimed as raw byte-for-byte API exports.",
     "diagnostics": {
-      "controlled_read": {
-        "workflow_id": "5QQkZWLqVDzx5it5",
-        "active": false
-      },
-      "persistence_test": {
-        "workflow_id": "vqpQl7orcv75JNC5",
-        "active": false
-      }
+      "controlled_read": {"workflow_id": "5QQkZWLqVDzx5it5", "active": false},
+      "persistence_test": {"workflow_id": "vqpQl7orcv75JNC5", "active": false}
     },
     "version_reference_note": "Stage 7 references updated from published graphs read on 2026-09-05. Unchanged stage 3-6 references retain their earlier verification date."
   },
   "communication": {
-    "revision": "stage8-foundation-1",
-    "status": "FOUNDATION_ONLY",
+    "revision": "stage8-api-live-1",
+    "status": "API_LIVE_GATED_OFF",
     "config_key": "COMMUNICATIONS_CONFIG",
     "initial_mode": "OFF",
-    "public_api_implemented": false,
+    "public_api_implemented": true,
     "ui_implemented": false,
     "es_rules_enabled": false,
     "history_policy": "HOLD",
-    "generator": "communication/build-foundation.mjs",
-    "probe": {
-      "workflow_id": "5zOHDQDFXoG7O4QK",
-      "active": false,
-      "execution_id": "588980"
-    },
-    "source_note": "Only stage 8 foundations; earlier active_versions keep their earlier verification dates. Generated graphs, not raw API dumps."
+    "generator": "communication/build-api-candidate.mjs",
+    "probe": {"workflow_id": "5zOHDQDFXoG7O4QK", "active": false, "execution_id": "588980"},
+    "source_note": "Published stage 8 communication API live in n8n with delivery gated OFF by COMMUNICATIONS_CONFIG. Active versions read back on 2026-09-06."
   }
 }
