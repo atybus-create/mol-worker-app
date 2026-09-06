@@ -79,7 +79,8 @@
     "comm_wrong_process_rules": "XYQziIf4NkjcNKhP",
     "comm_work_outside_app_rules": "wnkjKWWLBGefGytg",
     "comm_no_activity_rules": "UjpB45UX6384rTMW",
-    "comm_drive_mirror": "NdRo0Umetu6SYpIk"
+    "comm_drive_mirror": "NdRo0Umetu6SYpIk",
+    "comm_alert_source_gate": "0bpqCpUMsIRQW8OY"
   },
   "active_versions": {
     "health": "5d289c40-b4cf-4695-9fe5-944bb2cec5c2",
@@ -131,7 +132,8 @@
     "comm_wrong_process_rules": "62d4ba5c-dc31-4b95-be3c-5fd970088dbc",
     "comm_work_outside_app_rules": "e37b9b88-6e33-44df-980d-1702cd7fa9ce",
     "comm_no_activity_rules": "5d422c92-34da-4ad6-8170-5350b9739563",
-    "comm_drive_mirror": "cfa6644a-78e1-4302-b9c6-5c8acdf1f8e6"
+    "comm_drive_mirror": "cfa6644a-78e1-4302-b9c6-5c8acdf1f8e6",
+    "comm_alert_source_gate": "a05ef75f-ac98-455f-b880-0174cdcdc2fe"
   },
   "auth": {
     "receipt_credential_id": "79mc2IFYLaJLMrgJ",
@@ -295,7 +297,10 @@
       "workflow_id": "5zOHDQDFXoG7O4QK",
       "active": false,
       "execution_id": "588980"
-    }
+    },
+    "auto_alert_source_gate": true,
+    "auto_alert_consumer_enabled": false,
+    "alert_cutover_outbox_id": 7689
   },
   "release": {
     "version": "0.8.0",

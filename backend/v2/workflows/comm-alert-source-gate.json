@@ -1,0 +1,209 @@
+{
+  "name": "MOL // APP V2 // COMM ALERT SOURCE GATE",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        80
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "read-config",
+      "name": "Read Communication Config",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        80
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "x66LbXe5CSpdMIkv"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "condition": "eq",
+              "keyValue": "COMMUNICATIONS_CONFIG"
+            }
+          ]
+        },
+        "limit": 2
+      }
+    },
+    {
+      "id": "gate",
+      "name": "Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        80
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const C=(function(){const module={exports:{}};'use strict';\n\nfunction integer(value, min = 0) {\n  return Number.isSafeInteger(value) && value >= min;\n}\n\nfunction validatePolicy(config) {\n  if (!config || typeof config !== 'object' || Array.isArray(config)) throw Object.assign(new Error('COMM_ALERT_CUTOVER_INVALID'), {code:'COMM_ALERT_CUTOVER_INVALID'});\n  if (config.history_policy !== 'HOLD') throw Object.assign(new Error('COMM_ALERT_CUTOVER_INVALID'), {code:'COMM_ALERT_CUTOVER_INVALID'});\n  if (typeof config.auto_alert_consumer_enabled !== 'boolean') throw Object.assign(new Error('COMM_ALERT_CUTOVER_INVALID'), {code:'COMM_ALERT_CUTOVER_INVALID'});\n  const cutover = config.alert_cutover_outbox_id;\n  if (!(cutover === null || integer(cutover, 0))) throw Object.assign(new Error('COMM_ALERT_CUTOVER_INVALID'), {code:'COMM_ALERT_CUTOVER_INVALID'});\n  if (config.auto_alert_consumer_enabled && cutover === null) throw Object.assign(new Error('COMM_ALERT_CUTOVER_REQUIRED'), {code:'COMM_ALERT_CUTOVER_REQUIRED'});\n  return {enabled: config.auto_alert_consumer_enabled, cutover};\n}\n\nfunction alertSourceDecision(config, row) {\n  const policy = validatePolicy(config);\n  if (!policy.enabled) return {consume:false, reason:'CONSUMER_DISABLED'};\n  if (!row || row.type !== 'ALERT_DERIVED') return {consume:false, reason:'NOT_ALERT_DERIVED'};\n  if (!integer(row.id, 1)) throw Object.assign(new Error('COMM_ALERT_SOURCE_INVALID'), {code:'COMM_ALERT_SOURCE_INVALID'});\n  if (row.id <= policy.cutover) return {consume:false, reason:'LEGACY_HOLD'};\n  if (row.status !== 'PENDING') return {consume:false, reason:'NOT_PENDING'};\n  return {consume:true, reason:null};\n}\n\nmodule.exports={validatePolicy,alertSourceDecision};\n\nreturn module.exports;})();const S=(function(){const module={exports:{}};'use strict';\n\n\nconst ES_RULES=['WRONG_PROCESS','WORK_OUTSIDE_APP','NO_ACTIVITY'];\nconst ident=x=>typeof x==='string'&&/^MOL[0-9]+$/.test(x);\nconst day=x=>typeof x==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(x)&&new Date(x+'T00:00:00Z').toISOString().slice(0,10)===x;\nconst batch=x=>typeof x==='string'&&/^ES-[0-9]+$/.test(x);\n\nfunction sourceGate(config){\n  const p=C.validatePolicy(config);\n  if(!p.enabled)return {read_source:false,reason:'CONSUMER_DISABLED',cutover:p.cutover};\n  if(config.es_verified!==true)return {read_source:false,reason:'ES_VALIDATION_REQUIRED',cutover:p.cutover};\n  if(!config.rules||!ES_RULES.some(k=>config.rules[k]?.enabled===true))return {read_source:false,reason:'ES_RULES_DISABLED',cutover:p.cutover};\n  return {read_source:true,reason:null,cutover:p.cutover};\n}\n\nfunction decideRow(config,row,now){\n  const gate=sourceGate(config);\n  if(!gate.read_source)return {consume:false,reason:gate.reason};\n  const base=C.alertSourceDecision(config,row);\n  if(!base.consume)return base;\n  if(typeof now!=='string'||!Number.isFinite(Date.parse(now)))throw Object.assign(new Error('COMM_ALERT_SOURCE_TIME_INVALID'),{code:'COMM_ALERT_SOURCE_TIME_INVALID'});\n  if(row.next_attempt_at&&Date.parse(row.next_attempt_at)>Date.parse(now))return {consume:false,reason:'NOT_DUE'};\n  if(row.lease_until&&Date.parse(row.lease_until)>Date.parse(now))return {consume:false,reason:'LEASED'};\n  let p;try{p=JSON.parse(row.payload_json);}catch{throw Object.assign(new Error('COMM_ALERT_SOURCE_INVALID'),{code:'COMM_ALERT_SOURCE_INVALID'});}\n  if(!p||typeof p!=='object'||Array.isArray(p)||!ident(p.employee_id)||!day(p.work_date)||!batch(p.batch_id))throw Object.assign(new Error('COMM_ALERT_SOURCE_INVALID'),{code:'COMM_ALERT_SOURCE_INVALID'});\n  if(row.aggregate_id!==p.employee_id+':'+p.work_date||row.request_id!==p.batch_id)throw Object.assign(new Error('COMM_ALERT_SOURCE_SCOPE_INVALID'),{code:'COMM_ALERT_SOURCE_SCOPE_INVALID'});\n  return {consume:true,reason:null,employee_id:p.employee_id,work_date:p.work_date,batch_id:p.batch_id,outbox_id:row.outbox_id,id:row.id};\n}\n\nmodule.exports={ES_RULES,sourceGate,decideRow};\n\nreturn module.exports;})();const rows=$input.all().map(x=>x.json).filter(x=>x.key==='COMMUNICATIONS_CONFIG');if(rows.length!==1)throw Error('COMM_CONFIG_MISSING_OR_DUPLICATE');let c;try{c=JSON.parse(rows[0].value_json);}catch{throw Error('COMM_CONFIG_INVALID');}const g=S.sourceGate(c);if(!g.read_source)return [];return [{json:{cutover:g.cutover,config_json:JSON.stringify(c),tick_started_at:new Date().toISOString()}}];"
+      }
+    },
+    {
+      "id": "read-source",
+      "name": "Read Pending Alerts",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        80
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "gt",
+              "keyValue": "={{ $('Gate').first().json.cutover }}"
+            },
+            {
+              "keyName": "type",
+              "condition": "eq",
+              "keyValue": "ALERT_DERIVED"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "PENDING"
+            }
+          ]
+        },
+        "returnAll": false,
+        "limit": 20,
+        "orderBy": true,
+        "orderByColumn": "id",
+        "orderByDirection": "ASC"
+      }
+    },
+    {
+      "id": "eligible",
+      "name": "Eligible Source",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        80
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const C=(function(){const module={exports:{}};'use strict';\n\nfunction integer(value, min = 0) {\n  return Number.isSafeInteger(value) && value >= min;\n}\n\nfunction validatePolicy(config) {\n  if (!config || typeof config !== 'object' || Array.isArray(config)) throw Object.assign(new Error('COMM_ALERT_CUTOVER_INVALID'), {code:'COMM_ALERT_CUTOVER_INVALID'});\n  if (config.history_policy !== 'HOLD') throw Object.assign(new Error('COMM_ALERT_CUTOVER_INVALID'), {code:'COMM_ALERT_CUTOVER_INVALID'});\n  if (typeof config.auto_alert_consumer_enabled !== 'boolean') throw Object.assign(new Error('COMM_ALERT_CUTOVER_INVALID'), {code:'COMM_ALERT_CUTOVER_INVALID'});\n  const cutover = config.alert_cutover_outbox_id;\n  if (!(cutover === null || integer(cutover, 0))) throw Object.assign(new Error('COMM_ALERT_CUTOVER_INVALID'), {code:'COMM_ALERT_CUTOVER_INVALID'});\n  if (config.auto_alert_consumer_enabled && cutover === null) throw Object.assign(new Error('COMM_ALERT_CUTOVER_REQUIRED'), {code:'COMM_ALERT_CUTOVER_REQUIRED'});\n  return {enabled: config.auto_alert_consumer_enabled, cutover};\n}\n\nfunction alertSourceDecision(config, row) {\n  const policy = validatePolicy(config);\n  if (!policy.enabled) return {consume:false, reason:'CONSUMER_DISABLED'};\n  if (!row || row.type !== 'ALERT_DERIVED') return {consume:false, reason:'NOT_ALERT_DERIVED'};\n  if (!integer(row.id, 1)) throw Object.assign(new Error('COMM_ALERT_SOURCE_INVALID'), {code:'COMM_ALERT_SOURCE_INVALID'});\n  if (row.id <= policy.cutover) return {consume:false, reason:'LEGACY_HOLD'};\n  if (row.status !== 'PENDING') return {consume:false, reason:'NOT_PENDING'};\n  return {consume:true, reason:null};\n}\n\nmodule.exports={validatePolicy,alertSourceDecision};\n\nreturn module.exports;})();const S=(function(){const module={exports:{}};'use strict';\n\n\nconst ES_RULES=['WRONG_PROCESS','WORK_OUTSIDE_APP','NO_ACTIVITY'];\nconst ident=x=>typeof x==='string'&&/^MOL[0-9]+$/.test(x);\nconst day=x=>typeof x==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(x)&&new Date(x+'T00:00:00Z').toISOString().slice(0,10)===x;\nconst batch=x=>typeof x==='string'&&/^ES-[0-9]+$/.test(x);\n\nfunction sourceGate(config){\n  const p=C.validatePolicy(config);\n  if(!p.enabled)return {read_source:false,reason:'CONSUMER_DISABLED',cutover:p.cutover};\n  if(config.es_verified!==true)return {read_source:false,reason:'ES_VALIDATION_REQUIRED',cutover:p.cutover};\n  if(!config.rules||!ES_RULES.some(k=>config.rules[k]?.enabled===true))return {read_source:false,reason:'ES_RULES_DISABLED',cutover:p.cutover};\n  return {read_source:true,reason:null,cutover:p.cutover};\n}\n\nfunction decideRow(config,row,now){\n  const gate=sourceGate(config);\n  if(!gate.read_source)return {consume:false,reason:gate.reason};\n  const base=C.alertSourceDecision(config,row);\n  if(!base.consume)return base;\n  if(typeof now!=='string'||!Number.isFinite(Date.parse(now)))throw Object.assign(new Error('COMM_ALERT_SOURCE_TIME_INVALID'),{code:'COMM_ALERT_SOURCE_TIME_INVALID'});\n  if(row.next_attempt_at&&Date.parse(row.next_attempt_at)>Date.parse(now))return {consume:false,reason:'NOT_DUE'};\n  if(row.lease_until&&Date.parse(row.lease_until)>Date.parse(now))return {consume:false,reason:'LEASED'};\n  let p;try{p=JSON.parse(row.payload_json);}catch{throw Object.assign(new Error('COMM_ALERT_SOURCE_INVALID'),{code:'COMM_ALERT_SOURCE_INVALID'});}\n  if(!p||typeof p!=='object'||Array.isArray(p)||!ident(p.employee_id)||!day(p.work_date)||!batch(p.batch_id))throw Object.assign(new Error('COMM_ALERT_SOURCE_INVALID'),{code:'COMM_ALERT_SOURCE_INVALID'});\n  if(row.aggregate_id!==p.employee_id+':'+p.work_date||row.request_id!==p.batch_id)throw Object.assign(new Error('COMM_ALERT_SOURCE_SCOPE_INVALID'),{code:'COMM_ALERT_SOURCE_SCOPE_INVALID'});\n  return {consume:true,reason:null,employee_id:p.employee_id,work_date:p.work_date,batch_id:p.batch_id,outbox_id:row.outbox_id,id:row.id};\n}\n\nmodule.exports={ES_RULES,sourceGate,decideRow};\n\nreturn module.exports;})();let c;try{c=JSON.parse($('Gate').first().json.config_json);}catch{throw Error('COMM_CONFIG_INVALID');}const now=new Date().toISOString(),out=[];for(const x of $input.all().map(i=>i.json).filter(r=>r.outbox_id)){const d=S.decideRow(c,x,now);if(!d.consume)continue;out.push({json:{source_outbox_id:d.outbox_id,source_row_id:d.id,employee_id:d.employee_id,work_date:d.work_date,batch_id:d.batch_id,observed_at:now}});if(out.length>=10)break;}return out;"
+      }
+    },
+    {
+      "id": "return",
+      "name": "Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        80
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return $input.all();"
+      }
+    }
+  ],
+  "connections": {
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Read Communication Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Communication Config": {
+      "main": [
+        [
+          {
+            "node": "Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gate": {
+      "main": [
+        [
+          {
+            "node": "Read Pending Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Pending Alerts": {
+      "main": [
+        [
+          {
+            "node": "Eligible Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eligible Source": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "executionTimeout": 30,
+    "errorWorkflow": "rnELTCKClbzY8lxZ"
+  }
+}
