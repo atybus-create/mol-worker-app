@@ -1,5 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
 const {assembleWorkerView}=require('../backend/v2/metrics/worker-view.cjs');
 let total=0;function test(name,fn){fn();total++;console.log('PASS '+name)}
 const now='2026-09-06T08:00:00.000Z',actor={employee_id:'MOL004',display_name:'Worker',role:'WORKER'};
@@ -16,4 +18,5 @@ test('expired unread record is excluded',()=>{const d=delivery({valid_until:'202
 test('foreign delivery cannot increment actor unread count',()=>{const d=delivery({recipient_id:'MOL015'}),r=view({comm_rows:[d],comm_any:[],comm_events:[]});assert.equal(r.data.unread_messages,0);assert.equal(r.data.messages_available,false)});
 test('same communication revision and fingerprint reuses snapshot version',()=>{const d=delivery(),first=view({comm_rows:[d],comm_any:[d],comm_events:[event()]});const second=view({previous:first.row,comm_rows:[d],comm_any:[d],comm_events:[event()]});assert.equal(second.reused,true);assert.equal(second.row,null);assert.equal(second.data.snapshot_version,1)});
 test('duplicate latest communication rows fail closed',()=>assert.throws(()=>view({comm_events:[event(5),{...event(5),record_key:'EVENT:E2'}]}),/COMM_STATUS_DUPLICATE/));
+test('generated worker-status avoids unsupported Data Table contains filter',()=>{const file=path.join(__dirname,'../backend/v2/workflows/attendance-service.json');const workflow=JSON.parse(fs.readFileSync(file,'utf8'));const node=workflow.nodes.find(n=>n.name==='Read Comm Unread');assert.ok(node,'Read Comm Unread missing');const conditions=node.parameters?.filters?.conditions||[];assert.deepEqual(conditions.map(c=>[c.keyName,c.condition]),[['scope_id','eq'],['kind','eq']]);assert.equal(conditions.some(c=>c.condition==='contains'),false);assert.equal(node.parameters.returnAll,true)});
 console.log(`Communication worker view PASS: ${total} cases.`);
