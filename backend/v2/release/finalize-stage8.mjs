@@ -10,6 +10,10 @@ if(manifest.workflows?.attendance_service!=='qPVmcfp6pUg3GbzH'||manifest.workflo
 manifest.active_versions.attendance_service='1275f1a8-a361-4184-8420-9804fd5568cb';
 manifest.active_versions.attendance_moniti='7c2bb56d-9f5c-4fe7-b74e-9f480e814840';
 manifest.attendance={...(manifest.attendance||{}),moniti_test_date:'2026-09-06',moniti_test_worker_ids:[99191,99186,99185]};
+// Stage 7/8 hotfixes published during the Stage 8 acceptance cycle.
+if(manifest.workflows?.es_report_read!=='LQnqf4nQmNKsRsMT'||manifest.workflows?.metrics_task_ack!=='r0pQp59VKwIt4i0h')throw Error('STAGE8_METRICS_IDS_CHANGED');
+manifest.active_versions.es_report_read='c90f9be9-c265-4ec0-90dc-13327124f607';
+manifest.active_versions.metrics_task_ack='e688b2fd-af46-4a89-92c2-6e7aef5d22d0';
 manifest.release={...(manifest.release||{}),version:'0.8.0',stage:8,environment:'test',health_workflow_id:'sfoWeuiJBN2qvCRF',health_active_version:'5d289c40-b4cf-4695-9fe5-944bb2cec5c2',health_verified_at:'2026-09-06',frontend_status:'READY_FOR_MAIN'};
 if(manifest.communication){manifest.communication.ui_implemented=true;manifest.communication.ui_published=false;}
 writeFileSync(manifestUrl,JSON.stringify(manifest,null,2)+'\n');
