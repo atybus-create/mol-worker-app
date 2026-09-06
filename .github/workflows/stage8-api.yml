@@ -1,0 +1,32 @@
+name: Stage 8 API verification
+on:
+  push:
+    branches: [codex/stage8-alerts-messages, main]
+    paths: ['backend/v2/**', 'scripts/**', '.github/workflows/stage8-api.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Build candidate from committed sources
+        run: |
+          node backend/v2/communication/register-foundation.mjs
+          node backend/v2/communication/build-foundation.mjs
+          node backend/v2/communication/build-api-candidate.mjs
+      - name: Test generated API graphs with in-memory tables
+        run: |
+          node scripts/test-v2-communication-adapters.cjs
+          node --check backend/v2/communication/api-domain.cjs
+          node --check backend/v2/communication/persistence-domain.cjs
+          git diff --check
+      - name: Verify deterministic candidate generation
+        run: |
+          sha256sum backend/v2/communication/candidate-workflows/*.json > /tmp/comm-before.sha256
+          node backend/v2/communication/build-api-candidate.mjs
+          sha256sum -c /tmp/comm-before.sha256
+# This job does not deploy n8n, create sessions, send messages, or publish Pages.
