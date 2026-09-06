@@ -19,7 +19,7 @@
   function render(data){if(data.work_date!==el('workDate').value||data.month!==el('normMonth').value||data.employee?.employee_id!==employee||data.user?.employee_id!==employee)return false;
     if(!window.molNorms?.validate(data))throw new Error('Niepełny snapshot. Poprzednie normy pozostają widoczne.');
     if(snapshot?.work_date===data.work_date&&snapshot?.month===data.month&&snapshot.snapshot_version>data.snapshot_version)return false;
-    snapshot=data;confirmedAt=Date.now();window.molNorms.render(data);const a=data.attendance;
+    snapshot=data;confirmedAt=Date.now();window.molNorms.render(data);window.molMessages?.applyWorkerStatus(data);const a=data.attendance;
     const choice=el('processChoice'),previous=choice.value;choice.replaceChildren(...(data.process_catalog||[]).map(p=>{const option=document.createElement('option');option.value=p.process_code;option.textContent=p.display_name;return option;}));if((data.process_catalog||[]).some(p=>p.process_code===previous))choice.value=previous;
     const name=code=>(data.process_catalog||[]).find(p=>p.process_code===code)?.display_name||code;el('processState').textContent=data.active_process?`Aktywny: ${name(data.active_process.process_code)} · od ${time(data.active_process.start_at)}`:'Brak aktywnego procesu';el('processHistory').textContent=(data.process_sessions||[]).map(p=>`${name(p.process_code)}: ${time(p.start_at)} → ${p.stop_at?time(p.stop_at):'trwa'}`).join('\n');tickProcesses();
     el('workState').textContent=({OPEN:'W pracy',CLOSED:'Dzień zakończony'})[a?.state]||'Dzień nierozpoczęty';
