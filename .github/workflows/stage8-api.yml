@@ -2,7 +2,15 @@ name: Stage 8 API verification
 on:
   push:
     branches: [codex/stage8-alerts-messages, main]
-    paths: ['backend/v2/**', 'scripts/**', '.github/workflows/stage8-api.yml']
+    paths:
+      - 'backend/v2/**'
+      - 'scripts/**'
+      - 'v2/app.js'
+      - 'v2/attendance.js'
+      - 'v2/messages.js'
+      - 'v2/messages.css'
+      - 'v2/index.html'
+      - '.github/workflows/stage8-api.yml'
 permissions:
   contents: read
 jobs:
@@ -18,11 +26,17 @@ jobs:
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
           node backend/v2/communication/build-api-candidate.mjs
-      - name: Test generated API graphs with in-memory tables
+      - name: Test generated API graphs and stage 8 UI
         run: |
           node scripts/test-v2-communication-adapters.cjs
+          node scripts/test-v2-communication-worker-view.cjs
+          node scripts/test-v2-communication-ui.cjs
           node --check backend/v2/communication/api-domain.cjs
           node --check backend/v2/communication/persistence-domain.cjs
+          node --check backend/v2/metrics/worker-view.cjs
+          node --check v2/app.js
+          node --check v2/attendance.js
+          node --check v2/messages.js
           git diff --check
       - name: Verify deterministic candidate generation
         run: |
