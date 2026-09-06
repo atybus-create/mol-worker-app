@@ -3,3 +3,11 @@ Date: 2026-09-06
 User requested verification of the existing GitHub connection.
 Diagnostic text only. No application code, workflow, secrets, or business data.
 This test must not update main or publish the application.
+
+Verified before this edit:
+- Repository metadata reports pull=true and push=true.
+- create_tree completed successfully.
+- create_commit completed successfully.
+- Diagnostic branch creation completed successfully.
+- The initial file was read back from the diagnostic branch.
+This second revision tests editing an existing file using its current blob SHA.
