@@ -1,0 +1,28 @@
+{
+  "revision": "stage8-foundation-1",
+  "tables": {
+    "MOL_V2_COMM_RECORDS": "42jIxvSmSVGdlxB8",
+    "MOL_V2_COMM_COMMANDS": "7JVuBY9l6ISR2YBz"
+  },
+  "workflows": {
+    "comm_record_writer": "TJiDDKw10Ue3UKWO",
+    "comm_batch_service": "J3qIFff05cYGDW7C"
+  },
+  "active_versions": {
+    "comm_record_writer": "b03f92a0-51ee-4fa0-855c-bca747245959",
+    "comm_batch_service": "8e82e176-249e-48a9-b1de-29fc6bbf3aab"
+  },
+  "communication": {
+    "revision": "stage8-foundation-1",
+    "status": "FOUNDATION_ONLY",
+    "config_key": "COMMUNICATIONS_CONFIG",
+    "initial_mode": "OFF",
+    "public_api_implemented": false,
+    "ui_implemented": false,
+    "es_rules_enabled": false,
+    "history_policy": "HOLD",
+    "generator": "communication/build-foundation.mjs",
+    "probe": {"workflow_id":"5zOHDQDFXoG7O4QK","active":false,"execution_id":"588980"},
+    "source_note": "Only stage 8 foundations; earlier active_versions keep their earlier verification dates. Generated graphs, not raw API dumps."
+  }
+}

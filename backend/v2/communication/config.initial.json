@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mode": "OFF",
+  "timezone": "Europe/Warsaw",
+  "manual_enabled": false,
+  "es_verified": false,
+  "poll_seconds": null,
+  "history_policy": "HOLD",
+  "rules": {
+    "NO_PROCESS": {"enabled": false, "threshold_seconds": null, "ack_required": null},
+    "NO_ACTIVITY": {"enabled": false, "threshold_seconds": null, "ack_required": null},
+    "WRONG_PROCESS": {"enabled": false, "ack_required": null},
+    "WORK_OUTSIDE_APP": {"enabled": false, "ack_required": null},
+    "ATTENDANCE_CORRECTION": {"enabled": false, "ack_required": null},
+    "FORGOTTEN_STOP": {"enabled": false, "at_local": null, "escalate_after_seconds": null, "ack_required": null}
+  }
+}

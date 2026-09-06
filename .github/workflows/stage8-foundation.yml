@@ -1,0 +1,45 @@
+name: Stage 8 foundation sync
+on:
+  push:
+    branches: [codex/stage8-alerts-messages, main]
+    paths:
+      - 'backend/v2/**'
+      - 'scripts/**'
+      - 'docs/v2/stage-8-*.md'
+      - '.github/workflows/stage8-foundation.yml'
+permissions:
+  contents: write
+concurrency:
+  group: stage8-foundation-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Register and generate reviewed foundation exports
+        run: |
+          node backend/v2/communication/register-foundation.mjs
+          node backend/v2/communication/build-foundation.mjs
+      - name: Verify foundation and stage 4-7 regression
+        run: |
+          node scripts/verify-v2-stage8-foundation.cjs
+          git diff --check
+      - name: Verify exports on main without mutation
+        if: github.ref == 'refs/heads/main'
+        run: git diff --exit-code -- backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows
+      - name: Commit generated exports on work branch only
+        if: github.ref == 'refs/heads/codex/stage8-alerts-messages'
+        run: |
+          if git diff --quiet -- backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows/comm-record-writer.json backend/v2/workflows/comm-batch-service.json
+          git commit -m 'build(v2): synchronize tested communication foundation exports'
+          git push origin HEAD:codex/stage8-alerts-messages
+# No n8n calls, employee data, credentials, or live message delivery in this job.

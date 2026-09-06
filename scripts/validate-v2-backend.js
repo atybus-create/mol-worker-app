@@ -8,7 +8,7 @@ const schema = read('schema.json');
 const manifest = read('manifest.json');
 const allowedTables = new Set(Object.values(manifest.tables));
 const workflows = fs.readdirSync(path.join(root, 'workflows')).map(file => read(`workflows/${file}`));
-assert.equal(schema.tables.length, 24);
+assert.equal(schema.tables.length, 26);
 for (const table of schema.tables) {
   assert.ok(table.name.startsWith('MOL_V2_'));
   assert.ok(manifest.tables[table.name]);
