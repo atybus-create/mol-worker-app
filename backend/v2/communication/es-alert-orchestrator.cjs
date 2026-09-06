@@ -5,6 +5,7 @@ const need=D.requireValue;
 const TYPES=new Set(['WRONG_PROCESS','WORK_OUTSIDE_APP','NO_ACTIVITY']);
 const MUTATING_STATUSES=new Set(['OPEN','RESOLVED','CLEAR','BELOW_THRESHOLD','SOURCE_UNAVAILABLE']);
 const ident=x=>typeof x==='string'&&/^MOL[0-9]+$/.test(x);
+const copy=x=>JSON.parse(D.canonical(x));
 
 function validateInvocation(x){
   need(x&&typeof x==='object'&&!Array.isArray(x)&&TYPES.has(x.type),'COMM_ES_ORCHESTRATOR_INVOCATION_INVALID');
@@ -27,7 +28,7 @@ function validateRuleResult(type,result){
   need(MUTATING_STATUSES.has(result.status),'COMM_ES_RULE_RESULT_INVALID');
   need(Array.isArray(result.resolve)&&typeof result.deliver==='boolean','COMM_ES_RULE_RESULT_INVALID');
   need(result.open===null||D.object(result.open),'COMM_ES_RULE_RESULT_INVALID');
-  return result;
+  return copy(result);
 }
 
 function normalizeDeliveryIntents(type,decision,intents){
@@ -49,11 +50,28 @@ function normalizeDeliveryIntents(type,decision,intents){
   });
 }
 
+function freezeDeliveryPolicy(decision,intents){
+  const next=copy(decision);
+  for(const ep of [next.open,...next.resolve].filter(Boolean)){
+    const frozen=ep.details?.delivery_recipient_ids;
+    if(frozen!==undefined)need(Array.isArray(frozen)&&frozen.length<=100&&new Set(frozen).size===frozen.length&&frozen.every(ident),'COMM_ES_DELIVERY_POLICY_INVALID');
+  }
+  if(next.deliver===true){
+    need(next.open&&D.object(next.open.details),'COMM_ES_DELIVERY_POLICY_INVALID');
+    const ids=intents.map(x=>x.recipient_id).sort();
+    const prior=next.open.details.delivery_recipient_ids;
+    if(prior!==undefined)need(D.canonical([...prior].sort())===D.canonical(ids),'COMM_ES_DELIVERY_POLICY_CONFLICT');
+    next.open.details.delivery_recipient_ids=ids;
+  }
+  return next;
+}
+
 function prepareDecision({invocation,rule_result,delivery_intents=[]}){
   validateInvocation(invocation);
-  const decision=validateRuleResult(invocation.type,rule_result);
-  if(decision.ok===false)return {ok:false,type:invocation.type,error_code:decision.error_code,persist:false,delivery_intents:[]};
-  const intents=normalizeDeliveryIntents(invocation.type,decision,delivery_intents);
+  const raw=validateRuleResult(invocation.type,rule_result);
+  if(raw.ok===false)return {ok:false,type:invocation.type,error_code:raw.error_code,persist:false,delivery_intents:[]};
+  const intents=normalizeDeliveryIntents(invocation.type,raw,delivery_intents);
+  const decision=freezeDeliveryPolicy(raw,intents);
   const persist=decision.open!==null||decision.resolve.length>0;
   return {ok:true,type:invocation.type,decision,delivery_intents:intents,persist};
 }
@@ -68,4 +86,4 @@ function prepareBundle({context,results,intents_by_type={}}){
   return {ok:true,prepared,persist:prepared.some(x=>x.persist)};
 }
 
-module.exports={TYPES,validateInvocation,validateRuleResult,normalizeDeliveryIntents,prepareDecision,prepareBundle};
+module.exports={TYPES,validateInvocation,validateRuleResult,normalizeDeliveryIntents,freezeDeliveryPolicy,prepareDecision,prepareBundle};
