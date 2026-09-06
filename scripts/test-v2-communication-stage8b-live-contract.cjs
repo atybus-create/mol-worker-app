@@ -1,0 +1,30 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const c=JSON.parse(fs.readFileSync('backend/v2/communication/stage8b-live-contract.json','utf8'));
+const d=JSON.parse(fs.readFileSync('backend/v2/communication/deployment.json','utf8'));
+const map={source_gate:'comm_alert_source_gate',context:'comm_es_alert_context',rule_router:'comm_es_alert_rule_router',orchestrator:'comm_es_alert_orchestrator',source_claim:'comm_alert_source_claim',source_ack:'comm_alert_source_ack',record_reader:'comm_es_alert_record_reader',bundle_persistence:'comm_es_alert_bundle_persistence',coordinator:'comm_es_alert_coordinator'};
+assert.equal(c.status,'WIRED_FAIL_CLOSED_READY_FOR_REAL_DATA_TEST');
+for(const [k,dk] of Object.entries(map)){
+  const x=c.components[k];assert.ok(x&&x.active===true&&typeof x.workflow_id==='string'&&typeof x.active_version==='string');
+  assert.equal(d.workflows[dk],x.workflow_id,dk+' workflow id drift');
+}
+assert.equal(c.components.source_gate.node_count,8);
+assert.equal(c.components.coordinator.node_count,38);
+assert.equal(c.components.record_reader.lookup,'exact_record_key_only');
+assert.equal(c.components.bundle_persistence.mutation_delegate,d.workflows.comm_batch_service);
+assert.equal(c.safety.auto_alert_consumer_enabled,false);
+assert.equal(c.safety.es_verified,false);
+assert.equal(c.safety.automatic_rules_enabled,false);
+assert.equal(c.safety.history_policy,'HOLD');
+assert.equal(c.safety.alert_cutover_outbox_id,7689);
+assert.equal(c.safety.recipient_policy_approved,false);
+assert.equal(c.safety.real_positive_es_test_complete,false);
+assert.equal(c.safety.source_gate_batch_size,1);
+assert.equal(c.safety.writer_lock_readback,true);
+assert.equal(c.safety.stable_request_from_sha256,true);
+assert.equal(c.safety.single_atomic_comm_revision_per_source,true);
+const edges=new Set(c.edges.map(x=>x.join('>')));
+for(const e of ['source_gate>coordinator','coordinator>source_claim','coordinator>orchestrator','orchestrator>context','orchestrator>rule_router','coordinator>record_reader','coordinator>bundle_persistence','coordinator>source_ack'])assert.ok(edges.has(e),'missing edge '+e);
+assert.equal(c.runtime_notes.datatable_contains_filter,'UNSUPPORTED_AT_RUNTIME_USE_EQ_ONLY');
+console.log('PASS Stage 8B live contract');
