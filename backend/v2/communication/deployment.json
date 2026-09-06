@@ -1,5 +1,5 @@
 {
-  "revision": "stage8-api-live-1",
+  "revision": "stage8-no-process-engine-live-1",
   "tables": {
     "MOL_V2_COMM_RECORDS": "42jIxvSmSVGdlxB8",
     "MOL_V2_COMM_COMMANDS": "7JVuBY9l6ISR2YBz"
@@ -13,7 +13,8 @@
     "comm_shown": "cPRymemz7EC09Ox3",
     "comm_ack": "HQBhMCEhQqujQbos",
     "comm_list": "7HfWqIshFLgpGeoW",
-    "comm_recipients": "hBO6ShOy2MH3FCI4"
+    "comm_recipients": "hBO6ShOy2MH3FCI4",
+    "comm_no_process_rules": "EsCycMxoypbudrE7"
   },
   "active_versions": {
     "comm_record_writer": "b03f92a0-51ee-4fa0-855c-bca747245959",
@@ -24,23 +25,32 @@
     "comm_shown": "b9d9350f-86bd-464c-b365-91f9c1c274bf",
     "comm_ack": "2d4395f5-d5fe-4c34-80b0-3842fb33c64b",
     "comm_list": "c24f16c7-dbb4-40e7-8c71-e8713ce53536",
-    "comm_recipients": "d5e57619-929f-4603-9282-b32933410981"
+    "comm_recipients": "d5e57619-929f-4603-9282-b32933410981",
+    "comm_no_process_rules": "a2ae8ad0-33c8-4593-9d3b-19cb5f16ddae"
   },
   "communication": {
-    "revision": "stage8-api-live-1",
-    "status": "API_LIVE_GATED_OFF",
+    "revision": "stage8-no-process-engine-live-1",
+    "status": "MANUAL_LIVE_AUTOMATIC_GATED",
     "config_key": "COMMUNICATIONS_CONFIG",
-    "initial_mode": "OFF",
+    "manual_enabled": true,
+    "automatic_rules_enabled": false,
     "public_api_implemented": true,
     "ui_implemented": false,
     "es_rules_enabled": false,
     "history_policy": "HOLD",
     "generator": "communication/build-api-candidate.mjs",
+    "no_process": {
+      "rules_workflow_id": "EsCycMxoypbudrE7",
+      "active": true,
+      "rule_enabled": false,
+      "threshold_seconds": null,
+      "ack_required": null,
+      "note": "Engine is published but cannot evaluate or deliver until the operational threshold and ACK policy are confirmed in COMMUNICATIONS_CONFIG."
+    },
     "probe": {
       "workflow_id": "5zOHDQDFXoG7O4QK",
       "active": false,
       "execution_id": "588980"
-    },
-    "source_note": "Published stage 8 communication API is live in n8n but delivery remains gated OFF by COMMUNICATIONS_CONFIG. Active versions read back on 2026-09-06."
+    }
   }
 }
