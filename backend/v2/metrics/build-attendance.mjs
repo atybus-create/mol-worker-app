@@ -31,9 +31,11 @@ export function metricsAttendance() {
  Object.assign(node('Read Norm Bundles').parameters,{matchType:'anyCondition',limit:4});
  g.table('Read Prior View','STATUS_SNAPSHOTS','get',[['view_id',ex("[$('Authorize').first().json.actor.employee_id,$('Authorize').first().json.target,$('Validate Input').first().json.payload.work_date,$('Validate Input').first().json.month].join(':')")]]);
  // Communication counters are bounded, actor-scoped reads. Full message history is never loaded by worker-status.
+ // Data Table does not support "contains" for this string column on the current n8n runtime,
+ // so keep the database scope strict (actor + DELIVERY) and let assembleWorkerView parse shown_at.
  const actorId=ex("$('Authorize').first().json.actor.employee_id");
  g.table('Read Comm Unread','COMM_RECORDS','get',[['scope_id',actorId],['kind','DELIVERY']]);
- const unread=node('Read Comm Unread').parameters;unread.filters.conditions.push({keyName:'payload_json',condition:'contains',keyValue:'"shown_at":null'});unread.returnAll=true;delete unread.limit;
+ const unread=node('Read Comm Unread').parameters;unread.returnAll=true;delete unread.limit;
  g.table('Read Comm Any','COMM_RECORDS','get',[['scope_id',actorId],['kind','DELIVERY']]);
  Object.assign(node('Read Comm Any').parameters,{returnAll:false,limit:1,orderBy:true,orderByColumn:'id',orderByDirection:'DESC'});
  g.table('Read Comm Event','COMM_RECORDS','get',[['scope_id',actorId],['kind','EVENT']]);
