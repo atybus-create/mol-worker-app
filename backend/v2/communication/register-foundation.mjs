@@ -12,11 +12,26 @@ for(const t of addition.tables){
  const old=schema.tables.filter(x=>x.name===t.name);assert.ok(old.length<=1);
  if(old.length)assert.deepEqual(old[0],t,'Existing schema differs: '+t.name);else schema.tables.push(t);
 }
-for(const section of ['tables','workflows','active_versions'])for(const [key,value]of Object.entries(deployment[section])){
- if(Object.hasOwn(manifest[section],key))assert.equal(manifest[section][key],value,'Refuse to overwrite changed deployment reference '+key);
- else manifest[section][key]=value;
+// IDs of tables/workflows are immutable deployment identities. A mismatch means
+// somebody changed the contract and must be reviewed instead of silently replaced.
+for(const [key,value]of Object.entries(deployment.tables||{})){
+ if(Object.hasOwn(manifest.tables,key))assert.equal(manifest.tables[key],value,'Refuse to overwrite changed table reference '+key);
+ else manifest.tables[key]=value;
 }
-if(manifest.communication)assert.deepEqual(manifest.communication,deployment.communication,'Refuse to overwrite newer communication deployment');
-else manifest.communication=deployment.communication;
+for(const [key,value]of Object.entries(deployment.workflows||{})){
+ if(Object.hasOwn(manifest.workflows,key))assert.equal(manifest.workflows[key],value,'Refuse to overwrite changed workflow reference '+key);
+ else manifest.workflows[key]=value;
+}
+// deployment.json is the reviewed read-back of LIVE for communication-owned
+// workflows. Version pointers legitimately move after an n8n publish, so update
+// only keys whose workflow identity is present and matches this deployment.
+for(const [key,value]of Object.entries(deployment.active_versions||{})){
+ assert.ok(Object.hasOwn(deployment.workflows,key),'Active version without deployment workflow: '+key);
+ assert.equal(manifest.workflows[key],deployment.workflows[key],'Workflow identity mismatch for active version '+key);
+ manifest.active_versions[key]=value;
+}
+// Likewise the communication block is a versioned deployment snapshot, not a
+// once-only bootstrap object. Re-running this script must be deterministic.
+manifest.communication=deployment.communication;
 write('../schema.json',schema);write('../manifest.json',manifest);
-console.log('Stage 8 foundation registration OK: additive schema, existing references preserved.');
+console.log('Stage 8 registration OK: additive schema preserved and reviewed deployment snapshot synchronized.');
