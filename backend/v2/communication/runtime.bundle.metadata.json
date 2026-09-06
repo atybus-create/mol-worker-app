@@ -1,0 +1,11 @@
+{
+  "compiler": "esbuild",
+  "compiler_version": "0.25.9",
+  "entry": "persistence-domain.cjs",
+  "runtime_sha256": "b1d5ec481ad8d40ba3e8542d79b7120f047017aff6b4d461e940eef8f6b9e045",
+  "sources": {
+    "domain.cjs": "da37a18fe1cf13b230aff82d7230856e00e43f4da6774b8fda22fe36ca082a06",
+    "api-domain.cjs": "fc445efcf7d0d232896b96496ff05e6ea40ffee68c5a8dc7228485d5b046264e",
+    "persistence-domain.cjs": "77952486914c9dbdd27d8852fc2e6eb9687557e34a161198fb21b34e1e93ad2b"
+  }
+}
