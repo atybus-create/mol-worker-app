@@ -1,0 +1,45 @@
+name: Stage 8 compiled runtime
+on:
+  push:
+    branches: [codex/stage8-alerts-messages, main]
+    paths: ['backend/v2/communication/**', 'scripts/**', '.github/workflows/stage8-runtime.yml']
+permissions:
+  contents: write
+concurrency:
+  group: stage8-runtime-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install existing locked build dependencies
+        run: npm ci --prefix backend/v2/auth --ignore-scripts
+      - name: Generate and test compiled rules
+        run: |
+          node backend/v2/communication/build-runtime.mjs
+          node backend/v2/communication/build-api-candidate.mjs
+          node scripts/test-v2-communication-adapters.cjs
+          node scripts/test-v2-communication-runtime-bundle.cjs
+          sha256sum backend/v2/communication/runtime.bundle.js > /tmp/runtime.sha256
+          node backend/v2/communication/build-runtime.mjs
+          sha256sum -c /tmp/runtime.sha256
+          git diff --check
+      - name: Verify committed bundle on main
+        if: github.ref == 'refs/heads/main'
+        run: git diff --exit-code -- backend/v2/communication/runtime.bundle.js backend/v2/communication/runtime.bundle.metadata.json
+      - name: Save verified generated bundle on work branch only
+        if: github.ref == 'refs/heads/codex/stage8-alerts-messages'
+        run: |
+          git add backend/v2/communication/runtime.bundle.js backend/v2/communication/runtime.bundle.metadata.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'build(v2): compile and verify communication runtime from locked sources'
+          git push origin HEAD:codex/stage8-alerts-messages
+# No deployment or business-data writes. Main is never modified by this job.
