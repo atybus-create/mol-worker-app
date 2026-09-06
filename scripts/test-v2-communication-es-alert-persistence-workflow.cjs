@@ -1,0 +1,17 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const w=JSON.parse(fs.readFileSync('backend/v2/workflows/comm-es-alert-persistence.json','utf8'));
+let count=0;const test=(name,fn)=>{fn();count++;console.log('PASS '+name);};
+const node=name=>w.nodes.find(n=>n.name===name);
+test('workflow has reviewed internal name and six nodes',()=>{assert.equal(w.name,'MOL // APP V2 // COMM ES ALERT PERSISTENCE');assert.equal(w.nodes.length,6);});
+test('workflow has only internal trigger',()=>{assert.equal(w.nodes.filter(n=>n.type==='n8n-nodes-base.executeWorkflowTrigger').length,1);assert.equal(w.nodes.some(n=>['n8n-nodes-base.webhook','n8n-nodes-base.scheduleTrigger'].includes(n.type)),false);});
+test('workflow has no direct database or HTTP nodes',()=>assert.equal(w.nodes.some(n=>['n8n-nodes-base.dataTable','n8n-nodes-base.httpRequest'].includes(n.type)),false));
+test('plan embeds generic ES persistence protections',()=>{const c=node('Plan Persistence').parameters.jsCode;for(const marker of ['COMM_ALERT_EXISTING_DELIVERY_REQUIRES_POLICY','COMM_EPISODE_REOPEN_FORBIDDEN','COMM_ALERT_DELIVERY_CONFLICT'])assert.ok(c.includes(marker));});
+test('write branch is explicitly gated',()=>{const i=node('Write Needed');assert.ok(i);assert.equal(i.parameters.conditions.conditions[0].leftValue,'={{ $json.execute === true }}');});
+test('write branch strips wrapper before batch service',()=>assert.ok(node('Batch Input').parameters.jsCode.includes(".json.batch")));
+test('only mutation path delegates to reviewed batch service',()=>{const x=node('Comm Batch Service');assert.equal(x.type,'n8n-nodes-base.executeWorkflow');assert.equal(x.parameters.workflowId.value,'J3qIFff05cYGDW7C');assert.equal(x.parameters.options.waitForSubWorkflow,true);});
+test('false branch returns explicit no change',()=>assert.ok(node('No Change').parameters.jsCode.includes('executed:false')));
+test('successful executions are not retained',()=>assert.equal(w.settings.saveDataSuccessExecution,'none'));
+test('shared error handler remains configured',()=>assert.equal(w.settings.errorWorkflow,'rnELTCKClbzY8lxZ'));
+console.log('TOTAL '+count);
