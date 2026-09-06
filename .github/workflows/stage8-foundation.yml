@@ -5,6 +5,7 @@ on:
     paths:
       - 'backend/v2/**'
       - 'scripts/**'
+      - 'docs/v2/openapi.json'
       - 'docs/v2/stage-8-*.md'
       - '.github/workflows/stage8-foundation.yml'
 permissions:
@@ -46,10 +47,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Prepare deterministic foundation
+      - name: Prepare deterministic foundation and API contract
         run: |
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
+          node backend/v2/communication/register-openapi.mjs
       - name: Run ${{ matrix.test }}
         run: node scripts/${{ matrix.test }}
 
@@ -64,31 +66,35 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Register and generate reviewed foundation and metrics exports
+      - name: Register and generate reviewed Stage 8 artifacts
         run: |
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
           node backend/v2/metrics/build-all.mjs
+          node backend/v2/communication/register-openapi.mjs
           find backend/v2/workflows -maxdepth 1 -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/workflows.sha256
           cp backend/v2/schema.json /tmp/schema.json
           cp backend/v2/manifest.json /tmp/manifest.json
+          cp docs/v2/openapi.json /tmp/openapi.json
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
           node backend/v2/metrics/build-all.mjs
+          node backend/v2/communication/register-openapi.mjs
           cmp /tmp/schema.json backend/v2/schema.json
           cmp /tmp/manifest.json backend/v2/manifest.json
+          cmp /tmp/openapi.json docs/v2/openapi.json
           sha256sum -c /tmp/workflows.sha256
           git diff --check
-      - name: Verify exports on main without mutation
+      - name: Verify generated artifacts on main without mutation
         if: github.ref == 'refs/heads/main'
-        run: git diff --exit-code -- backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows
-      - name: Commit generated exports on work branch only
+        run: git diff --exit-code -- backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows docs/v2/openapi.json
+      - name: Commit generated artifacts on work branch only
         if: github.ref == 'refs/heads/codex/stage8-alerts-messages'
         run: |
-          if git diff --quiet -- backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows; then exit 0; fi
+          if git diff --quiet -- backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows docs/v2/openapi.json; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows
-          git commit -m 'build(v2): synchronize tested stage 8 generated exports'
+          git add backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows docs/v2/openapi.json
+          git commit -m 'build(v2): synchronize tested stage 8 generated artifacts'
           git push origin HEAD:codex/stage8-alerts-messages
 # No n8n calls, employee data, credentials, or live message delivery in this job.
