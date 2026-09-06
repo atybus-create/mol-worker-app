@@ -1,0 +1,58 @@
+{
+  "captured_at": "2026-09-06T18:55:00Z",
+  "status": "READY_FOR_POSITIVE_REAL_ES_TEST",
+  "test_date": "2026-09-07",
+  "components": {
+    "es_report_read": {"workflow_id":"LQnqf4nQmNKsRsMT","active_version":"c90f9be9-c265-4ec0-90dc-13327124f607","active":true},
+    "es_ingest": {"workflow_id":"i4MdwSwbjUkEosk4","active_version":"9aeb3f82-5a8f-4123-9aa7-642b68f6edb6","active":true},
+    "metrics_scheduler": {"workflow_id":"vxe3T6UbcSofc4FL","active_version":"395d5949-d5ea-4c50-a1f4-ba291ec1a955","active":true,"schedule_minutes":1},
+    "summary_recalculator": {"workflow_id":"pBYXQiiTNxhK9IGq","active_version":"2d4e29bd-d956-43f4-b744-f586608b309d","active":true},
+    "norm_drive": {"workflow_id":"25EgiHZmEcqxxTvG","active_version":"ef240fa2-1dc5-4af0-b045-f2b7c4251e08","active":true},
+    "metrics_task_ack": {"workflow_id":"r0pQp59VKwIt4i0h","active_version":"e688b2fd-af46-4a89-92c2-6e7aef5d22d0","active":true},
+    "attendance_service": {"workflow_id":"qPVmcfp6pUg3GbzH","active_version":"1275f1a8-a361-4184-8420-9804fd5568cb","active":true},
+    "moniti_adapter": {"workflow_id":"3e67SsUOByUi17YV","active_version":"7c2bb56d-9f5c-4fe7-b74e-9f480e814840","active":true}
+  },
+  "source_mapping": {
+    "PAK": "ilość skontrolowanych zamówień",
+    "PICK": "Ilość zadań PICK",
+    "operator_column": "operator",
+    "operator_normalization": "trim + lowercase"
+  },
+  "known_test_mappings": {
+    "MOL004": "dtatarska",
+    "MOL014": "asorokopud",
+    "MOL015": "atybus"
+  },
+  "safety": {
+    "ES_ENABLED": true,
+    "METRICS_ENABLED": true,
+    "NORM_DRIVE_ENABLED": true,
+    "WRITES_ENABLED": true,
+    "MONITI_ENABLED": true,
+    "production_deltas_before_test": 0,
+    "unfinished_es_derived_before_test": 0,
+    "unfinished_attendance_derived_before_test": 0,
+    "unfinished_norm_drive_before_test": 0,
+    "prepared_es_batches_before_test": 0,
+    "recovery_required_before_test": 0,
+    "command_writer_free_before_test": true,
+    "moniti_live_write_scope_current_date": "2026-09-06",
+    "moniti_scope_for_2026_09_07_approved": false
+  },
+  "acceptance": {
+    "first_good_read_is_baseline_only": true,
+    "historical_production_must_not_be_counted": true,
+    "positive_test_requires_later_counter_increase": true,
+    "missing_operator_is_not_zero_production": true,
+    "source_failure_is_not_zero_production": true,
+    "counter_reset_requires_rebaseline": true,
+    "real_positive_es_test_complete": false
+  },
+  "communication_handoff": {
+    "alert_derived_created_only_when_any_comm_rule_enabled": true,
+    "all_comm_rules_currently_disabled": true,
+    "auto_alert_consumer_enabled": false,
+    "es_verified": false,
+    "real_data_stage8b_preflight_mode": "CONTEXT_READ_ONLY_FROM_REAL_ES_DERIVED_SOURCE"
+  }
+}
