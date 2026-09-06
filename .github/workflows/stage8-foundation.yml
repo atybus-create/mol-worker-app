@@ -41,6 +41,7 @@ jobs:
           - test-v2-communication-alert-cutover.cjs
           - test-v2-communication-alert-source.cjs
           - test-v2-communication-alert-source-workflow.cjs
+          - test-v2-communication-es-alert-context.cjs
           - test-v2-communication-es-alert-persistence.cjs
           - test-v2-communication-es-alert-persistence-runtime.cjs
           - test-v2-communication-es-alert-persistence-workflow.cjs
