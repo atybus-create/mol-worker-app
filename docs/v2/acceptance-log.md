@@ -9,7 +9,7 @@
 | 5 | Czas pracy | PASS: 39 testów domeny, UI, trzy role, Moniti/Drive, retry, recovery, race; granice w stage-5-acceptance.md | Potwierdzony przez użytkownika po udanej korekcie Drive | ODEBRANY |
 | 6 | Procesy pracownika i uprawnienia BIURO | Zakres testów i ograniczenia: stage-6-closeout-20260905.md | Jawnie odebrany przez użytkownika w tej rozmowie 2026-09-05 | ODEBRANY |
 | 7 | ES, normy i spójny status | 276 izolowanych przypadków PASS, raport Sheets i publiczne API sprawdzone; niezaliczone: dodatnia produkcja ES, zalogowany E2E i test wizualny. Protokół: stage-7-acceptance.md; publikacja: stage-7-release.md | Oczekuje na decyzję po zapoznaniu z ograniczeniami | DO ODBIORU — E2E OTWARTE |
-| 8 | Alerty i komunikacja | — | — | NIE ROZPOCZĘTO |
+| 8 | Alerty i komunikacja | PASS: MANUAL, RECIPIENTS, LIST history/changes, SHOWN, ACK, Drive mirror, worker-status, realny START/STOP Moniti i recovery; CI Stage 8 zielone. Protokół: stage-8-e2e-20260906.md | Oczekuje na jawny odbiór użytkownika | DO ODBIORU |
 | 9 | Panel lidera i raporty | — | — | NIE ROZPOCZĘTO |
 | 10 | Spójny frontend V2 | — | — | NIE ROZPOCZĘTO |
 | 11 | Test równoległy V1 kontra V2 | — | — | NIE ROZPOCZĘTO |
@@ -19,11 +19,17 @@
 
 Protokół: [stage-6-closeout-20260905.md](stage-6-closeout-20260905.md). BIURO jest ograniczone do LEADER/ADMIN, a listy procesów są sterowane danymi ról i osób w MOL_V2_CONFIG. Nie utworzono fizycznej kolumny allowed_processes w EMPLOYEES; różnica względem literalnego pola jest jawna. Testów fixture nie traktujemy jako nowego odbioru przeglądarkowego lub zalogowanego API. Użytkownik jawnie odebrał etap 6 i zlecił etap 7 dnia 2026-09-05; nie wymagamy ponownego odbioru etapu 6.
 
-Etap 7 nie został jeszcze odebrany przez użytkownika. Wdrożenie kodu i zaliczenie testów automatycznych nie zamykają niewykonanych scenariuszy E2E. Przejście do etapu 8 wymaga jawnej decyzji użytkownika po przedstawieniu protokołu i ograniczeń. ALERT_DERIVED pozostaje zadaniem dla etapu 8, nie dowodem wdrożenia komunikatów.
+Etap 7 nie został jeszcze odebrany przez użytkownika. Wdrożenie kodu i zaliczenie testów automatycznych nie zamykają niewykonanych scenariuszy E2E. Użytkownik jawnie zlecił wdrożenie etapu 8 mimo otwartego punktu dodatniej produkcji ES w etapie 7; wykonanie etapu 8 nie zamyka automatycznie etapu 7.
+
+## Etap 8 — stan do odbioru
+
+Etap 8 został technicznie wdrożony 2026-09-06. Zaliczone zostało realne E2E LEADER → WORKER dla komunikatu MANUAL, pełna i przyrostowa historia, SHOWN, ACK, mirror Drive oraz realny START/STOP Moniti po czasowym rozszerzeniu zgody użytkownika na 2026-09-06. Podczas E2E wykryto i naprawiono błąd dynamicznego filtrowania Data Table w paginacji LIST. Pełny protokół: [stage-8-e2e-20260906.md](stage-8-e2e-20260906.md).
+
+Automatyczne reguły alertów pozostają świadomie wyłączone: brak zatwierdzonych progów/godzin/ACK, a reguły produkcyjne pozostają dodatkowo zablokowane przez `es_verified=false`. To jest zamierzona konfiguracja bezpieczna, a nie brak wdrożonego silnika.
 
 ## Wymagania odbiorowe roli LEADER — etapy 8 i 9
 
-Zatwierdzone doprecyzowanie użytkownika: każdy lider ma dostęp do panelu lidera, podglądu wszystkich danych pracowników w aplikacji oraz wysyłania komunikatów. To wymaganie, nie potwierdzenie wdrożenia tych etapów.
+Zatwierdzone doprecyzowanie użytkownika: każdy lider ma dostęp do panelu lidera, podglądu wszystkich danych pracowników w aplikacji oraz wysyłania komunikatów. Etap 8 potwierdza część komunikacyjną; pełny panel lidera i raporty pozostają zakresem etapu 9.
 
 1. Konto `asorokopud` otwiera panel lidera i widzi wszystkich pracowników, także bez przypisanego `leader_id`.
 2. Lider widzi czas pracy, procesy, normy, wyniki, historię i raporty pracowników.
