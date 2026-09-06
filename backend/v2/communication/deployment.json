@@ -1,5 +1,5 @@
 {
-  "revision": "stage8-forgotten-stop-engine-live-1",
+  "revision": "stage8-worker-status-live-1",
   "tables": {
     "MOL_V2_COMM_RECORDS": "42jIxvSmSVGdlxB8",
     "MOL_V2_COMM_COMMANDS": "7JVuBY9l6ISR2YBz"
@@ -16,7 +16,12 @@
     "comm_recipients": "hBO6ShOy2MH3FCI4",
     "comm_no_process_rules": "EsCycMxoypbudrE7",
     "comm_attendance_correction_rules": "jv7WUWyuwngD7FFe",
-    "comm_forgotten_stop_rules": "NHPqesBIjOwZHth4"
+    "comm_forgotten_stop_rules": "NHPqesBIjOwZHth4",
+    "comm_wrong_process_rules": "XYQziIf4NkjcNKhP",
+    "comm_work_outside_app_rules": "wnkjKWWLBGefGytg",
+    "comm_no_activity_rules": "UjpB45UX6384rTMW",
+    "attendance_service": "qPVmcfp6pUg3GbzH",
+    "worker_status": "yXJ9hBTKl2yFBTVO"
   },
   "active_versions": {
     "comm_record_writer": "b03f92a0-51ee-4fa0-855c-bca747245959",
@@ -30,11 +35,16 @@
     "comm_recipients": "d5e57619-929f-4603-9282-b32933410981",
     "comm_no_process_rules": "a2ae8ad0-33c8-4593-9d3b-19cb5f16ddae",
     "comm_attendance_correction_rules": "7e186044-5a28-4477-9cc0-a6c4b389446a",
-    "comm_forgotten_stop_rules": "2886d59d-dfbc-443c-b8fb-52f3338248cd"
+    "comm_forgotten_stop_rules": "2886d59d-dfbc-443c-b8fb-52f3338248cd",
+    "comm_wrong_process_rules": "62d4ba5c-dc31-4b95-be3c-5fd970088dbc",
+    "comm_work_outside_app_rules": "e37b9b88-6e33-44df-980d-1702cd7fa9ce",
+    "comm_no_activity_rules": "5d422c92-34da-4ad6-8170-5350b9739563",
+    "attendance_service": "4e65bd22-0379-45ea-8b3a-3591a0ef01a3",
+    "worker_status": "8837d66d-7a39-4131-9768-9472860e2ac2"
   },
   "communication": {
-    "revision": "stage8-forgotten-stop-engine-live-1",
-    "status": "MANUAL_LIVE_AUTOMATIC_GATED",
+    "revision": "stage8-worker-status-live-1",
+    "status": "MANUAL_LIVE_AUTOMATIC_GATED_WORKER_STATUS_READY",
     "config_key": "COMMUNICATIONS_CONFIG",
     "manual_enabled": true,
     "automatic_rules_enabled": false,
@@ -42,10 +52,23 @@
     "ui_implemented": false,
     "es_rules_enabled": false,
     "history_policy": "HOLD",
+    "poll_seconds": null,
     "generator": "communication/build-api-candidate.mjs",
+    "worker_status": {
+      "communication_counters_live": true,
+      "unread_query": "actor scoped DELIVERY rows with shown_at=null; expired messages excluded in assembly",
+      "messages_available_query": "one actor scoped DELIVERY row",
+      "communication_revision_query": "latest actor scoped EVENT revision",
+      "full_history_loaded": false,
+      "snapshot_version_includes_communication": true,
+      "polling_enabled": false
+    },
     "no_process": {"rules_workflow_id":"EsCycMxoypbudrE7","active":true,"rule_enabled":false,"threshold_seconds":null,"ack_required":null},
     "attendance_correction": {"rules_workflow_id":"jv7WUWyuwngD7FFe","active":true,"rule_enabled":false,"ack_required":null,"recipients":"all active LEADER/ADMIN","episode_resolution":"resolved on committed correction/reopen; ACK remains independent"},
     "forgotten_stop": {"rules_workflow_id":"NHPqesBIjOwZHth4","active":true,"rule_enabled":false,"at_local":null,"escalate_after_seconds":null,"ack_required":null,"automatic_stop":false},
+    "wrong_process": {"rules_workflow_id":"XYQziIf4NkjcNKhP","active":true,"rule_enabled":false,"requires_es_verified":true},
+    "work_outside_app": {"rules_workflow_id":"wnkjKWWLBGefGytg","active":true,"rule_enabled":false,"requires_es_verified":true},
+    "no_activity": {"rules_workflow_id":"UjpB45UX6384rTMW","active":true,"rule_enabled":false,"threshold_seconds":null,"ack_required":null,"requires_es_verified":true,"source_unavailable_is_not_inactivity":true},
     "probe": {"workflow_id":"5zOHDQDFXoG7O4QK","active":false,"execution_id":"588980"}
   }
 }
