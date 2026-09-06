@@ -59,6 +59,7 @@ function saveToken(token) {
 }
 
 function showLogin(message = '') {
+  window.molMessages?.hide();
   window.molAttendance?.hide();
   clearTimeout(expiryTimer);
   byId('authTitle').textContent = 'Zaloguj się';
@@ -82,6 +83,7 @@ function showSession(data) {
   byId('userRole').textContent = {WORKER:'Pracownik', LEADER:'Lider', ADMIN:'Administrator'}[data.user.role];
   byId('sessionExpiry').textContent = new Date(data.expires_at).toLocaleString('pl-PL');
   window.molAttendance?.activate(data, data.session_token || sessionToken);
+  window.molMessages?.activate(data, data.session_token || sessionToken);
   clearTimeout(expiryTimer);
   expiryTimer = setTimeout(() => {
     generation++;
@@ -133,6 +135,7 @@ async function restoreSession() {
     if (error.status === 401) { saveToken(''); showLogin('Sesja wygasła lub została zakończona. Zaloguj się ponownie.'); }
     else {
       byId('authTitle').textContent = 'Sesja niepotwierdzona';
+      window.molMessages?.hide();
       window.molAttendance?.hide();
       byId('authMessage').textContent = error.message;
       byId('sessionPanel').hidden = true;
