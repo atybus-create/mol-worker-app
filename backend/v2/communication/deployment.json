@@ -1,5 +1,5 @@
 {
-  "revision": "stage8-e2e-live-20260906",
+  "revision": "stage8b-es-orchestration-gated-20260906",
   "tables": {
     "MOL_V2_COMM_RECORDS": "42jIxvSmSVGdlxB8",
     "MOL_V2_COMM_COMMANDS": "7JVuBY9l6ISR2YBz"
@@ -21,6 +21,15 @@
     "comm_work_outside_app_rules": "wnkjKWWLBGefGytg",
     "comm_no_activity_rules": "UjpB45UX6384rTMW",
     "comm_drive_mirror": "NdRo0Umetu6SYpIk",
+    "comm_alert_source_gate": "0bpqCpUMsIRQW8OY",
+    "comm_es_alert_context": "qs36Tri1hIQhU5FH",
+    "comm_es_alert_rule_router": "fSwg0ADFK3aQhoqY",
+    "comm_es_alert_orchestrator": "7ugYR0OFPvtX2ySr",
+    "comm_alert_source_claim": "WgG4GvDQAPydveXr",
+    "comm_alert_source_ack": "7G4qKHql2OQjHROe",
+    "comm_es_alert_record_reader": "sofdr5km1LvSPrWB",
+    "comm_es_alert_bundle_persistence": "pcU9LO1WZfG3Fj0Y",
+    "comm_es_alert_coordinator": "XJJLQwqjG5nhdfRT",
     "attendance_service": "qPVmcfp6pUg3GbzH",
     "attendance_moniti": "3e67SsUOByUi17YV",
     "worker_status": "yXJ9hBTKl2yFBTVO"
@@ -42,13 +51,14 @@
     "comm_work_outside_app_rules": "e37b9b88-6e33-44df-980d-1702cd7fa9ce",
     "comm_no_activity_rules": "5d422c92-34da-4ad6-8170-5350b9739563",
     "comm_drive_mirror": "cfa6644a-78e1-4302-b9c6-5c8acdf1f8e6",
+    "comm_alert_source_gate": "935f8165-d20e-4b1a-b17a-69e44dd8c361",
     "attendance_service": "69f461a0-0cb9-4a2f-a35b-a16768130c83",
     "attendance_moniti": "c2040c1d-cb7d-42c8-a4ee-8ac8c199d3c8",
     "worker_status": "8837d66d-7a39-4131-9768-9472860e2ac2"
   },
   "communication": {
-    "revision": "stage8-e2e-live-20260906",
-    "status": "STAGE8_LIVE_E2E_VERIFIED_AUTOMATIC_GATED",
+    "revision": "stage8b-es-orchestration-gated-20260906",
+    "status": "STAGE8_LIVE_E2E_VERIFIED_STAGE8B_WIRED_FAIL_CLOSED",
     "config_key": "COMMUNICATIONS_CONFIG",
     "manual_enabled": true,
     "automatic_rules_enabled": false,
@@ -59,6 +69,24 @@
     "history_policy": "HOLD",
     "poll_seconds": null,
     "generator": "communication/build-api-candidate.mjs + communication/finalize-api-candidate.mjs",
+    "stage8b": {
+      "wired": true,
+      "fail_closed": true,
+      "source_gate_active": true,
+      "source_gate_active_version": "935f8165-d20e-4b1a-b17a-69e44dd8c361",
+      "loop_batch_size": 1,
+      "max_candidates_per_tick": 10,
+      "auto_alert_consumer_enabled": false,
+      "es_verified": false,
+      "alert_cutover_outbox_id": 7689,
+      "legacy_policy": "HOLD",
+      "stable_request_from_sha256": true,
+      "single_atomic_comm_revision_per_source": true,
+      "writer_lock_readback": true,
+      "source_claim_ack": true,
+      "recipient_policy_approved": false,
+      "real_positive_es_test_complete": false
+    },
     "worker_status": {
       "communication_counters_live": true,
       "unread_query": "actor scoped DELIVERY rows with shown_at=null; expired messages excluded in assembly",
