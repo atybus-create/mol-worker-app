@@ -90,8 +90,8 @@
     "auth_login": "872fb11a-00bd-4163-a056-04b4d92940d0",
     "auth_session": "d0075043-950f-45b1-99e3-39207707ad62",
     "auth_logout": "0630e472-9b5d-4593-a171-f8ee119377d5",
-    "attendance_service": "4e65bd22-0379-45ea-8b3a-3591a0ef01a3",
-    "attendance_moniti": "56ff0be6-3265-41a2-b0b9-7234c957d6e0",
+    "attendance_service": "69f461a0-0cb9-4a2f-a35b-a16768130c83",
+    "attendance_moniti": "c2040c1d-cb7d-42c8-a4ee-8ac8c199d3c8",
     "attendance_drive": "902ff676-6619-4b20-97ba-023d3ec7c5fc",
     "attendance_recovery": "10976a73-c4e2-4df0-8582-5cef75ac94a0",
     "sheet_approval": "c1458aa3-ab13-4f5f-9884-0c35b7da53c0",
@@ -119,7 +119,7 @@
     "comm_record_writer": "b03f92a0-51ee-4fa0-855c-bca747245959",
     "comm_batch_service": "fd2e842b-35e0-48c3-9963-1ddeb22a315e",
     "comm_api_rules": "17dce36d-1b72-428b-b856-98a82eb79506",
-    "comm_api_service": "87ab6d93-7ead-40a0-a2c5-ac8eac63f4fb",
+    "comm_api_service": "700fb264-3b84-486b-8d91-b22e4cf958a8",
     "comm_send": "d86019d7-c5a2-4283-8c05-864e86e561e9",
     "comm_shown": "b9d9350f-86bd-464c-b365-91f9c1c274bf",
     "comm_ack": "2d4395f5-d5fe-4c34-80b0-3842fb33c64b",
@@ -194,8 +194,8 @@
     "version_reference_note": "Stage 8 worker-status attendance service active version read back on 2026-09-06."
   },
   "communication": {
-    "revision": "stage8-drive-mirror-live-1",
-    "status": "MANUAL_LIVE_AUTOMATIC_GATED_WORKER_STATUS_READY",
+    "revision": "stage8-e2e-live-20260906",
+    "status": "STAGE8_LIVE_E2E_VERIFIED_AUTOMATIC_GATED",
     "config_key": "COMMUNICATIONS_CONFIG",
     "manual_enabled": true,
     "automatic_rules_enabled": false,
@@ -205,7 +205,7 @@
     "es_rules_enabled": false,
     "history_policy": "HOLD",
     "poll_seconds": null,
-    "generator": "communication/build-api-candidate.mjs",
+    "generator": "communication/build-api-candidate.mjs + communication/finalize-api-candidate.mjs",
     "worker_status": {
       "communication_counters_live": true,
       "unread_query": "actor scoped DELIVERY rows with shown_at=null; expired messages excluded in assembly",
@@ -226,7 +226,25 @@
       "schedule_minutes": 1,
       "matching_key": "message_id",
       "live_fixture_verified": true,
-      "live_fixture_removed": true
+      "live_fixture_removed": true,
+      "live_e2e_acknowledged_row_verified": true
+    },
+    "live_e2e": {
+      "date": "2026-09-06",
+      "leader": "MOL014",
+      "worker": "MOL004",
+      "manual_send": true,
+      "history_list": true,
+      "shown_revision": 2,
+      "ack_revision": 3,
+      "incremental_list": true,
+      "drive_mirror": true,
+      "attendance_start_local": "10:42",
+      "attendance_stop_local": "10:56",
+      "moniti_synced": true,
+      "temporary_sessions_removed": true,
+      "temporary_harnesses_removed": true,
+      "moniti_test_window_restored": "2026-09-05"
     },
     "no_process": {
       "rules_workflow_id": "EsCycMxoypbudrE7",
