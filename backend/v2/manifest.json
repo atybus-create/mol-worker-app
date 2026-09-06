@@ -81,7 +81,15 @@
     "comm_no_activity_rules": "UjpB45UX6384rTMW",
     "comm_drive_mirror": "NdRo0Umetu6SYpIk",
     "comm_alert_source_gate": "0bpqCpUMsIRQW8OY",
-    "comm_es_alert_persistence": "DWnFXZVIptjMSoax"
+    "comm_es_alert_persistence": "DWnFXZVIptjMSoax",
+    "comm_es_alert_context": "qs36Tri1hIQhU5FH",
+    "comm_es_alert_rule_router": "fSwg0ADFK3aQhoqY",
+    "comm_es_alert_orchestrator": "7ugYR0OFPvtX2ySr",
+    "comm_alert_source_claim": "WgG4GvDQAPydveXr",
+    "comm_alert_source_ack": "7G4qKHql2OQjHROe",
+    "comm_es_alert_record_reader": "sofdr5km1LvSPrWB",
+    "comm_es_alert_bundle_persistence": "pcU9LO1WZfG3Fj0Y",
+    "comm_es_alert_coordinator": "XJJLQwqjG5nhdfRT"
   },
   "active_versions": {
     "health": "5d289c40-b4cf-4695-9fe5-944bb2cec5c2",
@@ -134,8 +142,16 @@
     "comm_work_outside_app_rules": "e37b9b88-6e33-44df-980d-1702cd7fa9ce",
     "comm_no_activity_rules": "5d422c92-34da-4ad6-8170-5350b9739563",
     "comm_drive_mirror": "cfa6644a-78e1-4302-b9c6-5c8acdf1f8e6",
-    "comm_alert_source_gate": "a05ef75f-ac98-455f-b880-0174cdcdc2fe",
-    "comm_es_alert_persistence": null
+    "comm_alert_source_gate": "935f8165-d20e-4b1a-b17a-69e44dd8c361",
+    "comm_es_alert_persistence": null,
+    "comm_es_alert_context": "998cab14-5eb1-4a1d-9706-0c3baa2e75e4",
+    "comm_es_alert_rule_router": "28326530-c6a3-4028-9007-90fe64104225",
+    "comm_es_alert_orchestrator": "0afc126b-9090-4ad0-8bb6-f125b31bc99c",
+    "comm_alert_source_claim": "4882af08-e567-4414-947d-41ec3ca4d935",
+    "comm_alert_source_ack": "c384de0b-1f79-40f9-b328-c2f94227c061",
+    "comm_es_alert_record_reader": "b7da1214-9b8b-42bf-82e1-63ccec90299d",
+    "comm_es_alert_bundle_persistence": "845432d1-30fc-4f24-ab26-cf0ea755e687",
+    "comm_es_alert_coordinator": "b831e7ed-e799-413f-98ad-80a8653145e9"
   },
   "auth": {
     "receipt_credential_id": "79mc2IFYLaJLMrgJ",
@@ -205,7 +221,7 @@
     "automatic_rules_enabled": false,
     "public_api_implemented": true,
     "ui_implemented": true,
-    "ui_published": false,
+    "ui_published": true,
     "es_rules_enabled": false,
     "history_policy": "HOLD",
     "poll_seconds": null,
@@ -306,7 +322,14 @@
     "es_alert_persistence_ready": true,
     "es_alert_persistence_active": false,
     "es_alert_persistence_runtime_test_execution": "644321",
-    "es_alert_persistence_runtime_subexecution": "644322"
+    "es_alert_persistence_runtime_subexecution": "644322",
+    "es_verified": false,
+    "stage8b_wired": true,
+    "stage8b_fail_closed": true,
+    "stage8b_contract": "communication/stage8b-live-contract.json",
+    "stage8b_ready_for_real_data_test": true,
+    "recipient_policy_approved": false,
+    "real_positive_es_test_complete": false
   },
   "release": {
     "version": "0.8.0",
