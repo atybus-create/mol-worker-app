@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('node:assert/strict');const vm=require('node:vm');const D=require('../backend/v2/communication/es-alert-bundle.cjs');
+(async()=>{const G=await import('../backend/v2/communication/build-es-alert-bundle-workflow.mjs');const sandbox={Date,JSON,Set,Map,Object,Array,Number,String,RegExp,Error};vm.runInNewContext(G.runtimeSource()+'\nthis.planBundleRuntime=planBundleRuntime;',sandbox);const R=sandbox.planBundleRuntime;let count=0;const test=(n,f)=>{f();count++;console.log('PASS '+n);};
+const UUID='22222222-2222-4222-8222-222222222222',HASH='b'.repeat(64),NOW='2026-09-08T09:00:00.000Z';
+function ep(type,anchor,recipients){return {episode_id:'MOL004|'+type+'|'+anchor,employee_id:'MOL004',type,anchor,status:'OPEN',opened_at:NOW,resolved_at:null,resolution_reason:null,version:1,details:{ack_required:true,...(recipients?{delivery_recipient_ids:recipients}: {})}};}
+function item(type,anchor,deliver=false,recipient='MOL004'){const open=ep(type,anchor,deliver?[recipient]:undefined);return {type,decision:{ok:true,status:'OPEN',reason:null,open,resolve:[],deliver},delivery_intents:deliver?[{recipient_id:recipient,content:'Alert '+type,ack_required:true,type}]:[]};}
+const ctx=p=>({prepared:p,records:[],request_id:UUID,payload_hash:HASH,lock_owner:'900',now:NOW});
+function equal(a,b){assert.equal(JSON.stringify(a),JSON.stringify(b));}
+test('runtime matches domain for two observe-only rules',()=>{const x=ctx([item('WRONG_PROCESS','a'),item('NO_ACTIVITY','b')]);equal(R(x),D.planBundle(x));});
+test('runtime matches domain with deliveries',()=>{const x=ctx([item('WRONG_PROCESS','a',true,'MOL004'),item('WORK_OUTSIDE_APP','b',true,'MOL014')]);equal(R(x),D.planBundle(x));});
+test('runtime matches domain no-change bundle',()=>{const disabled=t=>({type:t,decision:{ok:true,status:'DISABLED',reason:'RULE_DISABLED',open:null,resolve:[],deliver:false},delivery_intents:[]});const x=ctx([disabled('WRONG_PROCESS'),disabled('NO_ACTIVITY')]);equal(R(x),D.planBundle(x));});
+test('generated workflow has one mutation delegate and no autonomous/direct IO',()=>{const w=G.build(),types=w.nodes.map(n=>n.type);assert.equal(types.includes('n8n-nodes-base.dataTable'),false);assert.equal(types.includes('n8n-nodes-base.httpRequest'),false);assert.equal(types.includes('n8n-nodes-base.webhook'),false);assert.equal(types.includes('n8n-nodes-base.scheduleTrigger'),false);const delegates=w.nodes.filter(n=>n.type==='n8n-nodes-base.executeWorkflow');assert.equal(delegates.length,1);assert.equal(delegates[0].parameters.workflowId.value,'J3qIFff05cYGDW7C');});
+console.log('TOTAL '+count);})().catch(e=>{console.error(e);process.exit(1);});
