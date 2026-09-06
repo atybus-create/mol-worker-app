@@ -1,0 +1,5 @@
+MOL V2 - GitHub write access verification
+Date: 2026-09-06
+User requested verification of the existing GitHub connection.
+Diagnostic text only. No application code, workflow, secrets, or business data.
+This test must not update main or publish the application.
