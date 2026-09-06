@@ -1,7 +1,7 @@
 name: Validate frontend
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, codex/stage8b-es-orchestrator]
   workflow_dispatch:
 jobs:
   validate:
@@ -20,6 +20,8 @@ jobs:
           node --check sw.js
           node --check v2/app.js
           node --check v2/attendance.js
+          node --check backend/v2/communication/es-alert-orchestrator.cjs
+          node --check scripts/test-v2-communication-es-alert-orchestrator.cjs
       - name: Validate V2 contract and backend isolation
         run: |
           node scripts/validate-v2-contract.js
@@ -29,6 +31,7 @@ jobs:
           node scripts/test-v2-attendance.cjs
           node scripts/test-v2-attendance-ui.cjs
           node scripts/test-v2-processes.cjs
+          node scripts/test-v2-communication-es-alert-orchestrator.cjs
       - name: Check required UI and integrations
         run: |
           grep -q 'MAGAZYN' app.js
