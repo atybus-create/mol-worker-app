@@ -1,0 +1,29 @@
+name: Stage 8B orchestrator
+on:
+  push:
+    branches: [codex/stage8b-es-orchestrator]
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Syntax
+        run: |
+          node --check backend/v2/communication/es-alert-orchestrator.cjs
+          node --check backend/v2/communication/es-alert-bundle.cjs
+          node --check backend/v2/communication/build-es-alert-rule-router.mjs
+          node --check backend/v2/communication/build-es-alert-orchestrator-workflow.mjs
+      - name: Domain tests
+        run: |
+          node scripts/test-v2-communication-es-alert-orchestrator.cjs
+          node scripts/test-v2-communication-es-alert-bundle.cjs
+          node scripts/test-v2-communication-es-alert-persistence.cjs
+      - name: Existing Stage 8 regression
+        run: |
+          node scripts/test-v2-communication-alert-source.cjs
+          node scripts/test-v2-communication-es-alert-persistence-runtime.cjs
+          node scripts/test-v2-communication-es-alert-persistence-workflow.cjs
