@@ -1,0 +1,10 @@
+'use strict';
+const assert=require('node:assert/strict');
+(async()=>{const G=await import('../backend/v2/communication/build-alert-source-gate.mjs');const w=G.build();const byName=new Map(w.nodes.map(n=>[n.name,n]));
+assert.equal(byName.get('Loop Sources')?.type,'n8n-nodes-base.splitInBatches');
+assert.equal(byName.get('Loop Sources')?.parameters?.batchSize,1);
+assert.equal(byName.get('Coordinate Source')?.parameters?.workflowId?.value,'XJJLQwqjG5nhdfRT');
+const loop=w.connections['Loop Sources']?.main;assert.equal(loop.length,2);assert.deepEqual(loop[0].map(x=>x.node),['Return']);assert.deepEqual(loop[1].map(x=>x.node),['Coordinate Source']);
+assert.deepEqual(w.connections['Coordinate Source'].main[0].map(x=>x.node),['Loop Sources']);
+assert.equal(w.nodes.filter(n=>n.type==='n8n-nodes-base.scheduleTrigger').length,1);
+console.log('PASS stage8b source gate loop wiring');})().catch(e=>{console.error(e);process.exit(1);});
