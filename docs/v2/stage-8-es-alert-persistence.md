@@ -78,7 +78,7 @@ This validator discrepancy is recorded as an open tooling/static-analysis limita
 
 The first full acceptance run completed all Stage 8 regression jobs and deterministic sync successfully. GitHub Actions synchronized the reviewed manifest as commit `4d39c22b3c7762ceef064bc54186f1833ba6c8a1`; that bot commit changed only `backend/v2/manifest.json` and registered the live workflow as ready but inactive.
 
-A second Stage 8 run is required after this evidence commit so the already-synchronized artifacts are tested as committed before fast-forwarding `main`.
+The second Stage 8 run on the already-synchronized artifacts completed all regression jobs and deterministic sync successfully before publication to `main`.
 
 ## Next integration boundary
 
