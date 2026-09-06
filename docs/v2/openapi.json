@@ -3,7 +3,7 @@
   "info": {
     "title": "MOL App V2 API",
     "version": "2.0.0",
-    "description": "Kontrakt zaakceptowany w etapie 2. Wszystkie zapisy są idempotentne po request_id."
+    "description": "MOL App V2 API. Wszystkie zapisy są idempotentne po request_id. Etap 8 dodaje trwałą komunikację, SHOWN/ACK i przyrostową historię; automatyczne alerty pozostają sterowane konfiguracją."
   },
   "servers": [
     {
@@ -138,10 +138,10 @@
               }
             }
           },
-          "401": {
+          "400": {
             "$ref": "#/components/responses/Error"
           },
-          "400": {
+          "401": {
             "$ref": "#/components/responses/Error"
           },
           "403": {
@@ -262,6 +262,16 @@
           },
           {
             "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "name": "since_revision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "description": "Przyrostowe zmiany komunikacji po tej rewizji. Nie łączyć z cursor rozpoczynającym historię."
           }
         ],
         "responses": {
@@ -271,7 +281,8 @@
           "401": {
             "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "description": "Stronicowana historia własnych wiadomości. Bez cursor zwraca historię; since_revision zwraca zmiany po rewizji. Backend nigdy nie ujawnia wiadomości innego odbiorcy."
       }
     },
     "/mol-app-v2-message-ack": {
@@ -294,10 +305,26 @@
           "200": {
             "$ref": "#/components/responses/CommandOk"
           },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
           "404": {
             "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "description": "Trwale potwierdza własną wiadomość. ACK nie zamyka i nie otwiera epizodu alertu."
       }
     },
     "/mol-app-v2-norms-daily": {
@@ -330,10 +357,10 @@
           "200": {
             "$ref": "#/components/responses/NormOk"
           },
-          "401": {
+          "400": {
             "$ref": "#/components/responses/Error"
           },
-          "400": {
+          "401": {
             "$ref": "#/components/responses/Error"
           },
           "403": {
@@ -379,10 +406,10 @@
           "200": {
             "$ref": "#/components/responses/NormOk"
           },
-          "401": {
+          "400": {
             "$ref": "#/components/responses/Error"
           },
-          "400": {
+          "401": {
             "$ref": "#/components/responses/Error"
           },
           "403": {
@@ -434,10 +461,26 @@
           "201": {
             "$ref": "#/components/responses/CommandOk"
           },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
           "403": {
             "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
           }
-        }
+        },
+        "description": "Wysyła komunikat MANUAL do wybranych pracowników z otwartym dniem albo do wszystkich aktualnie OPEN. WORKER jest odrzucany przez backend. Lista odbiorców jest zamrażana w komendzie."
       }
     },
     "/mol-app-v2-employee-history": {
@@ -618,6 +661,71 @@
             "$ref": "#/components/responses/Error"
           },
           "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/mol-app-v2-message-shown": {
+      "post": {
+        "tags": [
+          "Messages"
+        ],
+        "operationId": "showMessage",
+        "description": "Trwale oznacza własną wiadomość jako wyświetloną. Idempotentne po request_id; SHOWN nie rozwiązuje przyczyny alertu.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageAckRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CommandOk"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/mol-app-v2-leader-message-recipients": {
+      "get": {
+        "tags": [
+          "Leader"
+        ],
+        "operationId": "leaderMessageRecipients",
+        "description": "Lista aktywnych pracowników z otwartym dniem pracy, do których LEADER/ADMIN może wysłać komunikat MANUAL. Zakres nie zależy od leader_id.",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ListOk"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
             "$ref": "#/components/responses/Error"
           },
           "503": {
@@ -1112,7 +1220,6 @@
         "additionalProperties": false,
         "required": [
           "request_id",
-          "recipient_ids",
           "content"
         ],
         "properties": {
@@ -1122,9 +1229,16 @@
           "recipient_ids": {
             "type": "array",
             "minItems": 1,
+            "maxItems": 100,
+            "uniqueItems": true,
             "items": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^MOL[0-9]+$"
             }
+          },
+          "all_open": {
+            "type": "boolean",
+            "default": false
           },
           "content": {
             "type": "string",
@@ -1142,7 +1256,34 @@
             ],
             "format": "date-time"
           }
-        }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "recipient_ids"
+            ],
+            "not": {
+              "required": [
+                "all_open"
+              ]
+            }
+          },
+          {
+            "required": [
+              "all_open"
+            ],
+            "properties": {
+              "all_open": {
+                "const": true
+              }
+            },
+            "not": {
+              "required": [
+                "recipient_ids"
+              ]
+            }
+          }
+        ]
       },
       "User": {
         "type": "object",
@@ -1384,7 +1525,8 @@
           "monthly_norm",
           "attendance_version",
           "employee",
-          "messages_available"
+          "messages_available",
+          "communication_revision"
         ],
         "properties": {
           "user": {
@@ -1401,7 +1543,8 @@
           },
           "unread_messages": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Dokładna liczba niewyświetlonych, niewygasłych wiadomości dla zalogowanego aktora w spójnym snapshotcie."
           },
           "process_seconds": {
             "type": "integer",
@@ -1448,11 +1591,16 @@
           },
           "messages_available": {
             "type": "boolean",
-            "description": "False in stage 7; stage 8 communication is not implemented."
+            "description": "Czy istnieje co najmniej jedna wiadomość w historii aktora."
           },
           "presence_seconds": {
             "type": "integer",
             "minimum": 0
+          },
+          "communication_revision": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Najnowsza rewizja zmian komunikacji aktora; bierze udział w monotonicznym snapshot_version."
           }
         }
       },
