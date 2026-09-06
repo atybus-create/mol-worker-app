@@ -2,6 +2,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const w=JSON.parse(fs.readFileSync('backend/v2/workflows/comm-es-alert-persistence.json','utf8'));
+const manifest=JSON.parse(fs.readFileSync('backend/v2/manifest.json','utf8'));
 let count=0;const test=(name,fn)=>{fn();count++;console.log('PASS '+name);};
 const node=name=>w.nodes.find(n=>n.name===name);
 test('workflow has reviewed internal name and six nodes',()=>{assert.equal(w.name,'MOL // APP V2 // COMM ES ALERT PERSISTENCE');assert.equal(w.nodes.length,6);});
@@ -15,4 +16,6 @@ test('only mutation path delegates to reviewed batch service',()=>{const x=node(
 test('false branch returns explicit no change',()=>assert.ok(node('No Change').parameters.jsCode.includes('executed:false')));
 test('successful executions are not retained',()=>assert.equal(w.settings.saveDataSuccessExecution,'none'));
 test('shared error handler remains configured',()=>assert.equal(w.settings.errorWorkflow,'rnELTCKClbzY8lxZ'));
+test('manifest registers the reviewed live workflow but keeps it inactive',()=>{assert.equal(manifest.workflows.comm_es_alert_persistence,'DWnFXZVIptjMSoax');assert.equal(manifest.active_versions.comm_es_alert_persistence,null);assert.equal(manifest.communication.es_alert_persistence_ready,true);assert.equal(manifest.communication.es_alert_persistence_active,false);});
+test('manifest records the controlled no-write runtime evidence',()=>assert.equal(manifest.communication.es_alert_persistence_runtime_test_execution,'642355'));
 console.log('TOTAL '+count);
