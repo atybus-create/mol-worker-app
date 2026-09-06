@@ -4,6 +4,12 @@ const indexUrl=new URL('../../../v2/index.html',import.meta.url);
 const manifest=JSON.parse(readFileSync(manifestUrl,'utf8'));
 if(manifest.workflows?.health!=='sfoWeuiJBN2qvCRF')throw Error('STAGE8_HEALTH_ID_CHANGED');
 manifest.active_versions.health='5d289c40-b4cf-4695-9fe5-944bb2cec5c2';
+// Snapshot of the currently published Stage 5/8 attendance path. Keep this here so
+// deterministic Stage 8 regeneration cannot restore pre-fix active-version metadata.
+if(manifest.workflows?.attendance_service!=='qPVmcfp6pUg3GbzH'||manifest.workflows?.attendance_moniti!=='3e67SsUOByUi17YV')throw Error('STAGE8_ATTENDANCE_IDS_CHANGED');
+manifest.active_versions.attendance_service='1275f1a8-a361-4184-8420-9804fd5568cb';
+manifest.active_versions.attendance_moniti='7c2bb56d-9f5c-4fe7-b74e-9f480e814840';
+manifest.attendance={...(manifest.attendance||{}),moniti_test_date:'2026-09-06',moniti_test_worker_ids:[99191,99186,99185]};
 manifest.release={...(manifest.release||{}),version:'0.8.0',stage:8,environment:'test',health_workflow_id:'sfoWeuiJBN2qvCRF',health_active_version:'5d289c40-b4cf-4695-9fe5-944bb2cec5c2',health_verified_at:'2026-09-06',frontend_status:'READY_FOR_MAIN'};
 if(manifest.communication){manifest.communication.ui_implemented=true;manifest.communication.ui_published=false;}
 writeFileSync(manifestUrl,JSON.stringify(manifest,null,2)+'\n');
@@ -11,7 +17,8 @@ let html=readFileSync(indexUrl,'utf8');
 for(const [from,to] of [
  ['<strong>V2 0.8.0 RC</strong>','<strong>V2 0.8.0</strong>'],
  ['<small>gałąź etapu 8</small>','<small>wydanie testowe etapu 8</small>'],
- ['<footer>V2 0.8.0 RC · Etap 8','<footer>V2 0.8.0 · Etap 8']
+ ['<footer>V2 0.8.0 RC · Etap 8','<footer>V2 0.8.0 · Etap 8'],
+ ['Zakres realnych testów Moniti nie został rozszerzony poza 5 września 2026.','Realne testy Moniti są ograniczone do wcześniej uzgodnionych kont i aktualnie zatwierdzonego okna testowego.']
 ]){
  if(!html.includes(from)&&!html.includes(to))throw Error('STAGE8_FRONTEND_RELEASE_ANCHOR_CHANGED: '+from);
  html=html.replace(from,to);
