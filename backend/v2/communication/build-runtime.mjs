@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 const root=new URL('./',import.meta.url);
 const lock=JSON.parse(readFileSync(new URL('../auth/package-lock.json',import.meta.url),'utf8'));
 if(lock.packages['node_modules/esbuild'].version!=='0.25.9')throw Error('Unexpected esbuild version');
-const result=await build({entryPoints:[new URL('./persistence-domain.cjs',root).pathname],bundle:true,write:false,platform:'node',format:'iife',globalName:'MOLCommRules',target:'es2022',minify:true,legalComments:'none'});
+const result=await build({entryPoints:[new URL('./persistence-domain.cjs',root).pathname],bundle:true,write:false,platform:'node',format:'iife',globalName:'MOLCommRules',target:'es2022',minify:true,lineLimit:120,legalComments:'none'});
 const code=result.outputFiles[0].text+'\nreturn [{json:MOLCommRules.dispatch($input.first().json)}];\n';
 new Function('$input','Date','Buffer',code);
 writeFileSync(new URL('./runtime.bundle.js',root),code);
