@@ -14,8 +14,12 @@ manifest.attendance={...(manifest.attendance||{}),moniti_test_date:'2026-09-06',
 if(manifest.workflows?.es_report_read!=='LQnqf4nQmNKsRsMT'||manifest.workflows?.metrics_task_ack!=='r0pQp59VKwIt4i0h')throw Error('STAGE8_METRICS_IDS_CHANGED');
 manifest.active_versions.es_report_read='c90f9be9-c265-4ec0-90dc-13327124f607';
 manifest.active_versions.metrics_task_ack='e688b2fd-af46-4a89-92c2-6e7aef5d22d0';
+// Stage 8 auto-alert source remains fail-closed. The workflow is active but cannot
+// read the outbox unless consumer + ES verification + at least one ES rule are enabled.
+manifest.workflows.comm_alert_source_gate='0bpqCpUMsIRQW8OY';
+manifest.active_versions.comm_alert_source_gate='a05ef75f-ac98-455f-b880-0174cdcdc2fe';
 manifest.release={...(manifest.release||{}),version:'0.8.0',stage:8,environment:'test',health_workflow_id:'sfoWeuiJBN2qvCRF',health_active_version:'5d289c40-b4cf-4695-9fe5-944bb2cec5c2',health_verified_at:'2026-09-06',frontend_status:'READY_FOR_MAIN'};
-if(manifest.communication){manifest.communication.ui_implemented=true;manifest.communication.ui_published=false;}
+if(manifest.communication){manifest.communication.ui_implemented=true;manifest.communication.ui_published=false;manifest.communication.auto_alert_source_gate=true;manifest.communication.auto_alert_consumer_enabled=false;manifest.communication.alert_cutover_outbox_id=7689;}
 writeFileSync(manifestUrl,JSON.stringify(manifest,null,2)+'\n');
 let html=readFileSync(indexUrl,'utf8');
 for(const [from,to] of [
