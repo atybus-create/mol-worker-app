@@ -23,6 +23,7 @@ jobs:
           node scripts/validate-v2-contract.js
           node scripts/validate-v2-backend.js
           node backend/v2/communication/build-api-candidate.mjs
+          node backend/v2/communication/finalize-api-candidate.mjs
           for f in scripts/test-v2-*.cjs; do node "$f"; done
           git diff --exit-code -- backend/v2/workflows
           git diff --check
