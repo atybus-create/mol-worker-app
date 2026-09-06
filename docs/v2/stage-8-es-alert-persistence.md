@@ -74,6 +74,12 @@ This validator discrepancy is recorded as an open tooling/static-analysis limita
 - Stage 7 ES verification remains a separate open dependency
 - no legacy `ALERT_DERIVED` record was processed or modified by this checkpoint
 
+## Deterministic release sync
+
+The first full acceptance run completed all Stage 8 regression jobs and deterministic sync successfully. GitHub Actions synchronized the reviewed manifest as commit `4d39c22b3c7762ceef064bc54186f1833ba6c8a1`; that bot commit changed only `backend/v2/manifest.json` and registered the live workflow as ready but inactive.
+
+A second Stage 8 run is required after this evidence commit so the already-synchronized artifacts are tested as committed before fast-forwarding `main`.
+
 ## Next integration boundary
 
 The next implementation step is an orchestrator that converts a verified ES/source observation into a rule decision plus explicit delivery intents, then calls this persistence service. That integration must remain fail-closed until Stage 7 ES input is verified and the unresolved rule parameters/recipient policy are explicitly confirmed.
