@@ -55,6 +55,7 @@ jobs:
 
   sync:
     needs: regression
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -63,20 +64,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Register and generate reviewed foundation exports
+      - name: Register and generate reviewed foundation and metrics exports
         run: |
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
+          node backend/v2/metrics/build-all.mjs
+          find backend/v2/workflows -maxdepth 1 -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/workflows.sha256
           cp backend/v2/schema.json /tmp/schema.json
           cp backend/v2/manifest.json /tmp/manifest.json
-          cp backend/v2/workflows/comm-record-writer.json /tmp/comm-record-writer.json
-          cp backend/v2/workflows/comm-batch-service.json /tmp/comm-batch-service.json
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
+          node backend/v2/metrics/build-all.mjs
           cmp /tmp/schema.json backend/v2/schema.json
           cmp /tmp/manifest.json backend/v2/manifest.json
-          cmp /tmp/comm-record-writer.json backend/v2/workflows/comm-record-writer.json
-          cmp /tmp/comm-batch-service.json backend/v2/workflows/comm-batch-service.json
+          sha256sum -c /tmp/workflows.sha256
           git diff --check
       - name: Verify exports on main without mutation
         if: github.ref == 'refs/heads/main'
@@ -87,7 +88,7 @@ jobs:
           if git diff --quiet -- backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows/comm-record-writer.json backend/v2/workflows/comm-batch-service.json
-          git commit -m 'build(v2): synchronize tested communication foundation exports'
+          git add backend/v2/manifest.json backend/v2/schema.json backend/v2/workflows
+          git commit -m 'build(v2): synchronize tested stage 8 generated exports'
           git push origin HEAD:codex/stage8-alerts-messages
 # No n8n calls, employee data, credentials, or live message delivery in this job.
