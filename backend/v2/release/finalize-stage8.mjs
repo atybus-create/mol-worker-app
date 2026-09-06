@@ -20,11 +20,12 @@ manifest.workflows.comm_alert_source_gate='0bpqCpUMsIRQW8OY';
 manifest.active_versions.comm_alert_source_gate='a05ef75f-ac98-455f-b880-0174cdcdc2fe';
 // Stage 8B generic ES alert persistence is deployed as an internal-only service but
 // intentionally left unpublished until an orchestrator is connected. Runtime was
-// exercised through a one-shot no-write probe; no COMM_COMMANDS/COMM_RECORDS rows were created.
+// exercised through a one-shot no-write probe; COMM_COMMANDS and COMM_RECORDS were
+// explicitly checked for the probe request_id and both returned zero rows.
 manifest.workflows.comm_es_alert_persistence='DWnFXZVIptjMSoax';
 manifest.active_versions.comm_es_alert_persistence=null;
 manifest.release={...(manifest.release||{}),version:'0.8.0',stage:8,environment:'test',health_workflow_id:'sfoWeuiJBN2qvCRF',health_active_version:'5d289c40-b4cf-4695-9fe5-944bb2cec5c2',health_verified_at:'2026-09-06',frontend_status:'READY_FOR_MAIN'};
-if(manifest.communication){manifest.communication.ui_implemented=true;manifest.communication.ui_published=false;manifest.communication.auto_alert_source_gate=true;manifest.communication.auto_alert_consumer_enabled=false;manifest.communication.alert_cutover_outbox_id=7689;manifest.communication.es_alert_persistence_ready=true;manifest.communication.es_alert_persistence_active=false;manifest.communication.es_alert_persistence_runtime_test_execution='642355';}
+if(manifest.communication){manifest.communication.ui_implemented=true;manifest.communication.ui_published=false;manifest.communication.auto_alert_source_gate=true;manifest.communication.auto_alert_consumer_enabled=false;manifest.communication.alert_cutover_outbox_id=7689;manifest.communication.es_alert_persistence_ready=true;manifest.communication.es_alert_persistence_active=false;manifest.communication.es_alert_persistence_runtime_test_execution='644321';manifest.communication.es_alert_persistence_runtime_subexecution='644322';}
 writeFileSync(manifestUrl,JSON.stringify(manifest,null,2)+'\n');
 let html=readFileSync(indexUrl,'utf8');
 for(const [from,to] of [
