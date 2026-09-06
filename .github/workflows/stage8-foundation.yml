@@ -42,6 +42,7 @@ jobs:
           - test-v2-communication-alert-source.cjs
           - test-v2-communication-alert-source-workflow.cjs
           - test-v2-communication-es-alert-persistence.cjs
+          - test-v2-communication-es-alert-persistence-workflow.cjs
           - test-v2-communication-workflows.cjs
           - test-v2-communication-worker-view.cjs
           - test-v2-communication-ui.cjs
@@ -57,6 +58,7 @@ jobs:
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
           node backend/v2/communication/build-alert-source-gate.mjs
+          node backend/v2/communication/build-es-alert-persistence-workflow.mjs
           node backend/v2/communication/register-openapi.mjs
           node backend/v2/release/finalize-stage8.mjs
       - name: Run ${{ matrix.test }}
@@ -78,6 +80,7 @@ jobs:
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
           node backend/v2/communication/build-alert-source-gate.mjs
+          node backend/v2/communication/build-es-alert-persistence-workflow.mjs
           node backend/v2/metrics/build-all.mjs
           node backend/v2/communication/register-openapi.mjs
           node backend/v2/release/finalize-stage8.mjs
@@ -89,6 +92,7 @@ jobs:
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
           node backend/v2/communication/build-alert-source-gate.mjs
+          node backend/v2/communication/build-es-alert-persistence-workflow.mjs
           node backend/v2/metrics/build-all.mjs
           node backend/v2/communication/register-openapi.mjs
           node backend/v2/release/finalize-stage8.mjs
