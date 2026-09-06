@@ -1,7 +1,7 @@
 // n8n Code node; only the explicitly authorized test day and three workers.
 const req=$('Adapter Input').first().json;
 const cookie=$input.first().json.cookieHeader;
-const allowedWorkers=[99191,99186,99185], testDate='2026-09-05';
+const allowedWorkers=[99191,99186,99185], testDate='2026-09-06';
 const today=DateTime.now().setZone('Europe/Warsaw').toISODate();
 const workerId=Number(req.worker_id),date=req.work_date;
 const failure=(code,uncertain=false)=>[{json:{ok:false,code,uncertain,worker_id:workerId,work_date:date}}];
@@ -36,7 +36,7 @@ try{
     entries=Array.isArray(current.workerDayEntries)?current.workerDayEntries:[];
     if(entries.length)return failure('MONITI_EXTERNAL_CONFLICT',true);
   }
-  const entry=entries[0]||{department:null,approved:true,workerDayEntryActivities:[],workerDay:`/api/worker_days/${current.id}`,odometer:0,startAction:null,finishAction:null,jobPosition:null,isRemote:false,warnings:[],note:'MOL V2 — test 2026-09-05'};
+  const entry=entries[0]||{department:null,approved:true,workerDayEntryActivities:[],workerDay:`/api/worker_days/${current.id}`,odometer:0,startAction:null,finishAction:null,jobPosition:null,isRemote:false,warnings:[],note:'MOL V2 — test 2026-09-06'};
   const updated={...entry,start:after.start_at,finish:after.stop_at||null,finished:after.state==='CLOSED',totalTime:after.stop_at?Math.round((Date.parse(after.stop_at)-Date.parse(after.start_at))/60000):0};
   wrote=true;
   await call({method:'PUT',url:base+'/'+current.id,body:{...current,workerDayEntries:[updated],finished:after.state==='CLOSED',dayEndDate:after.stop_at||after.start_at}});
