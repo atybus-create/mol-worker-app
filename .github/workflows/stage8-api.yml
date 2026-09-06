@@ -26,9 +26,11 @@ jobs:
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
           node backend/v2/communication/build-api-candidate.mjs
+          node backend/v2/communication/finalize-api-candidate.mjs
       - name: Test generated API graphs and stage 8 UI
         run: |
           node scripts/test-v2-communication-adapters.cjs
+          node scripts/test-v2-communication-pagination.cjs
           node scripts/test-v2-communication-worker-view.cjs
           node scripts/test-v2-communication-ui.cjs
           node --check backend/v2/communication/api-domain.cjs
@@ -42,5 +44,6 @@ jobs:
         run: |
           sha256sum backend/v2/communication/candidate-workflows/*.json > /tmp/comm-before.sha256
           node backend/v2/communication/build-api-candidate.mjs
+          node backend/v2/communication/finalize-api-candidate.mjs
           sha256sum -c /tmp/comm-before.sha256
 # This job does not deploy n8n, create sessions, send messages, or publish Pages.
