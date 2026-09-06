@@ -1,13 +1,13 @@
 (() => {
   'use strict';
-  // Stage 8 WWW communication client. Polling stays off until configured by the server.
+  // Stage 8 WWW communication client. Extra communication polling stays off until configured by the server.
   const base='https://n8n.estyl.team/webhook/mol-app-v2-';
   const el=id=>document.getElementById(id);
   const routes={SEND:'leader-message',SHOWN:'message-shown',ACK:'message-ack'};
   const labels={MANUAL:'Wiadomość lidera',NO_PROCESS:'Brak procesu',NO_ACTIVITY:'Brak aktywności',WRONG_PROCESS:'Niewłaściwy proces',WORK_OUTSIDE_APP:'Praca bez START',ATTENDANCE_CORRECTION:'Korekta czasu',FORGOTTEN_STOP:'Przypomnienie STOP'};
   let token='',employee='',role='',generation=0,sequence=0,readBusy=false,writeBusy=false;
   let pending=null,items=new Map(),selected=null,historyCursor=null,changesCursor=null,syncRevision=null;
-  let manualEnabled=false,pollSeconds=null,timer=null,lastRevision=0;
+  let manualEnabled=false,pollSeconds=null,timer=null,lastRevision=0,statusRevision=0,statusUnread=null;
   const requests=new Set();
   const key=()=>`mol.v2.messages.pending.${employee}`;
   const manager=()=>['LEADER','ADMIN'].includes(role);
@@ -31,7 +31,7 @@
     el('commSender').hidden=!manager();
     el('commOpenAck').disabled=blocked;
     el('commOpenAck').hidden=!selected||!items.get(selected)?.ack_required||!!items.get(selected)?.ack_at;
-    el('commPolling').textContent=pollSeconds?`Automatyczny odczyt zmian co ${pollSeconds} s, gdy karta jest widoczna.`:'Automatyczny odczyt nie został skonfigurowany. Użyj przycisku odświeżania.';
+    el('commPolling').textContent=pollSeconds?`Dodatkowy odczyt komunikacji co ${pollSeconds} s, gdy karta jest widoczna.`:'Nowe wiadomości są wykrywane przez spójny status aplikacji. Dodatkowy polling komunikacji jest wyłączony.';
     el('commSendState').textContent=manualEnabled?'Wysyłka do osób z otwartym dniem pracy.':'Wysyłka jest wyłączona w konfiguracji backendu.';
   }
   function applySettings(data){
@@ -69,8 +69,8 @@
       open.addEventListener('click',()=>openMessage(d.message_id));
       li.append(head,meta,open);list.append(li);
     }
-    const unread=sorted.filter(d=>!d.shown_at&&!d.expired).length;
-    el('commCount').textContent=`Wczytano: ${sorted.length}. Nowe w pobranej historii: ${unread}.`;
+    const loadedUnread=sorted.filter(d=>!d.shown_at&&!d.expired).length;
+    el('commCount').textContent=`Nowe: ${Number.isInteger(statusUnread)?statusUnread:loadedUnread}. Wczytano: ${sorted.length}.`;
     el('commEmpty').hidden=sorted.length>0;
     if(selected&&items.has(selected))renderDetail(items.get(selected));
     controls();
@@ -134,8 +134,10 @@
       if(op==='SEND'){el('commContent').value='';say(`Zapisano wiadomość dla ${result.recipient_count} osób.`);}
       else{
         const old=items.get(body.message_id);
+        const wasUnread=old&&!old.shown_at&&!old.expired;
         if(old)merge([{...old,shown_at:result.shown_at,ack_at:result.ack_at,
           delivery_status:result.ack_at?'ACKNOWLEDGED':result.shown_at?'DISPLAYED':'PENDING',revision:Math.max(old.revision,result.revision||0)}]);
+        if(wasUnread&&Number.isInteger(statusUnread)&&statusUnread>0)statusUnread--;
         render();say(op==='ACK'?'Potwierdzenie zapisane.':'Wyświetlenie zapisane.');
       }
     }catch(e){
@@ -151,10 +153,22 @@
     const d=items.get(id);if(!d)return;selected=id;renderDetail(d);controls();
     if(!d.shown_at&&!document.hidden&&!pending&&!writeBusy)submit('SHOWN',{request_id:crypto.randomUUID(),message_id:id});
   }
+  function applyWorkerStatus(data){
+    if(!token||data?.user?.employee_id!==employee)return;
+    const revision=Number.isSafeInteger(data.communication_revision)?data.communication_revision:0;
+    if(revision<statusRevision)return;
+    const changed=revision>statusRevision;
+    statusRevision=revision;
+    if(Number.isSafeInteger(data.unread_messages)&&data.unread_messages>=0)statusUnread=data.unread_messages;
+    render();
+    // Existing coherent worker-status already refreshes every 30 s in attendance.js.
+    // Only fetch incremental message payloads when that lightweight status says communication changed.
+    if(changed&&revision>lastRevision&&!readBusy&&!writeBusy&&!pending&&!document.hidden)refresh();
+  }
   function hide(){
     generation++;sequence++;clearTimeout(timer);for(const c of requests)c.abort();requests.clear();
     token='';employee='';role='';readBusy=false;writeBusy=false;pending=null;items=new Map();selected=null;
-    historyCursor=null;changesCursor=null;syncRevision=null;manualEnabled=false;pollSeconds=null;lastRevision=0;
+    historyCursor=null;changesCursor=null;syncRevision=null;manualEnabled=false;pollSeconds=null;lastRevision=0;statusRevision=0;statusUnread=null;
     el('commPanel').hidden=true;el('commDetail').hidden=true;el('commList').replaceChildren();el('commRecipient').replaceChildren();
     for(const id of ['commStatus','commCount','commDetailText','commDetailMeta','commCause'])el(id).textContent='';
     el('commContent').value='';el('commAllOpen').checked=false;el('commAckRequired').checked=false;
@@ -182,5 +196,5 @@
   });
   document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);timer=null;}else if(token)refresh();});
   window.addEventListener('online',()=>{if(token)refresh();});
-  window.molMessages={hide,activate};
+  window.molMessages={hide,activate,applyWorkerStatus};
 })();
