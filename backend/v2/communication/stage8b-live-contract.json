@@ -1,0 +1,45 @@
+{
+  "captured_at": "2026-09-06T18:40:00Z",
+  "status": "WIRED_FAIL_CLOSED_READY_FOR_REAL_DATA_TEST",
+  "components": {
+    "source_gate": {"workflow_id":"0bpqCpUMsIRQW8OY","active_version":"935f8165-d20e-4b1a-b17a-69e44dd8c361","active":true,"node_count":8,"autonomous_trigger":"schedule_1_min"},
+    "context": {"workflow_id":"qs36Tri1hIQhU5FH","active_version":"998cab14-5eb1-4a1d-9706-0c3baa2e75e4","active":true,"node_count":10,"autonomous_trigger":null},
+    "rule_router": {"workflow_id":"fSwg0ADFK3aQhoqY","active_version":"28326530-c6a3-4028-9007-90fe64104225","active":true,"node_count":12,"autonomous_trigger":null},
+    "orchestrator": {"workflow_id":"7ugYR0OFPvtX2ySr","active_version":"0afc126b-9090-4ad0-8bb6-f125b31bc99c","active":true,"node_count":9,"autonomous_trigger":null},
+    "source_claim": {"workflow_id":"WgG4GvDQAPydveXr","active_version":"4882af08-e567-4414-947d-41ec3ca4d935","active":true,"node_count":11,"autonomous_trigger":null},
+    "source_ack": {"workflow_id":"7G4qKHql2OQjHROe","active_version":"c384de0b-1f79-40f9-b328-c2f94227c061","active":true,"node_count":10,"autonomous_trigger":null},
+    "record_reader": {"workflow_id":"sofdr5km1LvSPrWB","active_version":"b7da1214-9b8b-42bf-82e1-63ccec90299d","active":true,"node_count":4,"autonomous_trigger":null,"lookup":"exact_record_key_only"},
+    "bundle_persistence": {"workflow_id":"pcU9LO1WZfG3Fj0Y","active_version":"845432d1-30fc-4f24-ab26-cf0ea755e687","active":true,"node_count":7,"autonomous_trigger":null,"mutation_delegate":"J3qIFff05cYGDW7C"},
+    "coordinator": {"workflow_id":"XJJLQwqjG5nhdfRT","active_version":"b831e7ed-e799-413f-98ad-80a8653145e9","active":true,"node_count":38,"autonomous_trigger":null}
+  },
+  "edges": [
+    ["source_gate","coordinator"],
+    ["coordinator","source_claim"],
+    ["coordinator","orchestrator"],
+    ["orchestrator","context"],
+    ["orchestrator","rule_router"],
+    ["coordinator","record_reader"],
+    ["coordinator","bundle_persistence"],
+    ["coordinator","source_ack"]
+  ],
+  "safety": {
+    "auto_alert_consumer_enabled": false,
+    "es_verified": false,
+    "automatic_rules_enabled": false,
+    "history_policy": "HOLD",
+    "alert_cutover_outbox_id": 7689,
+    "recipient_policy_approved": false,
+    "real_positive_es_test_complete": false,
+    "source_gate_batch_size": 1,
+    "max_candidates_per_tick": 10,
+    "writer_lock_readback": true,
+    "stable_request_from_sha256": true,
+    "single_atomic_comm_revision_per_source": true
+  },
+  "runtime_notes": {
+    "datatable_contains_filter": "UNSUPPORTED_AT_RUNTIME_USE_EQ_ONLY",
+    "legacy_source_at_or_below_cutover": "DO_NOT_CONSUME",
+    "expired_nonempty_source_lease": "REQUIRES_OPERATOR",
+    "delivery_policy_missing": "FAIL_CLOSED_COMM_ES_DELIVERY_POLICY_REQUIRED"
+  }
+}
