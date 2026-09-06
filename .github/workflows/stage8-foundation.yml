@@ -42,6 +42,7 @@ jobs:
           - test-v2-communication-alert-source.cjs
           - test-v2-communication-alert-source-workflow.cjs
           - test-v2-communication-es-alert-context.cjs
+          - test-v2-communication-es-alert-context-workflow.cjs
           - test-v2-communication-es-alert-persistence.cjs
           - test-v2-communication-es-alert-persistence-runtime.cjs
           - test-v2-communication-es-alert-persistence-workflow.cjs
@@ -60,6 +61,7 @@ jobs:
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
           node backend/v2/communication/build-alert-source-gate.mjs
+          node backend/v2/communication/build-es-alert-context-workflow.mjs
           node backend/v2/communication/build-es-alert-persistence-workflow.mjs
           node backend/v2/communication/register-openapi.mjs
           node backend/v2/release/finalize-stage8.mjs
@@ -82,6 +84,7 @@ jobs:
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
           node backend/v2/communication/build-alert-source-gate.mjs
+          node backend/v2/communication/build-es-alert-context-workflow.mjs
           node backend/v2/communication/build-es-alert-persistence-workflow.mjs
           node backend/v2/metrics/build-all.mjs
           node backend/v2/communication/register-openapi.mjs
@@ -94,6 +97,7 @@ jobs:
           node backend/v2/communication/register-foundation.mjs
           node backend/v2/communication/build-foundation.mjs
           node backend/v2/communication/build-alert-source-gate.mjs
+          node backend/v2/communication/build-es-alert-context-workflow.mjs
           node backend/v2/communication/build-es-alert-persistence-workflow.mjs
           node backend/v2/metrics/build-all.mjs
           node backend/v2/communication/register-openapi.mjs
