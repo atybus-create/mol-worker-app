@@ -2050,11 +2050,6 @@
               "keyName": "kind",
               "condition": "eq",
               "keyValue": "DELIVERY"
-            },
-            {
-              "keyName": "payload_json",
-              "condition": "contains",
-              "keyValue": "\"shown_at\":null"
             }
           ]
         },
