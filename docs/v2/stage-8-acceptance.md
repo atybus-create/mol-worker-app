@@ -16,6 +16,7 @@ Wersja wydania testowego: `0.8.0`, health stage `8`.
 8. **Spójny worker-status** zawiera `unread_messages`, `messages_available` i `communication_revision`. Zmiana komunikacji bierze udział w monotonicznym `snapshot_version`; frontend nie musi pobierać pełnej historii co 30 sekund.
 9. **Frontend WWW 0.8.0**: skrzynka, historia, szczegóły, SHOWN, ACK, retry tego samego `request_id`, formularz MANUAL dla LEADER/ADMIN. Dodatkowy polling komunikacji pozostaje wyłączony przy `poll_seconds=null`; istniejący spójny worker-status sygnalizuje zmianę rewizji komunikacji.
 10. **Drive mirror**: zakładka `Komunikaty V2` w testowym raporcie, aktualizacja po `message_id`, stan przyrostowy i osobna blokada. Data Tables pozostają źródłem operacyjnym.
+11. **Bezpieczny cutover auto-alertów**: historyczny backlog `ALERT_DERIVED` jest objęty `history_policy=HOLD`; granica legacy została zapisana jako `alert_cutover_outbox_id=7689`, a `auto_alert_consumer_enabled=false`. Przyszły konsument nie może uruchomić się bez jawnego włączenia i jawnego watermarku; rekordy `id <= 7689` pozostają poza przyszłą konsumpcją.
 
 ## Aktywne workflowy Stage 8
 
@@ -48,9 +49,12 @@ Wersja wydania testowego: `0.8.0`, health stage `8`.
 - NO_ACTIVITY: 9 przypadków — PASS.
 - Worker-view communication: 7 przypadków — PASS.
 - Frontend communication contract: 15 przypadków — PASS.
-- Najnowszy pełny branch CI Stage 8: 20/20 niezależnych jobów regresji + deterministic sync — SUCCESS (`34021397121` przed finalnym release sync; finalne wydanie jest ponownie sprawdzane przez ten sam workflow przed merge).
-- Health LIVE po promocji: HTTP 200, `version=0.8.0`, `stage=8`, `READY`, `ONLINE`; active health version `5d289c40-b4cf-4695-9fe5-944bb2cec5c2`.
-- Drive mirror LIVE: fixture `SENT` utworzył jeden wiersz; późniejsze `SHOWN+ACK` z tym samym `message_id` zaktualizowały ten sam wiersz bez duplikatu. Fixture został następnie usunięty z Drive i Data Tables; stan mirrora pozostał za przetworzonym eventem.
+- Cutover starego backlogu: 9 przypadków fail-closed / watermark / legacy hold — PASS.
+- Stage 8 foundation po dodaniu cutover: 21/21 niezależnych jobów regresji + deterministic sync — SUCCESS (`34040718042`).
+- Health LIVE: HTTP 200, `version=0.8.0`, `stage=8`, `READY`, `ONLINE`.
+- Zalogowany E2E MANUAL został wykonany na rzeczywistym dniu testowym: LEADER `MOL014` → WORKER `MOL004` → SEND → LIST → SHOWN → ACK → przyrostowa historia. SHOWN podniosło rewizję 1→2, ACK 2→3, a ACK nie zmienił stanu przyczyny.
+- Drive mirror LIVE dla tego samego `message_id` zaktualizował istniejący wiersz do `ACKNOWLEDGED` bez duplikatu.
+- Po naprawie `METRICS TASK ACK` dwa kolejne cykle schedulera domknęły `ES_DERIVED` jako `DONE` i nie utworzyły nowych `ALERT_DERIVED`. Ostatni historyczny rekord pozostał `id=7689`, `PENDING`, `attempts=0`.
 
 ## Konfiguracja bezpiecznego uruchomienia
 
@@ -59,19 +63,22 @@ Wersja wydania testowego: `0.8.0`, health stage `8`.
 - `manual_enabled=true`
 - `es_verified=false`
 - `poll_seconds=null`
+- `history_policy=HOLD`
+- `auto_alert_consumer_enabled=false`
+- `alert_cutover_outbox_id=7689`
 - wszystkie reguły automatyczne `enabled=false`
 - niezatwierdzone progi/godziny/ACK pozostają `null`.
 
-Nie przyjęto arbitralnych wartości dla progów ani godziny STOP.
+Nie przyjęto arbitralnych wartości dla progów ani godziny STOP. Stary backlog nie jest kasowany ani masowo oznaczany jako wykonany.
 
 ## Otwarte testy / ograniczenia
 
-1. **Zalogowany E2E MANUAL → odbiorca → SHOWN → ACK** nie został wykonany na pracowniku `OPEN`, ponieważ 2026-09-06 nie było dozwolonego realnego dnia testowego i nie rozszerzono zgody na Moniti z 2026-09-05. Nie tworzymy sztucznego bieżącego czasu pracy tylko dla testu wiadomości.
-2. **Automatyczne reguły są wdrożone jako silniki, ale celowo nieaktywne** do czasu zatwierdzenia parametrów operacyjnych.
-3. **WRONG_PROCESS / WORK_OUTSIDE_APP / NO_ACTIVITY** dodatkowo czekają na zamknięcie otwartego testu rzeczywistego ES z etapu 7. `es_verified=false` uniemożliwia ich użycie do wysyłki.
+1. **Automatyczne reguły są wdrożone jako silniki, ale celowo nieaktywne** do czasu zatwierdzenia parametrów operacyjnych. Konsument auto-alertów pozostaje jawnie wyłączony.
+2. **WRONG_PROCESS / WORK_OUTSIDE_APP / NO_ACTIVITY** dodatkowo czekają na zamknięcie pozytywnego testu rzeczywistego ES z etapu 7. `es_verified=false` uniemożliwia ich użycie do wysyłki.
+3. Pozytywny E2E Stage 7 musi zostać wykonany w realnym dniu roboczym, gdy ten sam pracownik używa V2 i równocześnie powstają rzeczywiste PAK/PICK w ES. Nie tworzymy sztucznej historii produkcyjnej.
 4. Push, firmowy dźwięk, wibracja, heads-up, wygaszony ekran i restart telefonu pozostają zakresem późniejszego APK/pilota, nie są zaliczane przez WWW.
 5. Pełny panel lidera i raporty przekrojowe pozostają etapem 9.
 
 ## Kryterium odbioru użytkownika
 
-Etap 8 może zostać oznaczony `ODEBRANY` dopiero po publikacji `main`/Pages i jawnej decyzji użytkownika. Powyższe ograniczenia pozostają zapisane; odbiór Stage 8 nie oznacza automatycznego zamknięcia niewykonanych testów Stage 7 ani włączenia automatycznych alertów.
+Etap 8 może zostać oznaczony `ODEBRANY` dopiero po publikacji `main`/Pages i jawnej decyzji użytkownika. Odbiór Stage 8 nie oznacza automatycznego zamknięcia niewykonanego pozytywnego testu Stage 7 ani włączenia automatycznych alertów.
