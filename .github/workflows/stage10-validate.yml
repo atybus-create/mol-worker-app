@@ -18,6 +18,7 @@ jobs:
         run: |
           node --check stage10/shared/roles.js
           node --check stage10/shared/processes.js
+          node --check stage10/shared/warehouse-tools.js
           node --check stage10/shared/auth-demo.js
           node --check stage10/shared/states.js
           node --check stage10/mobile/app.js
@@ -109,6 +110,18 @@ jobs:
           grep -q '<th>START</th><th>STOP</th><th>Czas pracy</th>' stage10/web/worktime.js
           grep -q "reportType: 'attendance'" stage10/web/worktime.js
           grep -q 'employeeIds: checkedIds()' stage10/web/worktime.js
+      - name: Check MAGAZYN warehouse tools
+        run: |
+          test -f stage10/shared/warehouse-tools.js
+          grep -q 'Terminy – aplikacja magazynowa' stage10/shared/warehouse-tools.js
+          grep -q 'https://atybus-create.github.io/mol-magazyn-terminy-pwa/' stage10/shared/warehouse-tools.js
+          grep -q 'Batch reader' stage10/shared/warehouse-tools.js
+          grep -q 'https://atybus-create.github.io/mol-magazyn-terminy-pwa/batch-reader/' stage10/shared/warehouse-tools.js
+          grep -q 'data-warehouse-tools' stage10/mobile/worker-details.js
+          grep -q "selected.code !== 'MAGAZYN'" stage10/mobile/worker-details.js
+          grep -q "selected.code === 'MAGAZYN'" stage10/mobile/worker-details.js
+          grep -q 'target="_blank" rel="noopener noreferrer"' stage10/mobile/worker-details.js
+          grep -q 'Proces MAGAZYN pozostaje aktywny' stage10/mobile/worker-details.js
       - name: Check no secrets in Stage 10
         run: |
           ! grep -R -E 'Bearer [A-Za-z0-9._-]{20,}|pbkdf2-sha256\$600000\$|PHPSESSID=|CHAT_ALERT_WEBHOOK|password_hash' stage10
