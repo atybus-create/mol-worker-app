@@ -70,6 +70,7 @@
     await Promise.all([loadBrand(), loadWarehouseConfig()]);
     await loadScript('./worker-details.js');
     await loadScript('./spec-completion.js');
+    await loadScript('./report-integrity.js');
   };
 
   const renderActiveProcess = (selected) => {
