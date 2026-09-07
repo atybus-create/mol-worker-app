@@ -1,0 +1,46 @@
+name: Validate Stage 10 frontend
+on:
+  push:
+    branches: [codex/stage9-closeout-stage10-foundation]
+    paths:
+      - 'stage10/**'
+      - '.github/workflows/stage10-validate.yml'
+  workflow_dispatch:
+jobs:
+  stage10:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Check Stage 10 JavaScript
+        run: |
+          node --check stage10/shared/roles.js
+          node --check stage10/shared/auth-demo.js
+          node --check stage10/mobile/app.js
+          node --check stage10/mobile/manager.js
+          node --check stage10/web/app.js
+          node --check stage10/web/details.js
+      - name: Check approved role model
+        run: |
+          grep -q 'WORKER: Object.freeze({ mobile: true, web: false' stage10/shared/roles.js
+          grep -q 'LEADER: Object.freeze({ mobile: true, web: true, managerMobile: true' stage10/shared/roles.js
+          grep -q 'ADMIN: Object.freeze({ mobile: true, web: true, managerMobile: true' stage10/shared/roles.js
+          grep -q 'WORKER nie otrzymuje panelu WWW' stage10/README.md
+          grep -q 'Panel WWW niedostępny dla WORKER' stage10/web/app.js
+          grep -q 'managerMobileNav' stage10/mobile/index.html
+      - name: Check final UI surfaces
+        run: |
+          test -f stage10/mobile/login.html
+          test -f stage10/web/login.html
+          test -f stage10/mobile/manager.css
+          test -f stage10/web/details.css
+          grep -q 'Zaloguj' stage10/mobile/login.html
+          grep -q 'Panel internetowy jest dostępny wyłącznie dla ról LEADER i ADMIN' stage10/web/login.html
+          grep -q 'Korekty' stage10/mobile/manager.js
+          grep -q 'Eksport XLSX' stage10/web/details.js
+          grep -q 'Historia operacji' stage10/web/details.js
+      - name: Check no secrets in Stage 10
+        run: |
+          ! grep -R -E 'Bearer [A-Za-z0-9._-]{20,}|pbkdf2-sha256\$600000\$|PHPSESSID=|CHAT_ALERT_WEBHOOK|password_hash' stage10
