@@ -21,6 +21,7 @@ jobs:
           node --check v2/app.js
           node --check v2/attendance.js
           node --check v2/leader.js
+          node --check stage10/shared/roles.js
           node --check stage10/mobile/app.js
           node --check stage10/web/app.js
           node --check backend/v2/communication/es-alert-orchestrator.cjs
@@ -42,6 +43,11 @@ jobs:
           grep -q 'WORKER' stage10/mobile/index.html
           grep -q -- '--mol-cyan' stage10/shared/tokens.css
           grep -q 'data-required-roles="LEADER,ADMIN"' stage10/web/index.html
+          grep -q 'WORKER: Object.freeze({ mobile: true, web: false' stage10/shared/roles.js
+          grep -q 'LEADER: Object.freeze({ mobile: true, web: true' stage10/shared/roles.js
+          grep -q 'ADMIN: Object.freeze({ mobile: true, web: true' stage10/shared/roles.js
+          grep -q 'managerMobileNav' stage10/mobile/index.html
+          grep -q 'Panel WWW niedostępny dla WORKER' stage10/web/app.js
       - name: Check required UI and integrations
         run: |
           grep -q 'MAGAZYN' app.js
