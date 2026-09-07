@@ -92,7 +92,7 @@
     "comm_es_alert_coordinator": "XJJLQwqjG5nhdfRT"
   },
   "active_versions": {
-    "health": "5d289c40-b4cf-4695-9fe5-944bb2cec5c2",
+    "health": "5d289c40-7e09-452e-a079-9422c63011c2",
     "command": "6f348eb6-f8b3-4d07-ae61-903fcb17d5c6",
     "error_handler": "93d1354d-d7ea-4611-afa0-1fc29681ed53",
     "outbox": "a8906fe3-c6c2-4a58-88c3-acf1f2d074d4",
@@ -100,8 +100,8 @@
     "auth_login": "872fb11a-00bd-4163-a056-04b4d92940d0",
     "auth_session": "d0075043-950f-45b1-99e3-39207707ad62",
     "auth_logout": "0630e472-9b5d-4593-a171-f8ee119377d5",
-    "attendance_service": "1275f1a8-a361-4184-8420-9804fd5568cb",
-    "attendance_moniti": "7c2bb56d-9f5c-4fe7-b74e-9f480e814840",
+    "attendance_service": "aedab6e1-8d9c-4717-b4e7-3f8ffe76a521",
+    "attendance_moniti": "9037e45d-1e0d-46d4-99d2-e01bc887934a",
     "attendance_drive": "902ff676-6619-4b20-97ba-023d3ec7c5fc",
     "attendance_recovery": "10976a73-c4e2-4df0-8582-5cef75ac94a0",
     "sheet_approval": "c1458aa3-ab13-4f5f-9884-0c35b7da53c0",
@@ -162,7 +162,7 @@
     "diagnostic_active": false
   },
   "attendance": {
-    "moniti_test_date": "2026-09-06",
+    "moniti_test_date": "2026-09-07",
     "moniti_test_worker_ids": [
       99191,
       99186,
@@ -174,7 +174,15 @@
     "harness_id": "f9IXrykYauu9FVfi",
     "harness_active": false,
     "next_live_test_date": "2026-09-07",
-    "next_live_test_scope_requires_explicit_approval": true
+    "next_live_test_scope_requires_explicit_approval": true,
+    "moniti_test_all_day_worker_ids": [
+      99191,
+      99185
+    ],
+    "moniti_test_limited_worker_id": 99186,
+    "moniti_test_limited_until_local": "13:00",
+    "moniti_test_timezone": "Europe/Warsaw",
+    "moniti_test_scope_approved": true
   },
   "process_permissions": {
     "storage_table": "MOL_V2_CONFIG",
@@ -214,12 +222,21 @@
       }
     },
     "version_reference_note": "Stage 8 worker-status attendance service active version read back on 2026-09-06.",
-    "real_positive_es_test_complete": false,
+    "real_positive_es_test_complete": true,
     "live_test_ready": true,
     "live_test_date": "2026-09-07",
     "production_deltas_before_test": 0,
     "baseline_required_before_counting_delta": true,
-    "alert_handoff_requires_enabled_comm_rule": true
+    "alert_handoff_requires_enabled_comm_rule": true,
+    "real_positive_es_source_ingest_complete": true,
+    "real_positive_es_eligible_norm_complete": true,
+    "verified_real_employee_id": "MOL004",
+    "verified_sample_batch_id": "ES-681193",
+    "verified_sample_classification": "MATCH_PROCESS",
+    "public_worker_status_verified": true,
+    "drive_daily_row_verified": true,
+    "user_acceptance_recorded": false,
+    "evidence_document": "docs/v2/stage7-stage8b-live-evidence-20260907.md"
   },
   "communication": {
     "revision": "stage8-e2e-live-20260906",
@@ -337,15 +354,19 @@
     "stage8b_contract": "communication/stage8b-live-contract.json",
     "stage8b_ready_for_real_data_test": true,
     "recipient_policy_approved": false,
-    "real_positive_es_test_complete": false
+    "real_positive_es_test_complete": true,
+    "technical_es_source_verified": true,
+    "stage8b_real_context_verified": true,
+    "real_source_context_verified": true,
+    "real_source_context_outbox_id": "ES-681193:MOL004:2026-09-07:derived"
   },
   "release": {
     "version": "0.8.0",
     "stage": 8,
     "environment": "test",
     "health_workflow_id": "sfoWeuiJBN2qvCRF",
-    "health_active_version": "5d289c40-b4cf-4695-9fe5-944bb2cec5c2",
-    "health_verified_at": "2026-09-06",
+    "health_active_version": "5d289c40-7e09-452e-a079-9422c63011c2",
+    "health_verified_at": "2026-09-07",
     "frontend_status": "READY_FOR_MAIN"
   }
 }
