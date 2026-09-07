@@ -10,10 +10,10 @@
   document.head.append(managerStyles);
 
   const reportPeople = [
-    { id: 'MOL031', name: 'Aneta Nowak', attendance: '07:45', pick: 1526, pickTime: '15:11', pickNorm: 87, pack: 604, packTime: '10:52', packNorm: 89, total: 2130, totalTime: '26:03', totalNorm: 88 },
-    { id: 'MOL027', name: 'Kamil Kaczmarek', attendance: '08:12', pick: 1812, pickTime: '15:42', pickNorm: 98, pack: 698, packTime: '09:48', packNorm: 93, total: 2510, totalTime: '25:30', totalNorm: 96 },
-    { id: 'MOL011', name: 'Piotr Wiśniewski', attendance: '08:15', pick: 2054, pickTime: '16:10', pickNorm: 105, pack: 764, packTime: '10:16', packNorm: 101, total: 2818, totalTime: '26:26', totalNorm: 103 },
-    { id: 'MOL029', name: 'Tomasz Wójcik', attendance: '06:30', pick: 981, pickTime: '13:28', pickNorm: 69, pack: 412, packTime: '08:35', packNorm: 75, total: 1393, totalTime: '22:03', totalNorm: 72 }
+    { id: 'MOL031', name: 'Aneta Nowak', attendance: '07:45', pickTotal: 1637, pickEligible: 1526, pickOutside: 111, pickTime: '15:11', pickNorm: 87, packTotal: 652, packEligible: 604, packOutside: 48, packTime: '10:52', packNorm: 89, total: 2289, totalEligible: 2130, totalOutside: 159, totalTime: '26:03', totalNorm: 88 },
+    { id: 'MOL027', name: 'Kamil Kaczmarek', attendance: '08:12', pickTotal: 1884, pickEligible: 1812, pickOutside: 72, pickTime: '15:42', pickNorm: 98, packTotal: 728, packEligible: 698, packOutside: 30, packTime: '09:48', packNorm: 93, total: 2612, totalEligible: 2510, totalOutside: 102, totalTime: '25:30', totalNorm: 96 },
+    { id: 'MOL011', name: 'Piotr Wiśniewski', attendance: '08:15', pickTotal: 2110, pickEligible: 2054, pickOutside: 56, pickTime: '16:10', pickNorm: 105, packTotal: 792, packEligible: 764, packOutside: 28, packTime: '10:16', packNorm: 101, total: 2902, totalEligible: 2818, totalOutside: 84, totalTime: '26:26', totalNorm: 103 },
+    { id: 'MOL029', name: 'Tomasz Wójcik', attendance: '06:30', pickTotal: 1096, pickEligible: 981, pickOutside: 115, pickTime: '13:28', pickNorm: 69, packTotal: 466, packEligible: 412, packOutside: 54, packTime: '08:35', packNorm: 75, total: 1562, totalEligible: 1393, totalOutside: 169, totalTime: '22:03', totalNorm: 72 }
   ];
 
   const root = shell;
@@ -38,7 +38,7 @@
     <section class="mol-card mobile-report-selector">
       <div class="mobile-report-head"><div><small>Pracownicy do raportu</small><strong data-mobile-report-count>Wybrano 3</strong></div><div><button type="button" data-mobile-report-all>Wszyscy</button><button type="button" data-mobile-report-clear>Wyczyść</button></div></div>
       <div class="mobile-report-people">
-        ${reportPeople.map((person, index) => `<label><input type="checkbox" value="${person.id}" ${index < 3 ? 'checked' : ''}><span><b>${person.name}</b><small>${person.id} · PICK/PAK ${person.total} · ${person.totalTime} · ${person.totalNorm}%</small></span></label>`).join('')}
+        ${reportPeople.map((person, index) => `<label><input type="checkbox" value="${person.id}" ${index < 3 ? 'checked' : ''}><span><b>${person.name}</b><small>${person.id} · PICK/PAK łącznie ${person.total} · do normy ${person.totalEligible} · poza ${person.totalOutside}</small></span></label>`).join('')}
       </div>
       <button class="mol-button mol-button--primary" type="button" data-mobile-report-generate>Generuj raport dla zaznaczonych</button>
     </section>
@@ -97,6 +97,7 @@
     reports.querySelector('[data-mobile-report-generate]').disabled = count === 0;
   };
   const formatDate = (value) => value ? value.split('-').reverse().join('.') : '—';
+  const metricBlock = (label, total, eligible, outside, time, norm) => `<span><small>${label}</small><b>Łącznie ${total}</b><em>Do normy ${eligible}</em><i>Poza normą ${outside}</i><strong>Czas ${time} · ${norm}%</strong></span>`;
   const renderReport = () => {
     const selected = new Set(checkedIds());
     const rows = reportPeople.filter((person) => selected.has(person.id));
@@ -106,7 +107,7 @@
     const to = reports.querySelector('[data-mobile-report-to]').value;
     reports.querySelector('[data-mobile-report-range]').textContent = `Zakres ${formatDate(from)}–${formatDate(to)}`;
     reports.querySelector('[data-mobile-report-list]').innerHTML = rows.length
-      ? rows.map((person) => `<article class="mobile-norm-report"><div><b>${person.name}</b><small>${person.id}</small></div><div class="mobile-norm-grid"><span><small>PICK</small><b>${person.pick}</b><em>${person.pickTime}</em><strong>${person.pickNorm}%</strong></span><span><small>PAK</small><b>${person.pack}</b><em>${person.packTime}</em><strong>${person.packNorm}%</strong></span><span><small>PICK/PAK</small><b>${person.total}</b><em>${person.totalTime}</em><strong>${person.totalNorm}%</strong></span></div></article>`).join('')
+      ? rows.map((person) => `<article class="mobile-norm-report"><div><b>${person.name}</b><small>${person.id}</small></div><div class="mobile-norm-grid">${metricBlock('PICK', person.pickTotal, person.pickEligible, person.pickOutside, person.pickTime, person.pickNorm)}${metricBlock('PAK', person.packTotal, person.packEligible, person.packOutside, person.packTime, person.packNorm)}${metricBlock('PICK/PAK', person.total, person.totalEligible, person.totalOutside, person.totalTime, person.totalNorm)}</div></article>`).join('')
       : '<p class="mol-muted">Zaznacz co najmniej jednego pracownika.</p>';
   };
 
