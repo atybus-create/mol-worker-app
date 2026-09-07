@@ -11,8 +11,8 @@
 | 7 | ES, normy i spójny status | PASS techniczny na żywych danych 2026-09-07: realny baseline, dodatni PAK, `MATCH_PROCESS`, norma, publiczne worker-status, Google Sheet, Drive mirror, czyste lock/recovery. Dowód: stage7-stage8b-live-evidence-20260907.md | Jawnie odebrany przez użytkownika 2026-09-07 | ODEBRANY |
 | 8 | Alerty i komunikacja | PASS: MANUAL, RECIPIENTS, LIST history/changes, SHOWN, ACK, Drive mirror, worker-status, realny START/STOP Moniti i recovery; realny Context ES sprawdzony dla `NO_APP` i `MATCH_PROCESS`, bez uruchamiania automatów | Jawnie odebrany przez użytkownika 2026-09-07 | ODEBRANY |
 | 9 | Panel lidera, raporty, użytkownicy i kolejka korekt | PASS: aktywne i poprawne serwisy, publiczne bramki 401 bez sesji, wcześniejsze pełne E2E user-admin/status/corrections; protokół `stage-9-closeout-20260907.md` | Panel testowy obejrzany i zaakceptowany przez użytkownika 2026-09-07 | ODEBRANY |
-| 10 | Docelowy frontend V2: aplikacja mobilna role-based + WWW LEADER/ADMIN | PASS: Stage10 run `34120893120`, pełny frontend run `34120893114`; procesy/role/PICK-PAK/multi-select/sekrety/izolacja | Kierunek wizualny zaakceptowany; oczekuje odbioru finalnego preview | GOTOWY DO ODBIORU |
-| 11 | Integracja docelowych frontendów z zaakceptowanym backendem | — | — | NIE ROZPOCZĘTO |
+| 10 | Docelowy frontend V2: mobile role-based + WWW LEADER/ADMIN; normy dzienne/miesięczne i raport okresowy z PICK/PAK/PICK-PAK oraz ilość łącznie/do normy/poza normą | PASS: Stage10 `34124929440`, pełny frontend `34124929502`; procesy/role/multi-select/okresy/eligibility split/sekrety/izolacja | Kierunek wizualny zaakceptowany; oczekuje odbioru odświeżonego preview po ostatnim rozszerzeniu | GOTOWY DO ODBIORU |
+| 11 | Integracja docelowych frontendów z backendem, w tym rozszerzenie API o total/eligible/outside_norm dla norm | — | — | NIE ROZPOCZĘTO |
 | 12 | Pełny regres V2 / Release Candidate | — | — | NIE ROZPOCZĘTO |
 | 13 | Android APK/AAB | — | — | NIE ROZPOCZĘTO |
 | 14 | Powiadomienia Android w tle | — | — | NIE ROZPOCZĘTO |
@@ -70,7 +70,11 @@ Model dostępu docelowego:
 
 Finalny frontend odwzorowuje 10 kanonicznych procesów backendu. WORKER ma 9 procesów bez BIURO; LEADER/ADMIN wszystkie 10. Demonstracyjne SORTOWANIE zostało usunięte.
 
-Podgląd zespołu pokazuje bieżący status, proces, obecność, PICK dzisiaj, PAK dzisiaj, procent normy i alerty. Raporty pozwalają zaznaczyć dowolną grupę pracowników, zaznaczyć wszystkich, wyczyścić wybór oraz przygotować raport/CSV/XLSX dokładnie dla wybranych osób i zakresu dat.
+Norma pracownika jest pokazana osobno dla dnia i od początku bieżącego miesiąca. W obu okresach PICK, PAK i PICK/PAK mają pięć jawnych pól: `Ilość łącznie`, `Ilość do normy`, `Ilość poza normą`, `Czas`, `Procent normy`.
+
+Podgląd zespołu lidera pokazuje te same rozróżnienia dla bieżącego dnia. Szybki podgląd pracownika zawiera pełne rozliczenie dzienne i miesięczne. Raporty pozwalają wybrać jednego, wielu lub wszystkich pracowników oraz dowolny zakres dat, a wynik i eksport mają rozdzielone ilości total/eligible/outside dla PICK, PAK i PICK/PAK.
+
+Obecny backend Stage 7 zna kwalifikację `eligible` i klasyfikacje źródłowe, ale publiczny kontrakt wymaga w Etapie 11 rozszerzenia o gotowe `total` i `outside_norm`. Frontend nie ma sam zgadywać kwalifikacji.
 
 Mobile i WWW korzystają ze wspólnego design systemu i wspólnych stanów loading/offline/retry/expired/forbidden/empty.
 
