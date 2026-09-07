@@ -34,20 +34,24 @@ Każdy WORKER musi widzieć własne rozliczenie normy w dwóch okresach:
 1. **dzisiaj**,
 2. **od pierwszego dnia bieżącego miesiąca kalendarzowego do dziś**.
 
-W obu okresach obowiązuje identyczne rozbicie:
+W obu okresach obowiązuje identyczne rozbicie dla `PAK`, `PICK` i `PICK/PAK`:
 
-- `PAK` — ilość, czas, procent normy,
-- `PICK` — ilość, czas, procent normy,
-- `PICK/PAK` — łączna ilość, łączny czas, łączny procent normy.
+- **Ilość łącznie** — cała produkcja z danego procesu/okresu,
+- **Ilość do normy** — produkcja zakwalifikowana przez backend do naliczania normy,
+- **Ilość poza normą** — produkcja zachowana w wyniku, ale niekwalifikowana do normy,
+- **Czas**,
+- **Procent normy**.
+
+Frontend nie może ukrywać produkcji poza normą ani prezentować samego `eligible` jako całkowitego wykonania.
 
 Dodatkowo dla LEADER/ADMIN w aplikacji mobilnej:
 
 - mobilny podgląd zespołu,
 - szybki podgląd pracownika,
-- bieżące wykonanie dzienne PICK i PAK wraz z czasem i procentem normy,
+- bieżące wykonanie dzienne PICK, PAK i PICK/PAK z rozbiciem łącznie / do normy / poza normą,
 - raporty z wyborem jednego, wielu lub wszystkich pracowników,
 - zakres dat `od` / `do`,
-- raport PICK / PAK / PICK-PAK w układzie ilość / czas / procent,
+- raport PICK / PAK / PICK-PAK w układzie: ilość łącznie / do normy / poza normą / czas / procent,
 - kolejka korekt,
 - administracja użytkownikami w zakresie dozwolonym dla roli.
 
@@ -58,20 +62,33 @@ WORKER nie otrzymuje panelu WWW ani menedżerskich ekranów mobilnych.
 Docelowy panel desktopowy dostępny obok aplikacji mobilnej.
 
 - widok całego zespołu,
-- bieżące PICK dzisiaj i PAK dzisiaj dla każdego pracownika,
+- bieżące PICK, PAK i PICK/PAK dla każdego pracownika z trzema jawnie opisanymi ilościami: łącznie / do normy / poza normą,
 - szybki podgląd pracownika z pełnym rozliczeniem dziennym i od początku bieżącego miesiąca,
-- w każdym okresie: PICK, PAK i PICK/PAK jako ilość, czas i procent normy,
+- w każdym okresie: PICK, PAK i PICK/PAK jako ilość łączna / ilość do normy / ilość poza normą / czas / procent normy,
 - historia i raporty,
 - raportowanie jednego, wielu lub wszystkich pracowników,
 - `Zaznacz wszystkich`, `Wyczyść`, licznik zaznaczonych i raport tylko dla wybranych,
 - dowolny zakres dat `od` / `do`,
 - CSV/XLSX dokładnie dla zaznaczonych osób i zakresu dat,
-- raport okresowy zawiera osobno PICK ilość/czas/%, PAK ilość/czas/% oraz PICK/PAK ilość/czas/%,
 - kolejka korekt,
 - administracja użytkownikami zgodna z rolą,
 - historia operacji.
 
 Backend musi odrzucać WORKER niezależnie od ukrycia elementów UI.
+
+## Źródło semantyki norm
+
+Stage 7 rozróżnia produkcję kwalifikowaną do normy od produkcji poza normą. Przykładowo realne `MATCH_PROCESS` zostało zaliczone do `eligible_pak`, natomiast wcześniejsza produkcja `NO_APP` pozostała poza normą i nie była przepisywana wstecz.
+
+W Etapie 11 frontend nie może samodzielnie zgadywać kwalifikacji. Publiczny kontrakt API należy rozszerzyć tak, aby dla PICK i PAK zwracał wartości potrzebne do prezentacji:
+
+- total,
+- eligible,
+- outside_norm,
+- seconds,
+- percent,
+
+oraz analogiczny wynik łączny PICK/PAK. Agregacje dzienne, miesięczne i za dowolny okres mają pochodzić z backendu/snapshotów, nie z prowizorycznych obliczeń po stronie przeglądarki.
 
 ## Katalog procesów
 
@@ -122,13 +139,14 @@ Zbudowano:
 5. komponenty wspólne i stany,
 6. kanoniczny katalog procesów i granice `BIURO`,
 7. wieloosobowe raportowanie w UI,
-8. dzienne PICK/PAK w podglądzie zespołu,
-9. rozliczenie WORKER dzisiaj + bieżący miesiąc w układzie PICK / PAK / PICK-PAK: ilość / czas / procent,
-10. analogiczne rozliczenie w panelu lidera i raporcie okresowym,
-11. responsywne warianty mobile / tablet / desktop,
-12. dedykowane CI Stage 10.
+8. dzienne PICK/PAK/PICK-PAK w podglądzie zespołu,
+9. rozliczenie WORKER dzisiaj + bieżący miesiąc,
+10. rozdzielenie ilości na `łącznie`, `do normy`, `poza normą`,
+11. analogiczne rozliczenie w panelu lidera i raporcie okresowym,
+12. responsywne warianty mobile / tablet / desktop,
+13. dedykowane CI Stage 10.
 
-Rozszerzony zakres przeszedł dedykowane CI Stage 10 (`34124229858`) oraz pełny regres frontendu/V2 (`34124229836`) z wynikiem PASS.
+Ostatnie rozszerzenie ilości przeszło dedykowane CI Stage 10 (`34124929440`) oraz pełny regres frontendu/V2 (`34124929502`) z wynikiem PASS.
 
 Podłączenie do zaakceptowanych endpointów backendu zaczyna się dopiero w Etapie 11. Etap 10 pozostaje nieodebrany do czasu obejrzenia odświeżonego preview przez użytkownika.
 
