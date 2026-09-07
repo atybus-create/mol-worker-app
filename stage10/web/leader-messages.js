@@ -87,5 +87,23 @@
       : `Podgląd: komunikat przygotowany dla ${detail.recipientIds.length} odbiorców.`;
   });
 
+  const employeeActions = document.querySelector('.employee-actions');
+  if (employeeActions && !employeeActions.querySelector('[data-message-employee]')) {
+    const quickButton = document.createElement('button');
+    quickButton.type = 'button';
+    quickButton.className = 'mol-button';
+    quickButton.dataset.messageEmployee = 'true';
+    quickButton.textContent = 'Komunikat';
+    quickButton.addEventListener('click', () => {
+      const selectedEmployeeId = document.getElementById('employeeId')?.textContent?.trim();
+      allOpen.checked = false;
+      recipientInputs.forEach((input) => { input.checked = input.value === selectedEmployeeId; });
+      sync();
+      document.querySelector('.sidebar [data-section="leader-messages"]')?.click();
+      content.focus();
+    });
+    employeeActions.append(quickButton);
+  }
+
   sync();
 })();
