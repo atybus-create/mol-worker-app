@@ -1,175 +1,76 @@
 # MOL App V2 — Etap 10: docelowy frontend
 
-Status: GOTOWY TECHNICZNIE DO ODBIORU — po rozszerzeniu norm PICK/PAK
-Start: 2026-09-07
+Status: **GOTOWY TECHNICZNIE DO ODBIORU PO AUDYCIE — NIEODEBRANY**
 
-## Zasada
+Frontend `v2/` pozostaje środowiskiem testowym backendu. Docelowy frontend jest rozwijany wyłącznie w `stage10/`.
 
-Frontend z katalogu `v2/` pozostaje środowiskiem testowym użytym do odbioru backendu i funkcji Etapu 9.
+Pełny audyt wymagania → frontend → backend:
 
-Docelowy produkt powstaje od nowa w `stage10/` na bazie zaakceptowanego backendu i zaakceptowanych wizualizacji.
+`docs/v2/stage-10-frontend-backend-audit-20260907.md`
 
-## Dwa interfejsy
+## Role
 
-### `mobile/` — aplikacja mobilna dla wszystkich ról
+- WORKER — tylko aplikacja mobilna.
+- LEADER — aplikacja mobilna + widoki menedżerskie + WWW.
+- ADMIN — aplikacja mobilna + widoki menedżerskie/admin + WWW.
 
-Telefon jest podstawowym interfejsem pracy operacyjnej.
+Backend jest zawsze źródłem autoryzacji; ukrycie elementu UI nie jest zabezpieczeniem.
 
-WORKER korzysta wyłącznie z aplikacji mobilnej. LEADER i ADMIN również mogą korzystać z aplikacji mobilnej, ale na podstawie swojej roli otrzymują dodatkowe widoki i funkcje menedżerskie zgodne z zaakceptowanymi wizualizacjami.
+## Procesy
 
-Zakres wspólny operacyjny:
+Kanoniczny katalog:
 
-- logowanie,
-- START / STOP pracy,
-- wybór i zmiana procesu,
-- bieżąca norma i czas bez procesu,
-- komunikaty,
-- historia,
-- korekta własnego czasu,
-- profil i sesja,
-- stany offline / retry / wygasła sesja / forbidden / empty.
+1. PAKOWANIE
+2. KOMPLETACJA
+3. DYZUR
+4. ZWROTY
+5. BIURO
+6. PORZADKI_KARTONY
+7. PRZYGOTOWANIE_STANOWISKA
+8. MAGAZYN
+9. PRZERWA
+10. INNE
 
-Każdy WORKER musi widzieć własne rozliczenie normy w dwóch okresach:
+WORKER nie ma BIURO. LEADER/ADMIN mają wszystkie 10.
 
-1. **dzisiaj**,
-2. **od pierwszego dnia bieżącego miesiąca kalendarzowego do dziś**.
+**MAGAZYN:** kliknięcie kafla od razu aktywuje proces MAGAZYN. Dwa narzędzia magazynowe są wyłącznie opcjonalnym dodatkiem i nie sterują procesem.
 
-Na dashboardzie są dwa osobne przyciski/rozwijane panele: **Norma dziś** i **Norma miesięczna**. Oba są domyślnie zwinięte. Szczegółowe rozliczenie pojawia się dopiero po naciśnięciu przez pracownika; otwarcie jednego panelu zamyka drugi.
+## Norma
 
-W obu okresach obowiązuje identyczne rozbicie dla `PAK`, `PICK` i `PICK/PAK`:
+WORKER ma dwa domyślnie zwinięte widoki: `Norma dziś` i `Norma miesięczna`.
 
-- **Ilość łącznie** — cała produkcja z danego procesu/okresu,
-- **Ilość do normy** — produkcja zakwalifikowana przez backend do naliczania normy,
-- **Ilość poza normą** — produkcja zachowana w wyniku, ale niekwalifikowana do normy,
-- **Czas**,
-- **Procent normy**.
+PAK, PICK i PICK/PAK pokazują:
 
-Dla widoku łącznego `PICK/PAK` ilości są prezentowane jako **jednostki normy (j.n.)**, zgodnie z zaakceptowanym modelem domenowym:
+- ilość łącznie,
+- ilość do normy,
+- ilość poza normą,
+- czas,
+- procent normy.
 
-- `1 PAK = 1 j.n.`,
-- `3 PICK = 1 j.n.`.
+PICK/PAK używa jednostek normy: `1 PAK = 1 j.n.` oraz `3 PICK = 1 j.n.`.
 
-Wzory referencyjne:
+Agregacja okresu/grupy jest ważona z sum liczników i mianowników. Nie wolno uśredniać gotowych procentów.
 
-- `PAK% = eligible_PAK / (hours_PAK × 70) × 100`,
-- `PICK% = eligible_PICK / (hours_PICK × 210) × 100`,
-- `PICK/PAK% = (eligible_PAK + eligible_PICK / 3) / ((hours_PAK + hours_PICK) × 70) × 100`.
+## Raporty lidera
 
-Frontend nie może ukrywać produkcji poza normą ani prezentować samego `eligible` jako całkowitego wykonania. Przy braku kwalifikowanego czasu norma jest niedostępna (`—` / `null`), a nie `0%`.
+Osobne ekrany:
 
-Dodatkowo dla LEADER/ADMIN w aplikacji mobilnej:
+- Wydajność,
+- Czas pracy,
+- Komunikaty.
 
-- mobilny podgląd zespołu,
-- szybki podgląd pracownika,
-- bieżące wykonanie dzienne PICK, PAK i PICK/PAK z rozbiciem łącznie / do normy / poza normą,
-- `PICK/PAK` prezentowane w jednostkach normy,
-- raporty z wyborem jednego, wielu lub wszystkich pracowników,
-- zakres dat `od` / `do`,
-- raport PICK / PAK / PICK-PAK w układzie: ilość łącznie / do normy / poza normą / czas / procent,
-- kolejka korekt,
-- administracja użytkownikami w zakresie dozwolonym dla roli.
+Wydajność i Czas pracy pozwalają wybierać jednego, wielu lub wszystkich pracowników oraz zakres dat. Czas pracy ma osobno START, STOP, obecność, czasy procesów, czas międzyprocesowy, korekty i synchronizację.
 
-WORKER nie otrzymuje panelu WWW ani menedżerskich ekranów mobilnych.
+## Komunikacja
 
-### `web/` — dodatkowy panel dla LEADER / ADMIN
+LEADER/ADMIN mogą przygotować komunikat do jednego, wielu lub wszystkich aktualnie OPEN, z opcją wymaganego ACK. WORKER ma listę nowych/archiwalnych wiadomości, SHOWN i ACK.
 
-Docelowy panel desktopowy dostępny obok aplikacji mobilnej.
+Automatyczne reguły alertów pozostają OFF/HOLD do osobnej decyzji i etapu powiadomień.
 
-- widok całego zespołu,
-- bieżące PICK, PAK i PICK/PAK dla każdego pracownika z trzema jawnie opisanymi ilościami: łącznie / do normy / poza normą,
-- `PICK/PAK` w jednostkach normy według reguły 1 PAK = 1 j.n., 3 PICK = 1 j.n.,
-- szybki podgląd pracownika z pełnym rozliczeniem dziennym i od początku bieżącego miesiąca,
-- w każdym okresie: PICK, PAK i PICK/PAK jako ilość łączna / ilość do normy / ilość poza normą / czas / procent normy,
-- historia i raporty,
-- raportowanie jednego, wielu lub wszystkich pracowników,
-- `Zaznacz wszystkich`, `Wyczyść`, licznik zaznaczonych i raport tylko dla wybranych,
-- dowolny zakres dat `od` / `do`,
-- CSV/XLSX dokładnie dla zaznaczonych osób i zakresu dat,
-- kolejka korekt,
-- administracja użytkownikami zgodna z rolą,
-- historia operacji.
+## Ograniczenia Etapu 10
 
-Backend musi odrzucać WORKER niezależnie od ukrycia elementów UI.
-
-## Źródło semantyki norm
-
-Stage 7 rozróżnia produkcję kwalifikowaną do normy od produkcji poza normą. Przykładowo realne `MATCH_PROCESS` zostało zaliczone do `eligible_pak`, natomiast wcześniejsza produkcja `NO_APP` pozostała poza normą i nie była przepisywana wstecz.
-
-W Etapie 11 frontend nie może samodzielnie zgadywać kwalifikacji. Publiczny kontrakt API należy rozszerzyć tak, aby dla PICK i PAK zwracał wartości potrzebne do prezentacji:
-
-- total,
-- eligible,
-- outside_norm,
-- seconds,
-- percent,
-
-oraz analogiczny wynik łączny PICK/PAK w jednostkach normy. Agregacje dzienne, miesięczne i za dowolny okres mają pochodzić z backendu/snapshotów, nie z prowizorycznych obliczeń po stronie przeglądarki.
-
-## Katalog procesów
-
-Źródło UI: `shared/processes.js`, odwzorowujące zaakceptowany katalog backendu.
-
-Aktywne procesy:
-
-1. `PAKOWANIE` — Pakowanie,
-2. `KOMPLETACJA` — Kompletacja,
-3. `DYZUR` — Dyżur,
-4. `ZWROTY` — Zwroty,
-5. `BIURO` — Biuro,
-6. `PORZADKI_KARTONY` — Porządki – kartony,
-7. `PRZYGOTOWANIE_STANOWISKA` — Przygotowanie stanowiska,
-8. `MAGAZYN` — Magazyn,
-9. `PRZERWA` — Przerwa,
-10. `INNE` — Inne.
-
-Uprawnienia:
-
-- WORKER: wszystkie powyższe poza `BIURO`,
-- LEADER: wszystkie 10,
-- ADMIN: wszystkie 10.
-
-Fikcyjne `SORTOWANIE` nie występuje w finalnym frontendzie.
-
-## Wspólny design system
-
-`shared/tokens.css` jest źródłem podstawowych wartości wizualnych obu interfejsów:
-
-- kolorów,
-- odstępów,
-- promieni,
-- cieni,
-- typografii,
-- semantycznych stanów success/warning/danger/info.
-
-Zaakceptowany kierunek: ciemny granat/grafit, cyan/teal, wysoki kontrast, czytelne karty, interfejs przemysłowo-logistyczny.
-
-## Stan Etapu 10
-
-Zbudowano:
-
-1. wspólny design system,
-2. mobile shell operacyjny,
-3. mobile role views LEADER/ADMIN,
-4. WWW LEADER/ADMIN shell,
-5. komponenty wspólne i stany,
-6. kanoniczny katalog procesów i granice `BIURO`,
-7. wieloosobowe raportowanie w UI,
-8. dzienne PICK/PAK/PICK-PAK w podglądzie zespołu,
-9. rozliczenie WORKER dzisiaj + bieżący miesiąc w dwóch zwijanych panelach,
-10. rozdzielenie ilości na `łącznie`, `do normy`, `poza normą`,
-11. przeliczanie `PICK/PAK` w jednostkach normy 1:3,
-12. analogiczne rozliczenie w panelu lidera i raporcie okresowym,
-13. responsywne warianty mobile / tablet / desktop,
-14. dedykowane CI Stage 10.
-
-Ostatnia walidacja po zmianie zwijanych norm i reguły 1 PAK / 3 PICK: Stage 10 CI `34126911829` PASS oraz pełny frontend/V2 `34126911783` PASS. Publiczny preview po odświeżeniu: Pages `34127007163` PASS i walidacja `main` `34127007203` PASS.
-
-Podłączenie do zaakceptowanych endpointów backendu zaczyna się dopiero w Etapie 11. Etap 10 pozostaje nieodebrany do czasu końcowego potwierdzenia użytkownika.
-
-## Ograniczenia
-
-- nie zmieniać V1,
-- nie rozszerzać zgody Moniti,
-- nie włączać automatycznych alertów w Etapie 10,
-- nie przepisywać zaakceptowanej logiki backendu bez konkretnej regresji,
-- wszystkie akcje Stage 10 są nadal demonstracyjne i nie wykonują zapisu do backendu.
+- brak realnych zapisów do backendu z finalnego UI,
+- brak nowych zapisów Moniti,
+- V1 nietknięta,
+- finalne podłączenie danych i rozszerzenie brakujących kontraktów API zaczyna się w Etapie 11,
+- APK/push/dźwięk/wibracja przed pilotem magazynowym, zgodnie z decyzją użytkownika.
