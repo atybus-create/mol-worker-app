@@ -34,6 +34,8 @@ Każdy WORKER musi widzieć własne rozliczenie normy w dwóch okresach:
 1. **dzisiaj**,
 2. **od pierwszego dnia bieżącego miesiąca kalendarzowego do dziś**.
 
+Na dashboardzie są dwa osobne przyciski/rozwijane panele: **Norma dziś** i **Norma miesięczna**. Oba są domyślnie zwinięte. Szczegółowe rozliczenie pojawia się dopiero po naciśnięciu przez pracownika; otwarcie jednego panelu zamyka drugi.
+
 W obu okresach obowiązuje identyczne rozbicie dla `PAK`, `PICK` i `PICK/PAK`:
 
 - **Ilość łącznie** — cała produkcja z danego procesu/okresu,
@@ -42,13 +44,25 @@ W obu okresach obowiązuje identyczne rozbicie dla `PAK`, `PICK` i `PICK/PAK`:
 - **Czas**,
 - **Procent normy**.
 
-Frontend nie może ukrywać produkcji poza normą ani prezentować samego `eligible` jako całkowitego wykonania.
+Dla widoku łącznego `PICK/PAK` ilości są prezentowane jako **jednostki normy (j.n.)**, zgodnie z zaakceptowanym modelem domenowym:
+
+- `1 PAK = 1 j.n.`,
+- `3 PICK = 1 j.n.`.
+
+Wzory referencyjne:
+
+- `PAK% = eligible_PAK / (hours_PAK × 70) × 100`,
+- `PICK% = eligible_PICK / (hours_PICK × 210) × 100`,
+- `PICK/PAK% = (eligible_PAK + eligible_PICK / 3) / ((hours_PAK + hours_PICK) × 70) × 100`.
+
+Frontend nie może ukrywać produkcji poza normą ani prezentować samego `eligible` jako całkowitego wykonania. Przy braku kwalifikowanego czasu norma jest niedostępna (`—` / `null`), a nie `0%`.
 
 Dodatkowo dla LEADER/ADMIN w aplikacji mobilnej:
 
 - mobilny podgląd zespołu,
 - szybki podgląd pracownika,
 - bieżące wykonanie dzienne PICK, PAK i PICK/PAK z rozbiciem łącznie / do normy / poza normą,
+- `PICK/PAK` prezentowane w jednostkach normy,
 - raporty z wyborem jednego, wielu lub wszystkich pracowników,
 - zakres dat `od` / `do`,
 - raport PICK / PAK / PICK-PAK w układzie: ilość łącznie / do normy / poza normą / czas / procent,
@@ -63,6 +77,7 @@ Docelowy panel desktopowy dostępny obok aplikacji mobilnej.
 
 - widok całego zespołu,
 - bieżące PICK, PAK i PICK/PAK dla każdego pracownika z trzema jawnie opisanymi ilościami: łącznie / do normy / poza normą,
+- `PICK/PAK` w jednostkach normy według reguły 1 PAK = 1 j.n., 3 PICK = 1 j.n.,
 - szybki podgląd pracownika z pełnym rozliczeniem dziennym i od początku bieżącego miesiąca,
 - w każdym okresie: PICK, PAK i PICK/PAK jako ilość łączna / ilość do normy / ilość poza normą / czas / procent normy,
 - historia i raporty,
@@ -88,7 +103,7 @@ W Etapie 11 frontend nie może samodzielnie zgadywać kwalifikacji. Publiczny ko
 - seconds,
 - percent,
 
-oraz analogiczny wynik łączny PICK/PAK. Agregacje dzienne, miesięczne i za dowolny okres mają pochodzić z backendu/snapshotów, nie z prowizorycznych obliczeń po stronie przeglądarki.
+oraz analogiczny wynik łączny PICK/PAK w jednostkach normy. Agregacje dzienne, miesięczne i za dowolny okres mają pochodzić z backendu/snapshotów, nie z prowizorycznych obliczeń po stronie przeglądarki.
 
 ## Katalog procesów
 
@@ -140,15 +155,16 @@ Zbudowano:
 6. kanoniczny katalog procesów i granice `BIURO`,
 7. wieloosobowe raportowanie w UI,
 8. dzienne PICK/PAK/PICK-PAK w podglądzie zespołu,
-9. rozliczenie WORKER dzisiaj + bieżący miesiąc,
+9. rozliczenie WORKER dzisiaj + bieżący miesiąc w dwóch zwijanych panelach,
 10. rozdzielenie ilości na `łącznie`, `do normy`, `poza normą`,
-11. analogiczne rozliczenie w panelu lidera i raporcie okresowym,
-12. responsywne warianty mobile / tablet / desktop,
-13. dedykowane CI Stage 10.
+11. przeliczanie `PICK/PAK` w jednostkach normy 1:3,
+12. analogiczne rozliczenie w panelu lidera i raporcie okresowym,
+13. responsywne warianty mobile / tablet / desktop,
+14. dedykowane CI Stage 10.
 
-Ostatnie rozszerzenie ilości przeszło dedykowane CI Stage 10 (`34124929440`) oraz pełny regres frontendu/V2 (`34124929502`) z wynikiem PASS.
+Ostatnia walidacja po zmianie zwijanych norm i reguły 1 PAK / 3 PICK: Stage 10 CI `34126911829` PASS oraz pełny frontend/V2 `34126911783` PASS. Publiczny preview po odświeżeniu: Pages `34127007163` PASS i walidacja `main` `34127007203` PASS.
 
-Podłączenie do zaakceptowanych endpointów backendu zaczyna się dopiero w Etapie 11. Etap 10 pozostaje nieodebrany do czasu obejrzenia odświeżonego preview przez użytkownika.
+Podłączenie do zaakceptowanych endpointów backendu zaczyna się dopiero w Etapie 11. Etap 10 pozostaje nieodebrany do czasu końcowego potwierdzenia użytkownika.
 
 ## Ograniczenia
 
