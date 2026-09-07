@@ -1,7 +1,7 @@
 (() => {
   const el = id => document.getElementById(id);
   const BASE = 'https://n8n.estyl.team/webhook/';
-  let token = '', role = '', actorEmployee = '', generation = 0, selectedEmployee = '', busy = false, userBusy = false, users = [];
+  let token = '', role = '', actorEmployee = '', generation = 0, selectedEmployee = '', busy = false, userBusy = false, users = [], correctionBusy = false, corrections = [];
 
   const today = () => new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Warsaw', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date());
   const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Warsaw', year:'numeric', month:'2-digit', day:'2-digit'}).format(d); };
@@ -17,6 +17,13 @@
 
   function setUserMessage(text, error=false) {
     const node = el('leaderUserStatus');
+    if (!node) return;
+    node.textContent = text || '';
+    node.dataset.state = error ? 'error' : 'ok';
+  }
+
+  function setCorrectionMessage(text, error=false) {
+    const node = el('leaderCorrectionStatus');
     if (!node) return;
     node.textContent = text || '';
     node.dataset.state = error ? 'error' : 'ok';
@@ -164,7 +171,7 @@
     panel.setAttribute('aria-labelledby','leaderUserAdminTitle');
     panel.innerHTML = `
       <h3 id="leaderUserAdminTitle">Użytkownicy aplikacji</h3>
-      <p class="scope-note">LEADER może dodawać konta WORKER i zmieniać hasła pracowników WORKER oraz własne. ADMIN może zarządzać hasłami wszystkich ról i tworzyć dowolną rolę. Zmiana hasła unieważnia wszystkie aktywne sesje wskazanego użytkownika.</p>
+      <p class="scope-note">LEADER może dodawać konta WORKER, zmieniać ich aktywność i hasła oraz zmienić własne hasło. ADMIN może tworzyć wszystkie role, zmieniać aktywność innych kont i resetować hasła wszystkich użytkowników. Dezaktywacja konta natychmiast unieważnia jego aktywne sesje.</p>
       <p id="leaderUserStatus" class="scope-note" role="status" aria-live="polite"></p>
       <div class="leader-toolbar"><button id="leaderUsersRefresh" type="button">Odśwież użytkowników</button><span id="leaderUsersCount" class="scope-note"></span></div>
       <div id="leaderUsersList" class="leader-list"></div>
@@ -200,6 +207,13 @@
     for (const id of ['leaderUsersRefresh','leaderNewDisplayName','leaderNewLogin','leaderNewRole','leaderNewPassword','leaderNewPassword2','leaderNewMoniti','leaderNewEs','leaderCreateUser','leaderPasswordEmployee','leaderResetPassword','leaderResetPassword2','leaderResetPasswordButton']) {
       if (el(id)) el(id).disabled = value;
     }
+    for (const button of document.querySelectorAll('#leaderUsersList .leader-user-active')) button.disabled = value;
+  }
+
+  function canManageActive(user) {
+    if (user.employee_id === actorEmployee) return false;
+    if (role === 'ADMIN') return true;
+    return role === 'LEADER' && user.role === 'WORKER';
   }
 
   function renderUsers() {
@@ -208,9 +222,14 @@
     const list=el('leaderUsersList'); list.replaceChildren();
     for(const user of users){
       const row=document.createElement('div'); row.className='leader-row leader-user-row';
+      const content=document.createElement('div'); content.className='leader-user-content';
       const name=document.createElement('strong'); name.textContent=user.display_name;
       const meta=document.createElement('span'); meta.textContent=`${user.employee_id} · ${user.login} · ${user.role} · ${user.active?'aktywne':'nieaktywne'}${user.es_worker_id?` · ES ${user.es_worker_id}`:''}${user.moniti_worker_id?` · Moniti ${user.moniti_worker_id}`:''}`;
-      row.append(name,meta); list.append(row);
+      content.append(name,meta); row.append(content);
+      if(canManageActive(user)){
+        const button=document.createElement('button');button.type='button';button.className='leader-user-active';button.dataset.employeeId=user.employee_id;button.textContent=user.active?'Dezaktywuj':'Aktywuj';button.disabled=userBusy;button.addEventListener('click',()=>setUserActive(user));row.append(button);
+      }
+      list.append(row);
     }
     const select=el('leaderPasswordEmployee'); select.replaceChildren();
     const allowed=users.filter(u=>u.can_reset_password);
@@ -256,6 +275,106 @@
     finally{body.new_password='';userBusy=false;setUserControlsDisabled(false);}
   }
 
+  async function setUserActive(user) {
+    if(userBusy||!token||!canManageActive(user))return;
+    const desired=!user.active;
+    if(!desired&&!confirm(`Dezaktywować konto ${user.display_name}? Aktywne sesje zostaną zakończone.`))return;
+    const body={request_id:crypto.randomUUID(),employee_id:user.employee_id,active:desired};
+    userBusy=true;setUserControlsDisabled(true);setUserMessage(desired?'Aktywowanie konta…':'Dezaktywowanie konta i kończenie sesji…');
+    try{
+      const data=await request('mol-app-v2-user-active',{method:'POST',body});
+      setUserMessage(data.active?`Konto ${data.display_name} jest aktywne.`:`Konto ${data.display_name} zostało zdezaktywowane. Sesje zakończono.`);
+      await loadUsersAfterMutation();
+      await refreshTeam(true);
+    }catch(e){setUserMessage(e.message,true);}
+    finally{userBusy=false;setUserControlsDisabled(false);}
+  }
+
+  async function loadUsersAfterMutation() {
+    const data=await request('mol-app-v2-user-list');
+    users=data?.items||[];
+    renderUsers();
+  }
+
+  function ensureCorrectionQueuePanel() {
+    if(el('leaderCorrectionQueue'))return;
+    const panel=document.createElement('section');
+    panel.id='leaderCorrectionQueue';panel.className='leader-section';panel.setAttribute('aria-labelledby','leaderCorrectionTitle');
+    panel.innerHTML=`
+      <h3 id="leaderCorrectionTitle">Kolejka korekt czasu pracy</h3>
+      <p class="scope-note">Korekty pochodzą z zakładki „Korekty” raportu V2. Akceptacja korzysta z istniejącego mechanizmu zatwierdzania i kontroli wersji. Odrzucona korekta wróci jako nowa, jeżeli jej treść w arkuszu zostanie zmieniona.</p>
+      <p id="leaderCorrectionStatus" class="scope-note" role="status" aria-live="polite"></p>
+      <div class="leader-toolbar"><button id="leaderCorrectionsRefresh" type="button">Odśwież kolejkę</button><span id="leaderCorrectionsCount" class="scope-note"></span></div>
+      <div id="leaderCorrectionsList" class="leader-correction-list"></div>`;
+    el('leaderPanel').append(panel);
+    el('leaderCorrectionsRefresh').addEventListener('click',()=>loadCorrections());
+  }
+
+  function correctionStatusLabel(status){
+    return ({PENDING:'oczekuje',CHANGED:'zmieniona po odrzuceniu',APPROVED:'zatwierdzona',REJECTED:'odrzucona',CONFLICT:'konflikt wersji',RETRY_PENDING:'oczekuje na dokończenie',SYSTEM_REJECTED:'odrzucona przez system'})[status]||status;
+  }
+
+  function setCorrectionControlsDisabled(value){
+    if(el('leaderCorrectionsRefresh'))el('leaderCorrectionsRefresh').disabled=value;
+    for(const button of document.querySelectorAll('#leaderCorrectionsList button'))button.disabled=value;
+  }
+
+  function renderCorrections(data={}){
+    ensureCorrectionQueuePanel();
+    corrections=data.items||[];
+    const list=el('leaderCorrectionsList');list.replaceChildren();
+    el('leaderCorrectionsCount').textContent=`${data.pending_count||0} do decyzji · ${corrections.length} łącznie`;
+    if(!corrections.length){const empty=document.createElement('p');empty.className='scope-note';empty.textContent='Brak korekt w arkuszu.';list.append(empty);return;}
+    for(const item of corrections){
+      const card=document.createElement('article');card.className=`leader-correction leader-correction-${String(item.status||'').toLowerCase()}`;
+      const title=document.createElement('strong');title.textContent=`${item.employee_id} · ${item.work_date}`;
+      const status=document.createElement('span');status.className='leader-correction-status';status.textContent=correctionStatusLabel(item.status);
+      const meta=document.createElement('p');meta.textContent=`Wersja ${item.expected_version} · START ${when(item.start_at)} · STOP ${item.stop_at?when(item.stop_at):'bez zmiany'}`;
+      const reason=document.createElement('p');reason.className='scope-note';reason.textContent=`Powód: ${item.reason}`;
+      const head=document.createElement('div');head.className='leader-correction-head';head.append(title,status);card.append(head,meta,reason);
+      if(['PENDING','CHANGED'].includes(item.status)){
+        const actions=document.createElement('div');actions.className='leader-correction-actions';
+        const approve=document.createElement('button');approve.type='button';approve.textContent='Akceptuj';approve.addEventListener('click',()=>approveCorrection(item));
+        const reject=document.createElement('button');reject.type='button';reject.textContent='Odrzuć';reject.addEventListener('click',()=>rejectCorrection(item));
+        actions.append(approve,reject);card.append(actions);
+      }
+      list.append(card);
+    }
+  }
+
+  async function loadCorrections(silent=false){
+    if(!token||correctionBusy)return;
+    const gen=generation;correctionBusy=true;setCorrectionControlsDisabled(true);if(!silent)setCorrectionMessage('Odczyt kolejki korekt…');
+    try{const data=await request('mol-app-v2-corrections-queue');if(gen!==generation)return;renderCorrections(data);if(!silent)setCorrectionMessage('Kolejka korekt odświeżona.');}
+    catch(e){if(gen===generation)setCorrectionMessage(e.message,true);}
+    finally{if(gen===generation){correctionBusy=false;setCorrectionControlsDisabled(false);}}
+  }
+
+  async function approveCorrection(item){
+    if(correctionBusy||!token)return;
+    correctionBusy=true;setCorrectionControlsDisabled(true);setCorrectionMessage(`Sprawdzam korektę ${item.correction_id}…`);
+    try{
+      const preview=await request(`mol-app-v2-attendance-status?correction_id=${encodeURIComponent(item.correction_id)}`);
+      if(preview?.proposal?.request_id!==item.correction_id||typeof preview.approved_hash!=='string'||!preview.approved_hash)throw new Error('Backend nie potwierdził treści korekty. Odśwież kolejkę.');
+      await request('mol-app-v2-attendance-correct',{method:'POST',body:{request_id:preview.proposal.request_id,correction_id:preview.proposal.request_id,approved_hash:preview.approved_hash}});
+      setCorrectionMessage(`Korekta ${item.correction_id} została zatwierdzona.`);
+      await refreshTeam(true);
+      const data=await request('mol-app-v2-corrections-queue');renderCorrections(data);
+    }catch(e){setCorrectionMessage(e.message,true);}
+    finally{correctionBusy=false;setCorrectionControlsDisabled(false);}
+  }
+
+  async function rejectCorrection(item){
+    if(correctionBusy||!token)return;
+    if(!confirm(`Odrzucić korektę ${item.employee_id} z dnia ${item.work_date}?`))return;
+    correctionBusy=true;setCorrectionControlsDisabled(true);setCorrectionMessage('Zapisywanie odrzucenia…');
+    try{
+      await request('mol-app-v2-correction-reject',{method:'POST',body:{request_id:crypto.randomUUID(),correction_id:item.correction_id}});
+      const data=await request('mol-app-v2-corrections-queue');renderCorrections(data);setCorrectionMessage(`Korekta ${item.correction_id} została odrzucona.`);
+    }catch(e){setCorrectionMessage(e.message,true);}
+    finally{correctionBusy=false;setCorrectionControlsDisabled(false);}
+  }
+
   el('leaderRefresh').addEventListener('click',()=>refreshTeam());
   el('leaderHistoryRefresh').addEventListener('click',loadHistory);
   el('leaderReportRun').addEventListener('click',loadReport);
@@ -264,17 +383,17 @@
 
   window.molLeader = {
     hide(){
-      generation++; token=''; role=''; actorEmployee=''; selectedEmployee=''; users=[]; busy=false; userBusy=false;
+      generation++; token=''; role=''; actorEmployee=''; selectedEmployee=''; users=[]; corrections=[]; busy=false; userBusy=false; correctionBusy=false;
       el('leaderPanel').hidden=true; el('leaderTeamList').replaceChildren(); el('leaderHistoryBody').replaceChildren(); el('leaderReportBody').replaceChildren();
-      if(el('leaderUsersList'))el('leaderUsersList').replaceChildren();setMessage('');setUserMessage('');
+      if(el('leaderUsersList'))el('leaderUsersList').replaceChildren();if(el('leaderCorrectionsList'))el('leaderCorrectionsList').replaceChildren();setMessage('');setUserMessage('');setCorrectionMessage('');
     },
     activate(data,t){
       if (!['LEADER','ADMIN'].includes(data?.user?.role)) return this.hide();
       if (token===t && role===data.user.role) return;
-      generation++; token=t; role=data.user.role; actorEmployee=data.user.employee_id; selectedEmployee=''; users=[];
+      generation++; token=t; role=data.user.role; actorEmployee=data.user.employee_id; selectedEmployee=''; users=[]; corrections=[];
       const max=today(); for(const id of ['leaderDateTo','leaderReportTo']){el(id).value=max;el(id).max=max;} for(const id of ['leaderDateFrom','leaderReportFrom']){el(id).value=daysAgo(30);el(id).max=max;}
       el('leaderPanel').hidden=false; el('leaderHistoryTitle').textContent='Historia pracownika'; el('leaderHistoryEmployee').textContent='Wybierz osobę z listy.'; renderHistory({items:[]}); renderReport({items:[],count:0});
-      ensureUserAdminPanel(); refreshTeam(); loadUsers();
+      ensureUserAdminPanel();ensureCorrectionQueuePanel();refreshTeam();loadUsers();loadCorrections();
     }
   };
 })();
