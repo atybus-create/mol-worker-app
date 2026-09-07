@@ -2,16 +2,18 @@ import {readFileSync,writeFileSync} from 'node:fs';
 const manifestUrl=new URL('../manifest.json',import.meta.url);
 const indexUrl=new URL('../../../v2/index.html',import.meta.url);
 const contractUrl=new URL('../communication/stage8b-live-contract.json',import.meta.url);
+const stage7ContractUrl=new URL('../metrics/stage7-live-contract.json',import.meta.url);
 const manifest=JSON.parse(readFileSync(manifestUrl,'utf8'));
 const contract=JSON.parse(readFileSync(contractUrl,'utf8'));
+const stage7Contract=JSON.parse(readFileSync(stage7ContractUrl,'utf8'));
 if(manifest.workflows?.health!=='sfoWeuiJBN2qvCRF')throw Error('STAGE8_HEALTH_ID_CHANGED');
 manifest.active_versions.health='5d289c40-b4cf-4695-9fe5-944bb2cec5c2';
 // Current published attendance path. These versions were read back from live n8n
-// immediately before the real-data Stage 7/8B checkpoint.
+// after the explicitly authorized 2026-09-07 Moniti scope was narrowed to atybus/asorokopud.
 if(manifest.workflows?.attendance_service!=='qPVmcfp6pUg3GbzH'||manifest.workflows?.attendance_moniti!=='3e67SsUOByUi17YV')throw Error('STAGE8_ATTENDANCE_IDS_CHANGED');
-manifest.active_versions.attendance_service='1275f1a8-a361-4184-8420-9804fd5568cb';
-manifest.active_versions.attendance_moniti='7c2bb56d-9f5c-4fe7-b74e-9f480e814840';
-manifest.attendance={...(manifest.attendance||{}),moniti_test_date:'2026-09-06',moniti_test_worker_ids:[99191,99186,99185],next_live_test_date:'2026-09-07',next_live_test_scope_requires_explicit_approval:true};
+manifest.active_versions.attendance_service='0ea20e43-72f8-4941-96c9-97ac324015f6';
+manifest.active_versions.attendance_moniti='ffe808e8-9523-49a3-afb5-e582478f819f';
+manifest.attendance={...(manifest.attendance||{}),moniti_test_date:'2026-09-07',moniti_test_worker_ids:[99191,99185],next_live_test_date:'2026-09-07',next_live_test_scope_requires_explicit_approval:false,moniti_test_scope_approved:true};
 // Current published Stage 7 metrics path. Pin the exact live versions so deterministic
 // Stage 8B metadata synchronization cannot roll back to historical Stage 7 snapshots.
 const stage7={
@@ -26,6 +28,7 @@ for(const [key,[id,version]] of Object.entries(stage7)){
  if(manifest.workflows?.[key]!==id)throw Error('STAGE7_WORKFLOW_ID_CHANGED:'+key);
  manifest.active_versions[key]=version;
 }
+if(stage7Contract.status!=='REAL_ES_SOURCE_INGEST_VERIFIED_ELIGIBLE_NORM_OPEN')throw Error('STAGE7_LIVE_CONTRACT_STATUS_INVALID');
 
 // Stage 8B is wired but remains fail-closed. Pin exact published component IDs and
 // active versions from the reviewed live contract so release synchronization cannot
@@ -52,8 +55,8 @@ for(const [name,key] of Object.entries(map)){
 manifest.workflows.comm_es_alert_persistence='DWnFXZVIptjMSoax';
 manifest.active_versions.comm_es_alert_persistence=null;
 manifest.release={...(manifest.release||{}),version:'0.8.0',stage:8,environment:'test',health_workflow_id:'sfoWeuiJBN2qvCRF',health_active_version:'5d289c40-b4cf-4695-9fe5-944bb2cec5c2',health_verified_at:'2026-09-06',frontend_status:'READY_FOR_MAIN'};
-manifest.communication={...(manifest.communication||{}),ui_implemented:true,ui_published:true,auto_alert_source_gate:true,auto_alert_consumer_enabled:false,alert_cutover_outbox_id:7689,es_verified:false,history_policy:'HOLD',es_alert_persistence_ready:true,es_alert_persistence_active:false,stage8b_wired:true,stage8b_fail_closed:true,stage8b_contract:'communication/stage8b-live-contract.json',stage8b_ready_for_real_data_test:true,recipient_policy_approved:false,real_positive_es_test_complete:false};
-manifest.metrics={...(manifest.metrics||{}),real_positive_es_test_complete:false,live_test_ready:true,live_test_date:'2026-09-07',production_deltas_before_test:0,baseline_required_before_counting_delta:true,alert_handoff_requires_enabled_comm_rule:true};
+manifest.communication={...(manifest.communication||{}),ui_implemented:true,ui_published:true,auto_alert_source_gate:true,auto_alert_consumer_enabled:false,alert_cutover_outbox_id:7689,es_verified:false,history_policy:'HOLD',es_alert_persistence_ready:true,es_alert_persistence_active:false,stage8b_wired:true,stage8b_fail_closed:true,stage8b_contract:'communication/stage8b-live-contract.json',stage8b_ready_for_real_data_test:true,recipient_policy_approved:false,real_positive_es_test_complete:false,real_source_context_verified:true,real_source_context_outbox_id:'ES-679996:MOL004:2026-09-07:derived'};
+manifest.metrics={...(manifest.metrics||{}),real_positive_es_test_complete:false,real_positive_es_source_ingest_complete:true,real_positive_es_eligible_norm_complete:false,live_test_ready:true,live_test_date:'2026-09-07',production_deltas_before_test:0,real_production_deltas_observed:true,verified_real_employee_id:'MOL004',verified_sample_batch_id:'ES-679996',verified_sample_classification:'NO_APP',baseline_required_before_counting_delta:true,alert_handoff_requires_enabled_comm_rule:true,evidence_document:'docs/v2/stage7-stage8b-live-evidence-20260907.md'};
 writeFileSync(manifestUrl,JSON.stringify(manifest,null,2)+'\n');
 let html=readFileSync(indexUrl,'utf8');
 for(const [from,to] of [
@@ -66,4 +69,4 @@ for(const [from,to] of [
  html=html.replace(from,to);
 }
 writeFileSync(indexUrl,html);
-console.log('Stage 7/8/8B release metadata synchronized; real-data gate remains closed.');
+console.log('Stage 7/8/8B release metadata synchronized; real ES source verified, eligible norm and automatic alert gates remain open/closed as designed.');
