@@ -15,6 +15,10 @@
     return;
   }
 
+  const stateScript = document.createElement('script');
+  stateScript.src = '../shared/states.js';
+  document.body.append(stateScript);
+
   const detailsStyles = document.createElement('link');
   detailsStyles.rel = 'stylesheet';
   detailsStyles.href = './details.css';
