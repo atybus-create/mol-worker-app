@@ -1,4 +1,23 @@
 (() => {
+  const shell = document.querySelector('.web-shell');
+  const role = window.MOLRoles.normalizeRole(new URLSearchParams(location.search).get('role') || 'LEADER');
+  const capabilities = window.MOLRoles.get(role);
+
+  if (!capabilities?.web) {
+    document.body.innerHTML = `
+      <main style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#050b12;color:#f4f8fb;font-family:Inter,system-ui,sans-serif">
+        <section style="max-width:620px;padding:28px;border:1px solid rgba(81,178,220,.26);border-radius:18px;background:#091c2b">
+          <p style="color:#12c8ff;text-transform:uppercase;letter-spacing:.14em;font-size:11px;font-weight:800">MOL App V2</p>
+          <h1>Panel WWW niedostępny dla WORKER</h1>
+          <p style="color:#9fb6c9;line-height:1.6">Pracownicy korzystają wyłącznie z aplikacji mobilnej. Panel WWW jest przeznaczony dla ról LEADER i ADMIN.</p>
+        </section>
+      </main>`;
+    return;
+  }
+
+  shell.dataset.role = role;
+  document.querySelector('.profile small').textContent = role === 'ADMIN' ? 'Administrator' : 'Lider zespołu';
+
   const sectionButtons = [...document.querySelectorAll('[data-section]')];
   const views = [...document.querySelectorAll('[data-view]')];
 
