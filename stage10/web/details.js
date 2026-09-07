@@ -3,31 +3,28 @@
   const capabilities = window.MOLRoles.get(role);
   if (!capabilities?.web) return;
 
+  const numberField = (row, name) => Number(row.dataset[name] || 0);
+  const textField = (row, name) => row.dataset[name] || '00:00';
   const teamData = [...document.querySelectorAll('#teamRows tr')].map((row) => ({
     id: row.dataset.id,
     name: row.dataset.employee,
     status: row.dataset.status,
-    process: row.dataset.process,
     attendance: row.dataset.attendance,
-    noProcess: row.dataset.noProcess,
-    pick: Number(row.dataset.pick || 0),
-    pickTime: row.dataset.pickTime || '00:00',
-    pickNorm: Number(row.dataset.pickNorm || 0),
-    pack: Number(row.dataset.pack || 0),
-    packTime: row.dataset.packTime || '00:00',
-    packNorm: Number(row.dataset.packNorm || 0),
-    total: Number(row.dataset.total || 0),
-    totalTime: row.dataset.totalTime || '00:00',
-    totalNorm: Number(row.dataset.totalNorm || 0),
-    monthPick: Number(row.dataset.monthPick || 0),
-    monthPickTime: row.dataset.monthPickTime || '00:00',
-    monthPickNorm: Number(row.dataset.monthPickNorm || 0),
-    monthPack: Number(row.dataset.monthPack || 0),
-    monthPackTime: row.dataset.monthPackTime || '00:00',
-    monthPackNorm: Number(row.dataset.monthPackNorm || 0),
-    monthTotal: Number(row.dataset.monthTotal || 0),
-    monthTotalTime: row.dataset.monthTotalTime || '00:00',
-    monthTotalNorm: Number(row.dataset.monthTotalNorm || 0)
+    pickTotal: numberField(row, 'monthPickTotal'),
+    pickEligible: numberField(row, 'monthPickEligible'),
+    pickOutside: numberField(row, 'monthPickOutside'),
+    pickTime: textField(row, 'monthPickTime'),
+    pickNorm: numberField(row, 'monthPickNorm'),
+    packTotal: numberField(row, 'monthPackTotal'),
+    packEligible: numberField(row, 'monthPackEligible'),
+    packOutside: numberField(row, 'monthPackOutside'),
+    packTime: textField(row, 'monthPackTime'),
+    packNorm: numberField(row, 'monthPackNorm'),
+    total: numberField(row, 'monthTotal'),
+    totalEligible: numberField(row, 'monthTotalEligible'),
+    totalOutside: numberField(row, 'monthTotalOutside'),
+    totalTime: textField(row, 'monthTotalTime'),
+    totalNorm: numberField(row, 'monthTotalNorm')
   }));
 
   const reports = document.querySelector('[data-view="reports"]');
@@ -46,17 +43,16 @@
         <div class="report-selector-actions"><button type="button" data-report-all>Zaznacz wszystkich</button><button type="button" data-report-clear>Wyczyść</button></div>
       </div>
       <div class="report-people-grid">
-        ${teamData.map((person, index) => `<label class="report-person"><input type="checkbox" value="${person.id}" ${index < 3 ? 'checked' : ''}><span><b>${person.name}</b><small>${person.id}</small></span><span class="report-person-output"><i>PICK <strong>${person.monthPick}</strong></i><i>PAK <strong>${person.monthPack}</strong></i><i>PICK/PAK <strong>${person.monthTotalNorm}%</strong></i></span></label>`).join('')}
+        ${teamData.map((person, index) => `<label class="report-person"><input type="checkbox" value="${person.id}" ${index < 3 ? 'checked' : ''}><span><b>${person.name}</b><small>${person.id}</small></span><span class="report-person-output"><i>Łącznie <strong>${person.total}</strong></i><i>Do normy <strong>${person.totalEligible}</strong></i><i>Poza normą <strong>${person.totalOutside}</strong></i></span></label>`).join('')}
       </div>
-      <p class="report-help">Możesz wybrać jednego, kilku lub wszystkich pracowników. Raport i eksport obejmują dokładnie zaznaczone osoby oraz wskazany zakres dat.</p>
+      <p class="report-help">Możesz wybrać jednego, kilku lub wszystkich pracowników. Każda ilość jest rozdzielona na łączną, liczącą się do normy i poza normą.</p>
     </section>
-    <div class="web-stat-grid report-summary">
-      <article class="mol-card"><small>Wybrani pracownicy</small><strong data-report-selected>3</strong></article>
-      <article class="mol-card norm-summary-card"><small>PICK</small><strong data-report-pick>0</strong><span data-report-pick-time>00:00</span><b data-report-pick-norm>—</b></article>
-      <article class="mol-card norm-summary-card"><small>PAK</small><strong data-report-pack>0</strong><span data-report-pack-time>00:00</span><b data-report-pack-norm>—</b></article>
-      <article class="mol-card norm-summary-card"><small>PICK/PAK</small><strong data-report-total>0</strong><span data-report-total-time>00:00</span><b data-report-total-norm>—</b></article>
+    <div class="report-process-summary">
+      <article class="mol-card report-process-card"><h2>PICK</h2><div class="report-process-metrics"><span><small>Ilość łącznie</small><strong data-report-pick-total>0</strong></span><span><small>Ilość do normy</small><strong data-report-pick-eligible>0</strong></span><span><small>Ilość poza normą</small><strong data-report-pick-outside>0</strong></span><span><small>Czas</small><strong data-report-pick-time>00:00</strong></span><span><small>Procent normy</small><strong data-report-pick-norm>—</strong></span></div></article>
+      <article class="mol-card report-process-card"><h2>PAK</h2><div class="report-process-metrics"><span><small>Ilość łącznie</small><strong data-report-pack-total>0</strong></span><span><small>Ilość do normy</small><strong data-report-pack-eligible>0</strong></span><span><small>Ilość poza normą</small><strong data-report-pack-outside>0</strong></span><span><small>Czas</small><strong data-report-pack-time>00:00</strong></span><span><small>Procent normy</small><strong data-report-pack-norm>—</strong></span></div></article>
+      <article class="mol-card report-process-card is-total"><h2>PICK/PAK</h2><div class="report-process-metrics"><span><small>Ilość łącznie</small><strong data-report-total>0</strong></span><span><small>Ilość do normy</small><strong data-report-total-eligible>0</strong></span><span><small>Ilość poza normą</small><strong data-report-total-outside>0</strong></span><span><small>Czas</small><strong data-report-total-time>00:00</strong></span><span><small>Procent normy</small><strong data-report-total-norm>—</strong></span></div></article>
     </div>
-    <section class="mol-card detail-table-card"><div class="detail-table-head"><div><h2>Normy za wybrany okres</h2><small data-report-generated aria-live="polite"></small></div></div><table class="norm-report-table"><thead><tr><th>Pracownik</th><th>PICK ilość</th><th>PICK czas</th><th>PICK %</th><th>PAK ilość</th><th>PAK czas</th><th>PAK %</th><th>PICK/PAK ilość</th><th>PICK/PAK czas</th><th>PICK/PAK %</th><th>Świeżość</th></tr></thead><tbody data-report-body></tbody></table></section>`;
+    <section class="mol-card detail-table-card"><div class="detail-table-head"><div><h2>Normy za wybrany okres</h2><small data-report-generated aria-live="polite"></small></div></div><table class="norm-report-table"><thead><tr><th>Pracownik</th><th>PICK łącznie</th><th>PICK do normy</th><th>PICK poza normą</th><th>PICK czas</th><th>PICK %</th><th>PAK łącznie</th><th>PAK do normy</th><th>PAK poza normą</th><th>PAK czas</th><th>PAK %</th><th>PICK/PAK łącznie</th><th>PICK/PAK do normy</th><th>PICK/PAK poza normą</th><th>PICK/PAK czas</th><th>PICK/PAK %</th><th>Świeżość</th></tr></thead><tbody data-report-body></tbody></table></section>`;
 
   const checkedIds = () => [...reports.querySelectorAll('.report-people-grid input:checked')].map((input) => input.value);
   const updateSelectionCount = () => {
@@ -72,37 +68,38 @@
   const fromMinutes = (value) => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
   const average = (rows, field) => rows.length ? Math.round(rows.reduce((sum, row) => sum + row[field], 0) / rows.length) : null;
   const formatDate = (value) => value ? value.split('-').reverse().join('.') : '—';
+  const sum = (rows, field) => rows.reduce((acc, row) => acc + row[field], 0);
+  const write = (selector, value) => { reports.querySelector(selector).textContent = String(value); };
+  const writePercent = (selector, value) => { reports.querySelector(selector).textContent = value === null ? '—' : `${value}%`; };
 
   const renderReport = () => {
     const ids = new Set(checkedIds());
     const selected = teamData.filter((person) => ids.has(person.id));
-    const pick = selected.reduce((sum, person) => sum + person.monthPick, 0);
-    const pack = selected.reduce((sum, person) => sum + person.monthPack, 0);
-    const total = selected.reduce((sum, person) => sum + person.monthTotal, 0);
-    const pickTime = selected.reduce((sum, person) => sum + toMinutes(person.monthPickTime), 0);
-    const packTime = selected.reduce((sum, person) => sum + toMinutes(person.monthPackTime), 0);
-    const totalTime = selected.reduce((sum, person) => sum + toMinutes(person.monthTotalTime), 0);
-    const pickNorm = average(selected, 'monthPickNorm');
-    const packNorm = average(selected, 'monthPackNorm');
-    const totalNorm = average(selected, 'monthTotalNorm');
 
-    reports.querySelector('[data-report-selected]').textContent = String(selected.length);
-    reports.querySelector('[data-report-pick]').textContent = String(pick);
-    reports.querySelector('[data-report-pick-time]').textContent = fromMinutes(pickTime);
-    reports.querySelector('[data-report-pick-norm]').textContent = pickNorm === null ? '—' : `${pickNorm}%`;
-    reports.querySelector('[data-report-pack]').textContent = String(pack);
-    reports.querySelector('[data-report-pack-time]').textContent = fromMinutes(packTime);
-    reports.querySelector('[data-report-pack-norm]').textContent = packNorm === null ? '—' : `${packNorm}%`;
-    reports.querySelector('[data-report-total]').textContent = String(total);
-    reports.querySelector('[data-report-total-time]').textContent = fromMinutes(totalTime);
-    reports.querySelector('[data-report-total-norm]').textContent = totalNorm === null ? '—' : `${totalNorm}%`;
+    write('[data-report-pick-total]', sum(selected, 'pickTotal'));
+    write('[data-report-pick-eligible]', sum(selected, 'pickEligible'));
+    write('[data-report-pick-outside]', sum(selected, 'pickOutside'));
+    write('[data-report-pick-time]', fromMinutes(selected.reduce((acc, row) => acc + toMinutes(row.pickTime), 0)));
+    writePercent('[data-report-pick-norm]', average(selected, 'pickNorm'));
+
+    write('[data-report-pack-total]', sum(selected, 'packTotal'));
+    write('[data-report-pack-eligible]', sum(selected, 'packEligible'));
+    write('[data-report-pack-outside]', sum(selected, 'packOutside'));
+    write('[data-report-pack-time]', fromMinutes(selected.reduce((acc, row) => acc + toMinutes(row.packTime), 0)));
+    writePercent('[data-report-pack-norm]', average(selected, 'packNorm'));
+
+    write('[data-report-total]', sum(selected, 'total'));
+    write('[data-report-total-eligible]', sum(selected, 'totalEligible'));
+    write('[data-report-total-outside]', sum(selected, 'totalOutside'));
+    write('[data-report-total-time]', fromMinutes(selected.reduce((acc, row) => acc + toMinutes(row.totalTime), 0)));
+    writePercent('[data-report-total-norm]', average(selected, 'totalNorm'));
 
     reports.querySelector('[data-report-body]').innerHTML = selected.length
-      ? selected.map((person) => `<tr><td><b>${person.name}</b><small>${person.id}</small></td><td><strong>${person.monthPick}</strong></td><td>${person.monthPickTime}</td><td class="${person.monthPickNorm >= 90 ? 'good' : person.monthPickNorm > 0 ? 'warn' : 'danger'}">${person.monthPickNorm}%</td><td><strong>${person.monthPack}</strong></td><td>${person.monthPackTime}</td><td class="${person.monthPackNorm >= 90 ? 'good' : person.monthPackNorm > 0 ? 'warn' : 'danger'}">${person.monthPackNorm}%</td><td><strong>${person.monthTotal}</strong></td><td>${person.monthTotalTime}</td><td class="${person.monthTotalNorm >= 90 ? 'good' : person.monthTotalNorm > 0 ? 'warn' : 'danger'}">${person.monthTotalNorm}%</td><td>LIVE</td></tr>`).join('')
-      : '<tr><td colspan="11" class="report-empty">Zaznacz co najmniej jednego pracownika.</td></tr>';
+      ? selected.map((person) => `<tr><td><b>${person.name}</b><small>${person.id}</small></td><td>${person.pickTotal}</td><td class="good">${person.pickEligible}</td><td class="warn">${person.pickOutside}</td><td>${person.pickTime}</td><td>${person.pickNorm}%</td><td>${person.packTotal}</td><td class="good">${person.packEligible}</td><td class="warn">${person.packOutside}</td><td>${person.packTime}</td><td>${person.packNorm}%</td><td>${person.total}</td><td class="good">${person.totalEligible}</td><td class="warn">${person.totalOutside}</td><td>${person.totalTime}</td><td>${person.totalNorm}%</td><td>LIVE</td></tr>`).join('')
+      : '<tr><td colspan="17" class="report-empty">Zaznacz co najmniej jednego pracownika.</td></tr>';
     const from = reports.querySelector('[data-report-from]').value;
     const to = reports.querySelector('[data-report-to]').value;
-    reports.querySelector('[data-report-generated]').textContent = selected.length ? `Zakres ${formatDate(from)} – ${formatDate(to)} · ${selected.length} osób · dane w układzie ilość / czas / procent normy` : '';
+    reports.querySelector('[data-report-generated]').textContent = selected.length ? `Zakres ${formatDate(from)} – ${formatDate(to)} · ${selected.length} osób · ilość łączna / do normy / poza normą / czas / procent` : '';
   };
 
   reports.querySelectorAll('.report-people-grid input').forEach((input) => input.addEventListener('change', updateSelectionCount));
