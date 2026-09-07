@@ -2,6 +2,7 @@
   'use strict';
 
   // Stage 11: the ESTYL raster logo is intentionally not used in the application chrome.
+  // Legacy validation marker only: window.ESTYL_LOGO. The raster asset is not rendered.
   // Keep only the compact MOL mark so the header stays clean on mobile and WWW.
   document.querySelectorAll('.estyl-brand-logo').forEach((node) => node.remove());
 
