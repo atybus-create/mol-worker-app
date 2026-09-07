@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "effective_date": "2026-09-07",
+  "base_contract": "docs/v2/openapi.json",
+  "live_contract": "backend/v2/stage11-live-contract.json",
+  "description": "Rozszerzenia backendu po odbiorze Etapu 10. Przed Release Candidate zostaną scalone z bazowym openapi.json.",
+  "changes": {
+    "GET /mol-app-v2-auth-session": {
+      "side_effect": "technical_session_heartbeat_only",
+      "updates": ["SESSIONS.last_seen_at"],
+      "business_writes": false,
+      "moniti_writes": false
+    },
+    "GET /mol-app-v2-worker-status": {
+      "adds_to_norm_and_monthly_norm": [
+        "total_pak",
+        "total_pick",
+        "total_combined_units",
+        "eligible_combined_units",
+        "outside_combined_units",
+        "combined_seconds"
+      ]
+    },
+    "GET /mol-app-v2-norms-daily": {
+      "adds": ["total_pak", "total_pick", "total_combined_units", "eligible_combined_units", "outside_combined_units", "combined_seconds"]
+    },
+    "GET /mol-app-v2-norms-monthly": {
+      "adds": ["total_pak", "total_pick", "total_combined_units", "eligible_combined_units", "outside_combined_units", "combined_seconds"]
+    },
+    "GET /mol-app-v2-leader-team": {
+      "query": {"work_date": "YYYY-MM-DD optional"},
+      "adds_per_employee": [
+        "app_activity.status",
+        "app_activity.last_seen_at",
+        "app_activity.session_active",
+        "active_alert_count",
+        "active_alerts[]",
+        "es_mapping.status",
+        "es_mapping.configured",
+        "es_mapping.es_worker_id",
+        "es_mapping.last_good_at",
+        "es_mapping.last_attempt_at",
+        "es_mapping.error_code",
+        "norm.total_pak",
+        "norm.total_pick",
+        "norm.total_combined_units",
+        "monthly_norm"
+      ],
+      "admin_operational_visibility": "ADMIN included only when attendance state is OPEN for requested work_date"
+    },
+    "GET /mol-app-v2-employee-history": {
+      "query": {
+        "employee_id": "MOLxxx required",
+        "date_from": "YYYY-MM-DD optional",
+        "date_to": "YYYY-MM-DD optional",
+        "limit": "1..500 optional",
+        "cursor": "o:N optional"
+      },
+      "adds": ["events[]", "corrections[]", "messages[]", "timeline[]", "next_cursor", "total_timeline_items"],
+      "timeline_kinds": ["WORK_EVENT", "CORRECTION", "MESSAGE", "DAY"],
+      "direct_correction_event": "ATTENDANCE_CORRECTED",
+      "reopen_event": "WORK_REOPENED"
+    },
+    "GET /mol-app-v2-report-attendance": {
+      "query": {
+        "date_from": "YYYY-MM-DD required",
+        "date_to": "YYYY-MM-DD required",
+        "employee_id": "legacy single optional",
+        "employee_ids": "comma-separated MOL IDs optional, max 100",
+        "status": "comma-separated NOT_STARTED|OPEN|CLOSED optional"
+      },
+      "max_range_days": 367,
+      "adds_per_row": [
+        "process_seconds",
+        "no_process_seconds",
+        "time_by_process",
+        "process_sessions",
+        "corrections",
+        "direct_correction_events",
+        "moniti_sync",
+        "drive_sync",
+        "correction_required",
+        "norm_freshness",
+        "norm_coverage",
+        "norm_source_error"
+      ]
+    },
+    "GET /mol-app-v2-report-performance": {
+      "new": true,
+      "query": {
+        "date_from": "YYYY-MM-DD required",
+        "date_to": "YYYY-MM-DD required",
+        "employee_id": "legacy single optional",
+        "employee_ids": "comma-separated MOL IDs optional, max 100"
+      },
+      "per_row": [
+        "pick_total", "pick_eligible", "pick_outside", "pick_seconds", "pick_percent",
+        "pak_total", "pak_eligible", "pak_outside", "pak_seconds", "pak_percent",
+        "combined_total_units", "combined_eligible_units", "combined_outside_units", "combined_seconds", "combined_percent",
+        "numerator", "denominator", "freshness", "coverage", "source_error", "reason", "calculated_at", "time_by_process"
+      ],
+      "summary_rule": "weighted_from_summed_numerators_and_denominators_never_average_percentages"
+    },
+    "GET /mol-app-v2-report-export": {
+      "adds_query": {
+        "report_type": "attendance|performance",
+        "format": "csv|xlsx",
+        "employee_ids": "comma-separated MOL IDs optional"
+      }
+    },
+    "GET /mol-app-v2-audit-history": {
+      "new": true,
+      "query": {
+        "date_from": "YYYY-MM-DD optional",
+        "date_to": "YYYY-MM-DD optional",
+        "employee_id": "optional",
+        "actor_id": "optional",
+        "event_type": "optional",
+        "limit": "1..500 optional",
+        "cursor": "o:N optional"
+      },
+      "sources": ["WORK_EVENTS", "COMMUNICATIONS command_audit", "CORRECTION_DECISIONS + CORRECTION_APPROVALS"],
+      "sanitized_key_patterns": ["password", "token", "secret", "authorization", "credential"]
+    }
+  }
+}
