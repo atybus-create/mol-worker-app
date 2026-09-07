@@ -61,6 +61,7 @@ function saveToken(token) {
 function showLogin(message = '') {
   window.molMessages?.hide();
   window.molAttendance?.hide();
+  window.molLeader?.hide();
   clearTimeout(expiryTimer);
   byId('authTitle').textContent = 'Zaloguj się';
   byId('authMessage').textContent = message;
@@ -82,8 +83,10 @@ function showSession(data) {
   byId('userName').textContent = data.user.display_name;
   byId('userRole').textContent = {WORKER:'Pracownik', LEADER:'Lider', ADMIN:'Administrator'}[data.user.role];
   byId('sessionExpiry').textContent = new Date(data.expires_at).toLocaleString('pl-PL');
-  window.molAttendance?.activate(data, data.session_token || sessionToken);
-  window.molMessages?.activate(data, data.session_token || sessionToken);
+  const activeToken = data.session_token || sessionToken;
+  window.molAttendance?.activate(data, activeToken);
+  window.molMessages?.activate(data, activeToken);
+  window.molLeader?.activate(data, activeToken);
   clearTimeout(expiryTimer);
   expiryTimer = setTimeout(() => {
     generation++;
@@ -137,6 +140,7 @@ async function restoreSession() {
       byId('authTitle').textContent = 'Sesja niepotwierdzona';
       window.molMessages?.hide();
       window.molAttendance?.hide();
+      window.molLeader?.hide();
       byId('authMessage').textContent = error.message;
       byId('sessionPanel').hidden = true;
       byId('loginForm').hidden = true;
@@ -153,7 +157,6 @@ byId('loginForm').addEventListener('submit', async event => {
   setBusy(true);
   byId('authMessage').textContent = 'Sprawdzanie danych logowania…';
   try {
-    // A single request identifier is retained during transient retries.
     let data;
     for (let attempt = 0; attempt < 3; attempt++) {
       try { data = await authRequest('login',{body}); break; }
