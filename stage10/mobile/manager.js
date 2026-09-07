@@ -4,6 +4,11 @@
   const capabilities = window.MOLRoles.get(role);
   if (!capabilities?.managerMobile) return;
 
+  const managerStyles = document.createElement('link');
+  managerStyles.rel = 'stylesheet';
+  managerStyles.href = './manager.css';
+  document.head.append(managerStyles);
+
   const root = shell;
   const teamPanel = document.querySelector('[data-panel="team"]');
   const managerNav = document.createElement('div');
