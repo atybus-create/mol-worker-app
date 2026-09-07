@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#050b12">
+  <title>MOL App V2 — Worker</title>
+  <link rel="stylesheet" href="../shared/tokens.css">
+  <link rel="stylesheet" href="./app.css">
+</head>
+<body>
+  <main class="worker-shell" data-screen="home">
+    <header class="worker-hero">
+      <div class="brand-row">
+        <div class="brand-mark" aria-hidden="true">◆</div>
+        <div><strong>MOL App <span>V2</span></strong><small>Panel pracownika</small></div>
+        <span class="mol-chip mol-chip--info role-chip">WORKER</span>
+      </div>
+      <div class="worker-identity">
+        <div class="avatar">A</div>
+        <div><p class="mol-kicker">Dzień dobry</p><h1>Artur</h1></div>
+        <span class="online"><i></i> Online</span>
+      </div>
+    </header>
+
+    <section class="mol-card work-status">
+      <p class="mol-kicker">Status pracy</p>
+      <div class="status-head"><h2>W PRACY</h2><span class="mol-chip mol-chip--success">PAKOWANIE</span></div>
+      <div class="status-stats">
+        <div><small>Start pracy</small><strong>06:12</strong></div>
+        <div><small>Czas pracy</small><strong>02:43</strong></div>
+        <div><small>Proces od</small><strong>08:55</strong></div>
+      </div>
+    </section>
+
+    <section class="kpi-grid" aria-label="Wyniki dnia">
+      <article class="mol-card"><small>Obecność</small><strong>02:43</strong></article>
+      <article class="mol-card"><small>Bez procesu</small><strong>00:08</strong></article>
+      <article class="mol-card"><small>Norma</small><strong class="accent">87%</strong><div class="progress"><i style="width:87%"></i></div></article>
+    </section>
+
+    <section class="section-block">
+      <div class="section-title"><h2>Szybkie akcje</h2><span>Działaj sprawnie</span></div>
+      <div class="action-grid">
+        <button class="mol-button mol-button--primary" data-action="start">▶ <span><strong>Start pracy</strong><small>Rozpocznij zmianę</small></span></button>
+        <button class="mol-button mol-button--danger" data-action="stop">■ <span><strong>Stop pracy</strong><small>Zakończ zmianę</small></span></button>
+        <button class="mol-button" data-action="process">◆ <span><strong>Rozpocznij proces</strong><small>Wybierz proces</small></span></button>
+        <button class="mol-button" data-action="process-stop">✓ <span><strong>Zakończ proces</strong><small>Zakończ bieżący</small></span></button>
+      </div>
+    </section>
+
+    <section class="mol-card active-process">
+      <div><p class="mol-kicker">Aktywny proces</p><h2>PAKOWANIE</h2><small>Kod procesu: PAK</small></div>
+      <button class="mol-button" data-action="change-process">Zmień proces</button>
+    </section>
+
+    <section class="section-block notices">
+      <div class="section-title"><h2>Powiadomienia</h2><button class="text-button" data-nav="messages">Zobacz wszystkie</button></div>
+      <article class="mol-card notice warning"><b>!</b><div><strong>Przerwa bez procesu &gt; 5 min</strong><small>Brak aktywności od 08:47</small></div><time>13 min</time></article>
+      <article class="mol-card notice"><b>●</b><div><strong>Nowy komunikat od lidera</strong><small>Proszę o sprawdzenie strefy odkładczej A3.</small></div><time>28 min</time></article>
+    </section>
+
+    <section class="screen-placeholder" data-panel="process" hidden><h2>Proces</h2><p>Docelowy ekran wyboru i zmiany procesu. API zostanie podłączone po zamrożeniu komponentów Etapu 10.</p></section>
+    <section class="screen-placeholder" data-panel="messages" hidden><h2>Komunikaty</h2><p>Lista wiadomości, SHOWN/ACK i stany nieprzeczytane.</p></section>
+    <section class="screen-placeholder" data-panel="profile" hidden><h2>Profil</h2><p>Sesja, historia, korekta własnego czasu i wylogowanie.</p></section>
+
+    <nav class="bottom-nav" aria-label="Nawigacja aplikacji">
+      <button class="is-active" data-nav="home"><span>⌂</span>Start</button>
+      <button data-nav="process"><span>◆</span>Proces</button>
+      <button data-nav="messages"><span>●</span>Komunikaty<i class="badge">2</i></button>
+      <button data-nav="profile"><span>○</span>Profil</button>
+    </nav>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>
