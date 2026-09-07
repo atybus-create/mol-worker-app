@@ -23,7 +23,7 @@ Frontend posiada role-guard, jednak docelową autoryzacją pozostaje backend V2,
 
 ## Procesy
 
-Frontend został zsynchronizowany z `backend/v2/processes/catalog.json` i odwzorowuje dokładnie 10 aktywnych procesów:
+Frontend odwzorowuje dokładnie 10 aktywnych procesów:
 
 1. PAKOWANIE,
 2. KOMPLETACJA,
@@ -41,33 +41,39 @@ Reguła uprawnień:
 - WORKER: 9 procesów, bez BIURO,
 - LEADER / ADMIN: wszystkie 10.
 
-Wcześniejszy demonstracyjny proces SORTOWANIE został usunięty z UI. Dedykowane CI pilnuje, aby nie wrócił do wykonywalnego frontendu.
+Fikcyjne SORTOWANIE zostało usunięte.
 
 ## Norma WORKER
 
-Po rozszerzeniu zakresu każdy pracownik ma własny podgląd normy w dwóch okresach:
+Każdy pracownik ma podgląd normy w dwóch okresach:
 
 1. bieżący dzień,
 2. od pierwszego dnia bieżącego miesiąca kalendarzowego do dziś.
 
-W obu okresach prezentowane są trzy niezależne wiersze:
+W obu okresach dla PAK, PICK i PICK/PAK prezentowane są osobno:
 
-- PAK — ilość, czas, procent normy,
-- PICK — ilość, czas, procent normy,
-- PICK/PAK — łączna ilość, łączny czas, łączny procent normy.
+- **Ilość łącznie**,
+- **Ilość do normy**,
+- **Ilość poza normą**,
+- **Czas**,
+- **Procent normy**.
 
-Nie pozostawiamy jednego zbiorczego procentu bez możliwości sprawdzenia składowych PICK i PAK.
+`Ilość do normy` odpowiada produkcji zakwalifikowanej przez backend do normy. `Ilość poza normą` pozostaje widoczna i nie jest ukrywana w wyniku pracownika.
 
 ## Podgląd zespołu LEADER / ADMIN
 
-Lista pracowników pokazuje bieżący status, proces, obecność, PICK dzisiaj, PAK dzisiaj, łączną normę PICK/PAK i alerty.
+Lista pracowników pokazuje bieżący status, proces, obecność oraz dzisiejsze PICK, PAK i PICK/PAK. Każda z trzech ilości jest wyraźnie rozdzielona na:
+
+- łącznie,
+- do normy,
+- poza normą.
 
 Po wybraniu pracownika lider otrzymuje pełne rozliczenie:
 
-- dzisiaj: PICK ilość/czas/%, PAK ilość/czas/%, PICK/PAK ilość/czas/%,
-- bieżący miesiąc: ten sam komplet danych od pierwszego dnia miesiąca do dziś.
+- dzisiaj: PICK / PAK / PICK-PAK jako łącznie / do normy / poza normą / czas / procent,
+- bieżący miesiąc: identyczny komplet danych od pierwszego dnia miesiąca do dziś.
 
-Mobilny widok LEADER / ADMIN również pokazuje bieżące wartości jako ilość, czas i procent normy.
+Mobilny widok LEADER / ADMIN korzysta z tej samej semantyki.
 
 ## Raportowanie pracowników
 
@@ -84,19 +90,39 @@ Panel raportów WWW obsługuje:
 
 Raport okresowy ma jawne kolumny:
 
-- PICK ilość,
+- PICK łącznie,
+- PICK do normy,
+- PICK poza normą,
 - PICK czas,
 - PICK %,
-- PAK ilość,
+- PAK łącznie,
+- PAK do normy,
+- PAK poza normą,
 - PAK czas,
 - PAK %,
-- PICK/PAK ilość,
+- PICK/PAK łącznie,
+- PICK/PAK do normy,
+- PICK/PAK poza normą,
 - PICK/PAK czas,
 - PICK/PAK %.
 
-Mobilny panel LEADER / ADMIN ma analogiczny wybór osób i zakres dat oraz pokazuje dla każdej osoby trzy zestawy ilość/czas/procent.
+Mobilny panel LEADER / ADMIN ma analogiczny wybór osób i zakres dat.
 
-Etap 10 nie podłącza jeszcze tych akcji do żywego endpointu. Obsługa rzeczywistych agregacji za wskazany okres jest wejściem do Etapu 11.
+## Zgodność z logiką Stage 7
+
+Realny test Stage 7 potwierdził już rozróżnienie produkcji kwalifikowanej i niekwalifikowanej: `MATCH_PROCESS` weszło do `eligible_pak`, natomiast wcześniejsza produkcja `NO_APP` pozostała poza normą i nie została przepisana wstecz.
+
+Obecny publiczny `worker-status` eksponuje `eligible_pak` i `eligible_pick`, ale nie posiada jeszcze kompletnego gotowego zestawu `total` / `outside_norm`. Dlatego w Etapie 11 należy rozszerzyć kontrakt backendu. Frontend nie może sam arbitralnie kwalifikować produkcji ani traktować `eligible` jako całkowitego wykonania.
+
+Docelowo backend ma dostarczać dla PICK i PAK co najmniej:
+
+- total,
+- eligible,
+- outside_norm,
+- seconds,
+- percent,
+
+oraz analogiczne wartości PICK/PAK dla dnia, bieżącego miesiąca i dowolnego okresu raportowego.
 
 ## Pozostałe powierzchnie UI
 
@@ -129,30 +155,29 @@ Podczas Etapu 10:
 - `/v2/` pozostaje testowym frontendem Etapu 9,
 - akcje Stage 10 są nadal demonstracyjne i nie zapisują do backendu.
 
-## Testy końcowe po rozszerzeniu norm
+## Testy końcowe po ostatnim rozszerzeniu
 
 ### Validate Stage 10 frontend
 
-Run: `34124229858`
+Run: `34124929440`
 Wynik: PASS
 
 Sprawdzone m.in.:
 
 - składnia JS,
 - role,
-- 10 procesów,
-- BIURO niedostępne dla WORKER,
-- brak demonstracyjnego SORTOWANIA w UI,
-- dwa okresy norm WORKER: dzień + bieżący miesiąc,
-- PICK / PAK / PICK-PAK w układzie ilość / czas / procent,
+- 10 procesów i ograniczenie BIURO,
+- dwa okresy norm WORKER,
+- jawne `Ilość łącznie`, `Ilość do normy`, `Ilość poza normą`,
+- PICK / PAK / PICK-PAK,
 - pełny podgląd pracownika dla lidera,
-- raport okresowy dla jednego, wielu lub wszystkich pracowników,
+- raport jednego, wielu lub wszystkich pracowników,
 - przekazywanie `employeeIds`, `from`, `to`,
 - brak sekretów.
 
 ### Validate frontend
 
-Run: `34124229836`
+Run: `34124929502`
 Wynik: PASS
 
 Sprawdzone m.in.:
@@ -167,6 +192,6 @@ Sprawdzone m.in.:
 
 ## Brama odbiorowa
 
-Etap 10 jest technicznie gotowy po rozszerzeniu norm. Następnym krokiem jest publikacja odświeżonego izolowanego `/stage10-preview/` i wizualny odbiór użytkownika.
+Etap 10 jest technicznie gotowy po rozszerzeniu norm i rozdzieleniu ilości. Następnym krokiem jest publikacja odświeżonego izolowanego `/stage10-preview/` i wizualny odbiór użytkownika.
 
 Dopiero po jawnym odbiorze Etapu 10 należy oznaczyć go jako ODEBRANY i rozpocząć Etap 11 — integrację docelowych frontendów z backendem V2.
