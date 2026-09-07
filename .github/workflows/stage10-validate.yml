@@ -56,16 +56,30 @@ jobs:
           grep -q 'Korekty' stage10/mobile/manager.js
           grep -q 'Eksport XLSX' stage10/web/details.js
           grep -q 'Historia operacji' stage10/web/details.js
-      - name: Check leader output and multi-employee reports
+      - name: Check worker daily and monthly norms
+        run: |
+          grep -q 'Moja norma' stage10/mobile/index.html
+          grep -q 'Bieżący miesiąc' stage10/mobile/index.html
+          grep -q 'PICK/PAK' stage10/mobile/index.html
+          grep -q 'Norma dzienna' stage10/mobile/index.html
+          grep -q 'Norma od początku miesiąca' stage10/mobile/index.html
+          grep -q 'performance-row--total' stage10/mobile/index.html
+      - name: Check leader norm detail and period reports
         run: |
           grep -q 'PICK dziś' stage10/web/index.html
           grep -q 'PAK dziś' stage10/web/index.html
-          grep -q 'PICK dzisiaj' stage10/mobile/index.html
-          grep -q 'PAK dzisiaj' stage10/mobile/index.html
+          grep -q 'Bieżący miesiąc' stage10/web/index.html
+          grep -q 'data-month-pick-time' stage10/web/index.html
+          grep -q 'data-month-pack-norm' stage10/web/index.html
+          grep -q 'PICK/PAK ilość' stage10/web/details.js
+          grep -q 'PICK/PAK czas' stage10/web/details.js
+          grep -q 'PICK/PAK %' stage10/web/details.js
           grep -q 'Zaznacz wszystkich' stage10/web/details.js
           grep -q 'Generuj raport dla zaznaczonych' stage10/web/details.js
           grep -q 'employeeIds: checkedIds()' stage10/web/details.js
-          grep -q 'data-mobile-report-generate' stage10/mobile/manager.js
+          grep -q 'data-mobile-report-from' stage10/mobile/manager.js
+          grep -q 'data-mobile-report-to' stage10/mobile/manager.js
+          grep -q 'employeeIds: checkedIds()' stage10/mobile/manager.js
       - name: Check no secrets in Stage 10
         run: |
           ! grep -R -E 'Bearer [A-Za-z0-9._-]{20,}|pbkdf2-sha256\$600000\$|PHPSESSID=|CHAT_ALERT_WEBHOOK|password_hash' stage10
