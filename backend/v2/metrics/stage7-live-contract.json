@@ -1,6 +1,6 @@
 {
-  "captured_at": "2026-09-06T18:55:00Z",
-  "status": "READY_FOR_POSITIVE_REAL_ES_TEST",
+  "captured_at": "2026-09-07T06:34:06Z",
+  "status": "REAL_ES_SOURCE_INGEST_VERIFIED_ELIGIBLE_NORM_OPEN",
   "test_date": "2026-09-07",
   "components": {
     "es_report_read": {"workflow_id":"LQnqf4nQmNKsRsMT","active_version":"c90f9be9-c265-4ec0-90dc-13327124f607","active":true},
@@ -9,8 +9,8 @@
     "summary_recalculator": {"workflow_id":"pBYXQiiTNxhK9IGq","active_version":"2d4e29bd-d956-43f4-b744-f586608b309d","active":true},
     "norm_drive": {"workflow_id":"25EgiHZmEcqxxTvG","active_version":"ef240fa2-1dc5-4af0-b045-f2b7c4251e08","active":true},
     "metrics_task_ack": {"workflow_id":"r0pQp59VKwIt4i0h","active_version":"e688b2fd-af46-4a89-92c2-6e7aef5d22d0","active":true},
-    "attendance_service": {"workflow_id":"qPVmcfp6pUg3GbzH","active_version":"1275f1a8-a361-4184-8420-9804fd5568cb","active":true},
-    "moniti_adapter": {"workflow_id":"3e67SsUOByUi17YV","active_version":"7c2bb56d-9f5c-4fe7-b74e-9f480e814840","active":true}
+    "attendance_service": {"workflow_id":"qPVmcfp6pUg3GbzH","active_version":"0ea20e43-72f8-4941-96c9-97ac324015f6","active":true},
+    "moniti_adapter": {"workflow_id":"3e67SsUOByUi17YV","active_version":"ffe808e8-9523-49a3-afb5-e582478f819f","active":true}
   },
   "source_mapping": {
     "PAK": "ilość skontrolowanych zamówień",
@@ -36,8 +36,32 @@
     "prepared_es_batches_before_test": 0,
     "recovery_required_before_test": 0,
     "command_writer_free_before_test": true,
-    "moniti_live_write_scope_current_date": "2026-09-06",
-    "moniti_scope_for_2026_09_07_approved": false
+    "moniti_live_write_scope_current_date": "2026-09-07",
+    "moniti_test_worker_ids": [99191, 99185],
+    "moniti_test_logins": ["atybus", "asorokopud"],
+    "moniti_scope_for_2026_09_07_approved": true,
+    "dtatarska_moniti_write_authorized": false
+  },
+  "real_es_evidence": {
+    "verified_at_local_approx": "2026-09-07T08:32:00+02:00",
+    "report_ok": true,
+    "report_operator_count": 9,
+    "verified_employee_id": "MOL004",
+    "verified_es_operator": "dtatarska",
+    "baseline_at": "2026-09-07T04:33:05.206Z",
+    "baseline_pak": 0,
+    "baseline_pick": 4,
+    "real_production_deltas_observed": true,
+    "delta_records_at_audit": 98,
+    "sample_batch_id": "ES-679996",
+    "sample_batch_status": "COMMITTED",
+    "sample_delta_metric": "PAK",
+    "sample_delta_count": 2,
+    "sample_delta_classification": "NO_APP",
+    "sample_es_derived_outbox_id": "ES-679996:MOL004:2026-09-07:derived",
+    "sample_es_derived_status": "DONE",
+    "eligible_match_process_observed": false,
+    "reason_eligible_test_open": "real producer had no V2 attendance/process; approved Moniti accounts do not produce PAK/PICK"
   },
   "acceptance": {
     "first_good_read_is_baseline_only": true,
@@ -46,6 +70,8 @@
     "missing_operator_is_not_zero_production": true,
     "source_failure_is_not_zero_production": true,
     "counter_reset_requires_rebaseline": true,
+    "real_positive_es_source_ingest_complete": true,
+    "real_positive_es_eligible_norm_complete": false,
     "real_positive_es_test_complete": false
   },
   "communication_handoff": {
@@ -53,6 +79,11 @@
     "all_comm_rules_currently_disabled": true,
     "auto_alert_consumer_enabled": false,
     "es_verified": false,
-    "real_data_stage8b_preflight_mode": "CONTEXT_READ_ONLY_FROM_REAL_ES_DERIVED_SOURCE"
-  }
+    "real_data_stage8b_preflight_mode": "CONTEXT_READ_ONLY_FROM_REAL_ES_DERIVED_SOURCE",
+    "real_source_context_verified": true,
+    "verified_source_outbox_id": "ES-679996:MOL004:2026-09-07:derived",
+    "verified_context_classification": "WORK_OUTSIDE_APP",
+    "comm_write_performed": false
+  },
+  "evidence_document": "docs/v2/stage7-stage8b-live-evidence-20260907.md"
 }
