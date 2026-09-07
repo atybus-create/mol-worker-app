@@ -56,29 +56,40 @@ jobs:
           grep -q 'Korekty' stage10/mobile/manager.js
           grep -q 'Eksport XLSX' stage10/web/details.js
           grep -q 'Historia operacji' stage10/web/details.js
-      - name: Check worker daily and monthly norms
+      - name: Check worker daily and monthly norm quantities
         run: |
           grep -q 'Moja norma' stage10/mobile/index.html
           grep -q 'Bieżący miesiąc' stage10/mobile/index.html
+          grep -q 'Ilość łącznie' stage10/mobile/index.html
+          grep -q 'Ilość do normy' stage10/mobile/index.html
+          grep -q 'Ilość poza normą' stage10/mobile/index.html
+          grep -q 'Procent normy' stage10/mobile/index.html
           grep -q 'PICK/PAK' stage10/mobile/index.html
           grep -q 'Norma dzienna' stage10/mobile/index.html
           grep -q 'Norma od początku miesiąca' stage10/mobile/index.html
-          grep -q 'performance-row--total' stage10/mobile/index.html
-      - name: Check leader norm detail and period reports
+      - name: Check leader team and period reporting quantities
         run: |
           grep -q 'PICK dziś' stage10/web/index.html
           grep -q 'PAK dziś' stage10/web/index.html
-          grep -q 'Bieżący miesiąc' stage10/web/index.html
-          grep -q 'data-month-pick-time' stage10/web/index.html
-          grep -q 'data-month-pack-norm' stage10/web/index.html
-          grep -q 'PICK/PAK ilość' stage10/web/details.js
-          grep -q 'PICK/PAK czas' stage10/web/details.js
-          grep -q 'PICK/PAK %' stage10/web/details.js
+          grep -q 'PICK/PAK dziś' stage10/web/index.html
+          grep -q 'Do normy' stage10/web/index.html
+          grep -q 'Poza normą' stage10/web/index.html
+          grep -q 'data-month-pick-eligible' stage10/web/index.html
+          grep -q 'data-month-pick-outside' stage10/web/index.html
+          grep -q 'data-month-pack-eligible' stage10/web/index.html
+          grep -q 'data-month-pack-outside' stage10/web/index.html
+          grep -q 'PICK do normy' stage10/web/details.js
+          grep -q 'PICK poza normą' stage10/web/details.js
+          grep -q 'PAK do normy' stage10/web/details.js
+          grep -q 'PAK poza normą' stage10/web/details.js
+          grep -q 'PICK/PAK do normy' stage10/web/details.js
+          grep -q 'PICK/PAK poza normą' stage10/web/details.js
           grep -q 'Zaznacz wszystkich' stage10/web/details.js
           grep -q 'Generuj raport dla zaznaczonych' stage10/web/details.js
           grep -q 'employeeIds: checkedIds()' stage10/web/details.js
           grep -q 'data-mobile-report-from' stage10/mobile/manager.js
           grep -q 'data-mobile-report-to' stage10/mobile/manager.js
+          grep -q 'Poza normą' stage10/mobile/manager.js
           grep -q 'employeeIds: checkedIds()' stage10/mobile/manager.js
       - name: Check no secrets in Stage 10
         run: |
