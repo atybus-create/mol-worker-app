@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "stage": 9,
+  "status": "ACCEPTED",
+  "accepted_at": "2026-09-07",
+  "scope": "Leader/admin panel, reports, user administration and correction queue",
+  "tables": {
+    "employees": "npCr4h1LjhVL205w",
+    "sessions": "JXNEIdijeKfhuwYD",
+    "attendance": "HmJugmYliWT0ERn4",
+    "process_sessions": "4di5yA4jpe0ZEmPL",
+    "work_events": "SsKw8JJaizeIRoS5",
+    "locks": "uKfyrOkB2zoSEuBH",
+    "commands": "Oz0NtvJ9SRaVFMc8",
+    "norm_snapshots": "4pJlgFine6QhUQxX",
+    "status_snapshots": "8GZIQBgGlH0dGTAJ",
+    "config": "x66LbXe5CSpdMIkv",
+    "login_receipts": "sbWYwBwKoktbD3Yf",
+    "auth_limits": "XNQosSJXp23l2EBU",
+    "correction_approvals": "89iFEkyiyUaThLjU",
+    "correction_decisions": "Cptf8PNyVNlKGXlm"
+  },
+  "services": {
+    "leader_read": "5JJIHXO4rArpa32N",
+    "password_hash": "qAukpZqV4YiVENeI",
+    "user_admin": "RR7JeeHBxV9I3lOy",
+    "user_status": "rvFhqiLDN8uuZO4H",
+    "correction_queue": "3pPLDOfC2PfAEJvQ",
+    "sheet_correction_approval": "5eA8mKJLInBQSU7w"
+  },
+  "public_endpoints": {
+    "leader_team": {"workflow_id": "qaAkW6vHaRtLxq0Z", "method": "GET", "path": "mol-app-v2-leader-team"},
+    "employee_history": {"workflow_id": "lkqTVrFEeWpQaPTl", "method": "GET", "path": "mol-app-v2-employee-history"},
+    "report_attendance": {"workflow_id": "avbxQqBwiYG8KhrS", "method": "GET", "path": "mol-app-v2-report-attendance"},
+    "report_export": {"workflow_id": "l0Pq8sEusnT5IDhI", "method": "GET", "path": "mol-app-v2-report-export"},
+    "user_list": {"workflow_id": "1Yh4dgGFfXxbAplg", "method": "GET", "path": "mol-app-v2-user-list"},
+    "user_create": {"workflow_id": "qUf6xAdrDyH4l82X", "method": "POST", "path": "mol-app-v2-user-create"},
+    "user_password_reset": {"workflow_id": "p6WfXt9NMDmBFUb5", "method": "POST", "path": "mol-app-v2-user-password-reset"},
+    "user_active": {"workflow_id": "FZ2zk1JzeXkqCcx4", "method": "POST", "path": "mol-app-v2-user-active"},
+    "corrections_queue": {"workflow_id": "8aHmk0EO8zvOtns8", "method": "GET", "path": "mol-app-v2-corrections-queue"},
+    "correction_reject": {"workflow_id": "KY63viquzbO0O32y", "method": "POST", "path": "mol-app-v2-correction-reject"},
+    "correction_preview": {"method": "GET", "path": "mol-app-v2-attendance-status"},
+    "correction_approve": {"method": "POST", "path": "mol-app-v2-attendance-correct"}
+  },
+  "authorization": {
+    "worker_www_leader_panel": false,
+    "leader_user_create_roles": ["WORKER"],
+    "admin_user_create_roles": ["WORKER", "LEADER", "ADMIN"],
+    "leader_password_reset": "WORKER or self",
+    "admin_password_reset": "any user",
+    "leader_user_activation": "WORKER only",
+    "admin_user_activation": "any other account",
+    "self_deactivation": false
+  },
+  "safety": {
+    "v1_untouched": true,
+    "moniti_scope_expanded": false,
+    "automatic_alerts_enabled": false,
+    "correction_rejection_authoritative": true,
+    "shared_user_admin_lock": "user-admin-writer",
+    "shared_correction_lock": "auth-writer"
+  }
+}
