@@ -32,6 +32,7 @@ Frontend używany podczas odbioru Etapu 9 pozostaje frontendem testowym. Nie jes
 ### LEADER
 
 - dostęp do panelu WWW,
+- dostęp do aplikacji mobilnej z funkcjami wynikającymi z roli,
 - widok wszystkich aktywnych pracowników niezależnie od `leader_id`,
 - historia i raporty pracowników,
 - zatwierdzanie/odrzucanie korekt,
@@ -42,6 +43,7 @@ Frontend używany podczas odbioru Etapu 9 pozostaje frontendem testowym. Nie jes
 ### ADMIN
 
 - pełny zakres panelu WWW,
+- dostęp do aplikacji mobilnej z funkcjami wynikającymi z roli,
 - tworzenie WORKER/LEADER/ADMIN,
 - reset hasła dowolnego użytkownika,
 - aktywacja/dezaktywacja innych kont,
@@ -96,7 +98,7 @@ Etap 10: docelowy frontend V2.
 
 Dwa interfejsy na jednym backendzie:
 
-1. mobilny WORKER — dla telefonów magazynowych,
-2. WWW LEADER/ADMIN — dla liderów i administratorów.
+1. aplikacja mobilna role-based — WORKER używa jej jako jedynego interfejsu, LEADER/ADMIN również mogą z niej korzystać i otrzymują dodatkowe ekrany zgodne z rolą,
+2. WWW LEADER/ADMIN — dodatkowy rozbudowany panel dla liderów i administratorów.
 
 Oba mają używać wspólnego design systemu i stylistyki zaakceptowanej na wizualizacjach 2026-09-07.
