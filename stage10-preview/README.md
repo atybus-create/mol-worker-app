@@ -1,0 +1,1 @@
+Stage 10 isolated frontend preview. UI only; no active backend writes. Production /v2/ remains unchanged.
