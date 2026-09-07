@@ -1,12 +1,16 @@
 # MOL App V2 — Etap 10: docelowy frontend
 
-Status: **GOTOWY TECHNICZNIE DO ODBIORU PO AUDYCIE — NIEODEBRANY**
+Status: **ODEBRANY 2026-09-07 — FRONTEND ZAMROŻONY DO CZASU DOMKNIĘCIA BACKENDU**
 
-Frontend `v2/` pozostaje środowiskiem testowym backendu. Docelowy frontend jest rozwijany wyłącznie w `stage10/`.
+Frontend `v2/` pozostaje środowiskiem testowym backendu. Docelowy frontend znajduje się w `stage10/`.
 
 Pełny audyt wymagania → frontend → backend:
 
 `docs/v2/stage-10-frontend-backend-audit-20260907.md`
+
+Końcowe domknięcie backendu po odbiorze Etapu 10:
+
+`docs/v2/stage-11-backend-gap-closeout-20260907.md`
 
 ## Role
 
@@ -69,10 +73,27 @@ LEADER/ADMIN mogą przygotować komunikat do jednego, wielu lub wszystkich aktua
 
 Automatyczne reguły alertów pozostają OFF/HOLD do osobnej decyzji i etapu powiadomień.
 
-## Ograniczenia Etapu 10
+## Granica po odbiorze Etapu 10
 
-- brak realnych zapisów do backendu z finalnego UI,
-- brak nowych zapisów Moniti,
+Na polecenie użytkownika po odbiorze Etapu 10 najpierw domknięto brakujące kontrakty backendu. Do czasu końcowego raportu/audytu nie wolno rozpoczynać integracji fetch/API w `stage10/`.
+
+Etap 11 backend zapewnia autorytatywne źródło dla jawnych total/eligible/outside, monitoringu lidera, heartbeat aplikacji, raportu czasu wielu osób, raportu wydajności, eksportu, pełnej historii i audytu. Szczegóły: `backend/v2/stage11-live-contract.json`.
+
+## Nadal poza Etapem 10
+
+- finalne podłączenie odebranego UI do backendu,
+- APK/AAB,
+- rejestracja urządzenia/push tokena,
+- push w tle, dźwięk i wibracja,
+- testy Android foreground/background/locked/restart/network/DND/battery optimization,
+- pilot magazynowy.
+
+Te elementy są realizowane w kolejnych etapach; natywne powiadomienia muszą być gotowe przed pilotem magazynowym.
+
+## Niezmienne ograniczenia
+
 - V1 nietknięta,
-- finalne podłączenie danych i rozszerzenie brakujących kontraktów API zaczyna się w Etapie 11,
-- APK/push/dźwięk/wibracja przed pilotem magazynowym, zgodnie z decyzją użytkownika.
+- brak rozszerzenia zgody Moniti,
+- automatyczne alerty OFF/HOLD,
+- backend jest źródłem autoryzacji i danych,
+- frontend nie może samodzielnie rekonstruować kwalifikacji normy.
