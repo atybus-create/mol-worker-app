@@ -49,9 +49,36 @@
     });
   }));
 
-  const detailsScript = document.createElement('script');
-  detailsScript.src = './worker-details.js';
-  document.body.append(detailsScript);
+  const loadWarehouseConfig = () => new Promise((resolve) => {
+    if (window.MOLWarehouseTools?.items) {
+      resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = '../shared/warehouse-tools.js';
+    script.onload = resolve;
+    script.onerror = resolve;
+    document.head.append(script);
+  });
 
+  const loadWorkerDetails = async () => {
+    await loadWarehouseConfig();
+    const detailsScript = document.createElement('script');
+    detailsScript.src = './worker-details.js';
+    document.body.append(detailsScript);
+  };
+
+  window.addEventListener('mol:stage10-demo-process-select', (event) => {
+    const selected = event.detail || {};
+    const activeCard = document.querySelector('.active-process');
+    const activeName = activeCard?.querySelector('h2');
+    const activeCode = activeCard?.querySelector('small');
+    const statusChip = document.querySelector('.work-status .status-head .mol-chip');
+    if (activeName && selected.name) activeName.textContent = selected.name.toUpperCase();
+    if (activeCode && selected.code) activeCode.textContent = `Kod procesu: ${selected.code}`;
+    if (statusChip && selected.code) statusChip.textContent = selected.code;
+  });
+
+  loadWorkerDetails();
   show('home');
 })();
