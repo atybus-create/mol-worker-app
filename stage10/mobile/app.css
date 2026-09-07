@@ -49,6 +49,24 @@ body {
 .section-title > span, .text-button { color:var(--mol-text-muted); font-size:12px; }
 .text-button { border:0; background:none; cursor:pointer; }
 
+.performance-block { display:grid; gap:10px; }
+.performance-block .section-title { margin-bottom:0; }
+.performance-period { padding:16px; }
+.performance-period-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.performance-period-head h3 { margin:3px 0 0; font-size:17px; }
+.performance-table { overflow:hidden; border:1px solid rgba(81,178,220,.14); border-radius:11px; }
+.performance-row { display:grid; grid-template-columns:minmax(88px,1.2fr) repeat(3,minmax(58px,.8fr)); gap:8px; align-items:center; padding:11px 10px; border-bottom:1px solid rgba(81,178,220,.11); }
+.performance-row:last-child { border-bottom:0; }
+.performance-row span,.performance-row strong,.performance-row b { min-width:0; }
+.performance-row strong { font-size:12px; }
+.performance-row span { color:var(--mol-text-muted); font-size:12px; text-align:right; }
+.performance-row b { color:var(--mol-teal); text-align:right; font-size:13px; }
+.performance-row--head { padding-block:8px; background:rgba(18,200,255,.04); }
+.performance-row--head span { color:var(--mol-text-dim); font-size:9px; text-transform:uppercase; letter-spacing:.06em; font-weight:800; }
+.performance-row--head span:first-child { text-align:left; }
+.performance-row--total { background:rgba(34,210,162,.05); }
+.performance-row--total strong,.performance-row--total b { color:var(--mol-green); }
+
 .action-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .action-grid .mol-button { min-height:76px; display:flex; align-items:center; gap:12px; text-align:left; }
 .action-grid .mol-button > span { display:block; }
@@ -80,7 +98,7 @@ body {
 .manager-person small { color:var(--mol-text-muted); margin-top:3px; font-size:11px; }
 .manager-person-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
 .manager-person-metrics span { padding:8px; border:1px solid rgba(81,178,220,.14); border-radius:9px; background:rgba(4,19,29,.7); color:var(--mol-text-muted); font-size:10px; }
-.manager-person-metrics strong { display:block; margin-top:3px; color:var(--mol-text); font-size:15px; }
+.manager-person-metrics strong { display:block; margin-top:3px; color:var(--mol-text); font-size:12px; line-height:1.45; }
 
 .bottom-nav {
   position:fixed;
@@ -108,5 +126,6 @@ body {
   .brand-row { grid-template-columns:44px 1fr; }
   .kpi-grid { grid-template-columns:1fr; }
   .action-grid { grid-template-columns:1fr; }
-  .manager-person-metrics { grid-template-columns:1fr 1fr 1fr; }
+  .manager-person-metrics { grid-template-columns:1fr; }
+  .performance-row { grid-template-columns:minmax(82px,1.15fr) repeat(3,minmax(52px,.8fr)); gap:5px; padding-inline:8px; }
 }
