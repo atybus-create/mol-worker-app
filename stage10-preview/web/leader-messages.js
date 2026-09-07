@@ -105,5 +105,19 @@
     employeeActions.append(quickButton);
   }
 
+  const loadScript = (src, onload) => {
+    const script = document.createElement('script');
+    script.src = src;
+    if (onload) script.onload = onload;
+    document.head.append(script);
+  };
+  if (!window.ESTYL_LOGO) {
+    loadScript('../../logo.js', () => loadScript('../shared/brand.js'));
+  } else {
+    loadScript('../shared/brand.js');
+  }
+  ['./weighted-report.js', './worktime-completion.js', './leader-message-history.js', './spec-completion.js']
+    .forEach((src) => loadScript(src));
+
   sync();
 })();
