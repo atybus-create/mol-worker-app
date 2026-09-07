@@ -27,6 +27,27 @@
   shell.dataset.role = role;
   document.querySelector('.profile small').textContent = role === 'ADMIN' ? 'Administrator' : 'Lider zespołu';
 
+  const sidebarNav = document.querySelector('.sidebar nav');
+  const performanceButton = sidebarNav?.querySelector('[data-section="reports"]');
+  if (performanceButton) {
+    const label = performanceButton.querySelector('span');
+    if (label) label.textContent = 'Wydajność';
+    const worktimeButton = document.createElement('button');
+    worktimeButton.type = 'button';
+    worktimeButton.dataset.section = 'worktime';
+    worktimeButton.innerHTML = '◷ <span>Czas pracy</span>';
+    performanceButton.after(worktimeButton);
+  }
+
+  const performanceView = document.querySelector('[data-view="reports"]');
+  if (performanceView && !document.querySelector('[data-view="worktime"]')) {
+    const worktimeView = document.createElement('section');
+    worktimeView.className = 'view';
+    worktimeView.dataset.view = 'worktime';
+    worktimeView.hidden = true;
+    performanceView.after(worktimeView);
+  }
+
   const sectionButtons = [...document.querySelectorAll('[data-section]')];
   const views = [...document.querySelectorAll('[data-view]')];
 
@@ -125,6 +146,10 @@
   const detailsScript = document.createElement('script');
   detailsScript.src = './details.js';
   document.body.append(detailsScript);
+
+  const worktimeScript = document.createElement('script');
+  worktimeScript.src = './worktime.js';
+  document.body.append(worktimeScript);
 
   showSection('team');
 })();
