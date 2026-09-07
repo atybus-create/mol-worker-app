@@ -18,6 +18,7 @@ jobs:
         run: |
           node --check stage10/shared/roles.js
           node --check stage10/shared/auth-demo.js
+          node --check stage10/shared/states.js
           node --check stage10/mobile/app.js
           node --check stage10/mobile/worker-details.js
           node --check stage10/mobile/manager.js
@@ -35,11 +36,14 @@ jobs:
         run: |
           test -f stage10/mobile/login.html
           test -f stage10/web/login.html
+          test -f stage10/shared/states.css
           test -f stage10/mobile/worker-details.css
           test -f stage10/mobile/manager.css
           test -f stage10/web/details.css
           grep -q 'Zaloguj' stage10/mobile/login.html
           grep -q 'Panel internetowy jest dostępny wyłącznie dla ról LEADER i ADMIN' stage10/web/login.html
+          grep -q 'Sesja wygasła' stage10/shared/states.js
+          grep -q 'Brak połączenia' stage10/shared/states.js
           grep -q 'Korekta czasu pracy' stage10/mobile/worker-details.js
           grep -q 'Potwierdzam odbiór' stage10/mobile/worker-details.js
           grep -q 'Korekty' stage10/mobile/manager.js
