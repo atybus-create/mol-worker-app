@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="./styles.css?v=0.6.0">
   <link rel="stylesheet" href="./norms.css?v=0.7.0">
   <link rel="stylesheet" href="./messages.css?v=0.8.0-stage8">
+  <link rel="stylesheet" href="./leader.css?v=0.9.0-stage9-dev">
 </head>
 <body>
   <main class="shell">
@@ -18,7 +19,7 @@
       <p class="eyebrow">MOL // SYSTEM PRACY</p>
       <span class="environment">ŚRODOWISKO TESTOWE V2</span>
       <h1>Twoje konto.<br>Nowy początek.</h1>
-      <p class="lead">Etap 8: alerty i komunikacja. Automatyczne reguły pozostają wyłączone do zatwierdzenia parametrów i potwierdzenia źródeł ES. Realne testy Moniti są ograniczone do wcześniej uzgodnionych kont i aktualnie zatwierdzonego okna testowego.</p>
+      <p class="lead">Etap 9: panel lidera i raporty są wdrażane na odseparowanym backendzie V2. Automatyczne alerty pozostają wyłączone, a zakres realnych zapisów Moniti nie jest rozszerzany.</p>
     </section>
     <section class="auth-card" aria-labelledby="authTitle">
       <p class="eyebrow">Dostęp do V2</p>
@@ -33,7 +34,7 @@
       </form>
       <div id="sessionPanel" hidden>
         <dl><dt>Pracownik</dt><dd id="userName"></dd><dt>Rola</dt><dd id="userRole"></dd><dt>Sesja ważna do</dt><dd id="sessionExpiry"></dd></dl>
-        <p class="scope-note">Czas pracy, procesy, normy i komunikacja V2 są dostępne poniżej. Pełny panel lidera pozostaje zakresem etapu 9.</p>
+        <p class="scope-note">Czas pracy, procesy, normy i komunikacja V2 są dostępne poniżej. LEADER/ADMIN otrzymują dodatkowo panel zespołu Etapu 9.</p>
         <button id="logoutButton" type="button">Wyloguj się</button>
       </div>
       <button id="sessionRetry" type="button" hidden>Sprawdź sesję ponownie</button>
@@ -70,7 +71,7 @@
           <button id="processChange" type="button" hidden>Zmień proces</button>
           <button id="processLogout" type="button" hidden>Zakończ tylko proces</button>
         </div>
-        <p class="scope-note">Zakończenie procesu pozostawia dzień otwarty. STOP pracy zamyka również proces. PRZERWA jest osobnym procesem; czas bez procesu liczymy oddzielnie. Liczniki bazują na ostatnim potwierdzonym stanie — po pracy w innej karcie użyj „Odśwież stan”.</p>
+        <p class="scope-note">Zakończenie procesu pozostawia dzień otwarty. STOP pracy zamyka również proces. PRZERWA jest osobnym procesem; czas bez procesu liczymy oddzielnie.</p>
         <p id="processHistory" class="scope-note"></p>
       </section>
       <section id="normPanel" aria-labelledby="normTitle">
@@ -82,11 +83,11 @@
           <article><h4 id="normMonthLabel">Miesiąc</h4><strong id="normMonthPercent" class="norm-percent">—</strong><p id="normMonthFreshness" class="norm-freshness"></p><p id="normMonthDetails" class="norm-details"></p><p id="normMonthNote" class="scope-note"></p><small id="normMonthTime"></small></article>
         </div>
         <p id="normConnection" class="scope-note" role="status" aria-live="polite"></p>
-        <p class="scope-note">Spójny status odświeża się co 30 sekund, gdy karta jest widoczna. Nie przerywa wpisywania korekty. Wyniki wylicza backend; lokalny licznik czasu nie przelicza procentów. Brak danych oznaczamy kreską, nie zerem.</p>
+        <p class="scope-note">Spójny status odświeża się co 30 sekund, gdy karta jest widoczna. Brak danych oznaczamy kreską, nie zerem.</p>
       </section>
       <div id="sheetApprovalPanel" hidden>
         <h3>Zatwierdź korektę z Drive</h3>
-        <p class="scope-note">W zakładce „Korekty” raportu wpisz propozycję z nowym UUID. Godziny podawaj w ISO z offsetem, np. 2026-09-05T08:00:00+02:00. Następnie odczytaj propozycję tutaj i zatwierdź ją swoim kontem.</p>
+        <p class="scope-note">W zakładce „Korekty” raportu wpisz propozycję z nowym UUID. Następnie odczytaj propozycję tutaj i zatwierdź ją swoim kontem.</p>
         <p><a href="https://docs.google.com/spreadsheets/d/1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4/edit" target="_blank" rel="noopener noreferrer">Otwórz raport testowy V2</a></p>
         <label for="sheetCorrectionId">correction_id z arkusza</label><input id="sheetCorrectionId" maxlength="36" placeholder="UUID korekty">
         <button id="sheetPreviewButton" type="button">Odczytaj propozycję</button>
@@ -116,32 +117,70 @@
         </form>
       </section>
     </section>
+    <section id="leaderPanel" class="auth-card" aria-labelledby="leaderTitle" hidden>
+      <p class="eyebrow">Panel lidera · Etap 9</p>
+      <h2 id="leaderTitle">Zespół i raporty</h2>
+      <p class="scope-note">Widok obejmuje wszystkich aktywnych pracowników niezależnie od leader_id. Jest tylko do odczytu: lider nie może stąd zmieniać cudzego procesu, roli ani konfiguracji.</p>
+      <p id="leaderStatus" role="status" aria-live="polite"></p>
+      <div class="leader-grid">
+        <section aria-labelledby="leaderTeamTitle">
+          <h3 id="leaderTeamTitle">Bieżący zespół</h3>
+          <p id="leaderTeamCount" class="scope-note"></p>
+          <button id="leaderRefresh" type="button">Odśwież zespół</button>
+          <div id="leaderTeamList" class="leader-list"></div>
+        </section>
+        <section aria-labelledby="leaderHistoryTitle">
+          <h3 id="leaderHistoryTitle">Historia pracownika</h3>
+          <p id="leaderHistoryEmployee" class="scope-note">Wybierz osobę z listy.</p>
+          <div class="leader-toolbar">
+            <label>Od <input id="leaderDateFrom" type="date"></label>
+            <label>Do <input id="leaderDateTo" type="date"></label>
+            <button id="leaderHistoryRefresh" type="button">Odśwież historię</button>
+          </div>
+          <div class="leader-table-wrap"><table><thead><tr><th>Dzień</th><th>Stan</th><th>START</th><th>STOP</th><th>Obecność</th><th>Procesy</th><th>Norma</th></tr></thead><tbody id="leaderHistoryBody"></tbody></table></div>
+          <p id="leaderHistoryEmpty" class="scope-note">Brak danych w wybranym zakresie.</p>
+        </section>
+      </div>
+      <section class="leader-section" aria-labelledby="leaderReportTitle">
+        <h3 id="leaderReportTitle">Raport obecności i norm</h3>
+        <div class="leader-toolbar">
+          <label>Od <input id="leaderReportFrom" type="date"></label>
+          <label>Do <input id="leaderReportTo" type="date"></label>
+          <button id="leaderReportRun" type="button">Pokaż raport</button>
+          <button id="leaderExportCsv" type="button">Eksport CSV</button>
+          <button id="leaderExportXlsx" type="button">Eksport XLSX</button>
+        </div>
+        <p id="leaderReportCount" class="scope-note">0 wierszy</p>
+        <div class="leader-table-wrap"><table><thead><tr><th>Dzień</th><th>Pracownik</th><th>Stan</th><th>START</th><th>STOP</th><th>Obecność</th><th>Norma</th><th>Świeżość</th><th>Pokrycie</th></tr></thead><tbody id="leaderReportBody"></tbody></table></div>
+      </section>
+    </section>
     <section class="status-card" aria-labelledby="statusTitle">
       <div><p class="eyebrow">Stan środowiska</p><h2 id="statusTitle">Sprawdzanie backendu V2…</h2><p id="statusDescription">Łączenie z odseparowanym endpointem kontrolnym.</p></div>
       <span id="statusChip" class="status-chip is-loading">SPRAWDZANIE</span>
     </section>
     <section class="grid">
-      <article><span>Frontend</span><strong>V2 0.8.0</strong><small>wydanie testowe etapu 8</small></article>
-      <article><span>Backend</span><strong id="backendVersion">—</strong><small>oddzielny workflow n8n</small></article>
-      <article><span>Zapisy pracowników</span><strong id="writesState">—</strong><small>oddzielone od testów technicznych</small></article>
+      <article><span>Frontend</span><strong>V2 · Etap 9 DEV</strong><small>panel lidera w trakcie odbioru</small></article>
+      <article><span>Backend</span><strong id="backendVersion">—</strong><small>wersja live z endpointu health</small></article>
+      <article><span>Zapisy pracowników</span><strong id="writesState">—</strong><small>bez rozszerzania zgody Moniti</small></article>
       <article><span>Baza V2</span><strong id="databaseState">—</strong><small>odczyt konfiguracji na żywo</small></article>
     </section>
     <section class="acceptance">
-      <h2>Etap 8 — komunikacja w trakcie wdrożenia</h2>
+      <h2>Etap 9 — wdrożenie przed odbiorem</h2>
       <ul>
-        <li>WORKER widzi wyłącznie własne wiadomości i może oznaczyć je jako wyświetlone lub potwierdzone.</li>
-        <li>LEADER i ADMIN mogą wysłać komunikat do wybranej osoby z otwartym dniem lub do wszystkich osób OPEN.</li>
-        <li>ACK wiadomości nie rozwiązuje przyczyny alertu. Przyczyna ma osobny stan.</li>
-        <li>Historia jest pobierana stronami i przyrostowo. Błąd odczytu nie czyści ostatniego poprawnego widoku ani norm.</li>
-        <li>Automatyczne alerty pozostają wyłączone do zatwierdzenia progów/godzin oraz — dla reguł produkcyjnych — do potwierdzenia ES.</li>
+        <li>LEADER/ADMIN widzi wszystkich aktywnych pracowników, ich czas pracy, bieżący proces i stan normy.</li>
+        <li>Historia pracownika i raport obecności/norm korzystają z Data Tables i opublikowanych snapshotów V2.</li>
+        <li>Eksport raportu jest dostępny jako CSV i XLSX.</li>
+        <li>WORKER nie otrzymuje panelu lidera ani dostępu do endpointów raportowych.</li>
+        <li>Panel nie dodaje liderowi praw administracyjnych ani sterowania cudzym procesem.</li>
       </ul>
       <button id="retryButton" type="button">Sprawdź ponownie</button>
     </section>
-    <footer>V2 0.8.0 · Etap 8 · Oddzielna baza V2, bez rozszerzania zakresu realnych testów Moniti</footer>
+    <footer>V2 · Etap 9 DEV · Etapy 1–8 odebrane · automatyczne alerty OFF/HOLD</footer>
   </main>
   <script src="./norms.js?v=0.7.0" defer></script>
   <script src="./messages.js?v=0.8.0-stage8" defer></script>
   <script src="./attendance.js?v=0.8.0-stage8" defer></script>
-  <script src="./app.js?v=0.8.0-stage8" defer></script>
+  <script src="./leader.js?v=0.9.0-stage9-dev" defer></script>
+  <script src="./app.js?v=0.9.0-stage9-dev" defer></script>
 </body>
 </html>
