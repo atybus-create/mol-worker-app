@@ -43,40 +43,60 @@ Reguła uprawnień:
 
 Wcześniejszy demonstracyjny proces SORTOWANIE został usunięty z UI. Dedykowane CI pilnuje, aby nie wrócił do wykonywalnego frontendu.
 
-## Podgląd zespołu
+## Norma WORKER
 
-W widoku LEADER / ADMIN lista pracowników pokazuje teraz równolegle:
+Po rozszerzeniu zakresu każdy pracownik ma własny podgląd normy w dwóch okresach:
 
-- status pracy,
-- aktualny proces,
-- obecność,
-- PICK dzisiaj,
-- PAK dzisiaj,
-- procent normy,
-- alerty.
+1. bieżący dzień,
+2. od pierwszego dnia bieżącego miesiąca kalendarzowego do dziś.
 
-Szybki podgląd wybranego pracownika pokazuje PICK i PAK jako osobne wartości dzienne obok normy i obecności.
+W obu okresach prezentowane są trzy niezależne wiersze:
 
-Te same dzienne liczniki są obecne w menedżerskim widoku mobile.
+- PAK — ilość, czas, procent normy,
+- PICK — ilość, czas, procent normy,
+- PICK/PAK — łączna ilość, łączny czas, łączny procent normy.
 
-## Raportowanie wielu pracowników
+Nie pozostawiamy jednego zbiorczego procentu bez możliwości sprawdzenia składowych PICK i PAK.
 
-Panel raportów WWW obsługuje dowolny wybór wielu pracowników:
+## Podgląd zespołu LEADER / ADMIN
 
-- checkbox dla każdej osoby,
+Lista pracowników pokazuje bieżący status, proces, obecność, PICK dzisiaj, PAK dzisiaj, łączną normę PICK/PAK i alerty.
+
+Po wybraniu pracownika lider otrzymuje pełne rozliczenie:
+
+- dzisiaj: PICK ilość/czas/%, PAK ilość/czas/%, PICK/PAK ilość/czas/%,
+- bieżący miesiąc: ten sam komplet danych od pierwszego dnia miesiąca do dziś.
+
+Mobilny widok LEADER / ADMIN również pokazuje bieżące wartości jako ilość, czas i procent normy.
+
+## Raportowanie pracowników
+
+Panel raportów WWW obsługuje:
+
+- wybór jednego pracownika,
+- wybór dowolnej grupy,
 - `Zaznacz wszystkich`,
 - `Wyczyść`,
 - licznik zaznaczonych,
+- zakres dat `od` / `do`,
 - `Generuj raport dla zaznaczonych`,
-- podsumowanie wybranej grupy,
-- osobne wiersze pracowników,
-- PICK / PAK / obecność / norma,
-- zakres dat,
-- przygotowane akcje CSV i XLSX przekazujące dokładną listę `employeeIds`.
+- eksport CSV i XLSX z dokładną listą `employeeIds` i zakresem dat.
 
-Mobilny panel LEADER / ADMIN ma analogiczny multi-select i raport dla zaznaczonych osób.
+Raport okresowy ma jawne kolumny:
 
-Etap 10 nie podłącza jeszcze tych akcji do żywego endpointu. Obsługa żądania raportowego dla wielu `employee_id` jest wejściem do Etapu 11.
+- PICK ilość,
+- PICK czas,
+- PICK %,
+- PAK ilość,
+- PAK czas,
+- PAK %,
+- PICK/PAK ilość,
+- PICK/PAK czas,
+- PICK/PAK %.
+
+Mobilny panel LEADER / ADMIN ma analogiczny wybór osób i zakres dat oraz pokazuje dla każdej osoby trzy zestawy ilość/czas/procent.
+
+Etap 10 nie podłącza jeszcze tych akcji do żywego endpointu. Obsługa rzeczywistych agregacji za wskazany okres jest wejściem do Etapu 11.
 
 ## Pozostałe powierzchnie UI
 
@@ -87,7 +107,6 @@ Gotowe są:
 - dashboard WORKER,
 - START / STOP pracy,
 - wybór / zmiana procesu,
-- norma i czas bez procesu,
 - komunikaty i ACK UI,
 - profil i historia dnia,
 - formularz własnej korekty,
@@ -110,13 +129,11 @@ Podczas Etapu 10:
 - `/v2/` pozostaje testowym frontendem Etapu 9,
 - akcje Stage 10 są nadal demonstracyjne i nie zapisują do backendu.
 
-## Testy końcowe
-
-Commit technicznego closeoutu UI: `0a788a8bfc7b323f233e0a9be8a22925fac0a4d8`.
+## Testy końcowe po rozszerzeniu norm
 
 ### Validate Stage 10 frontend
 
-Run: `34120893120`
+Run: `34124229858`
 Wynik: PASS
 
 Sprawdzone m.in.:
@@ -126,15 +143,16 @@ Sprawdzone m.in.:
 - 10 procesów,
 - BIURO niedostępne dla WORKER,
 - brak demonstracyjnego SORTOWANIA w UI,
-- wymagane ekrany,
-- PICK / PAK w podglądzie zespołu,
-- multi-select raportów,
-- przekazywanie `employeeIds`,
+- dwa okresy norm WORKER: dzień + bieżący miesiąc,
+- PICK / PAK / PICK-PAK w układzie ilość / czas / procent,
+- pełny podgląd pracownika dla lidera,
+- raport okresowy dla jednego, wielu lub wszystkich pracowników,
+- przekazywanie `employeeIds`, `from`, `to`,
 - brak sekretów.
 
 ### Validate frontend
 
-Run: `34120893114`
+Run: `34124229836`
 Wynik: PASS
 
 Sprawdzone m.in.:
@@ -149,6 +167,6 @@ Sprawdzone m.in.:
 
 ## Brama odbiorowa
 
-Etap 10 jest technicznie gotowy. Następnym krokiem jest publikacja odświeżonego izolowanego `/stage10-preview/` i wizualny odbiór użytkownika.
+Etap 10 jest technicznie gotowy po rozszerzeniu norm. Następnym krokiem jest publikacja odświeżonego izolowanego `/stage10-preview/` i wizualny odbiór użytkownika.
 
 Dopiero po jawnym odbiorze Etapu 10 należy oznaczyć go jako ODEBRANY i rozpocząć Etap 11 — integrację docelowych frontendów z backendem V2.
