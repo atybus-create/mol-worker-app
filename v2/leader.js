@@ -1,7 +1,7 @@
 (() => {
   const el = id => document.getElementById(id);
   const BASE = 'https://n8n.estyl.team/webhook/';
-  let token = '', role = '', generation = 0, selectedEmployee = '', busy = false;
+  let token = '', role = '', actorEmployee = '', generation = 0, selectedEmployee = '', busy = false, userBusy = false, users = [];
 
   const today = () => new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Warsaw', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date());
   const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Warsaw', year:'numeric', month:'2-digit', day:'2-digit'}).format(d); };
@@ -15,16 +15,32 @@
     node.dataset.state = error ? 'error' : 'ok';
   }
 
-  async function request(path, {binary=false}={}) {
+  function setUserMessage(text, error=false) {
+    const node = el('leaderUserStatus');
+    if (!node) return;
+    node.textContent = text || '';
+    node.dataset.state = error ? 'error' : 'ok';
+  }
+
+  async function request(path, {binary=false, method='GET', body=null}={}) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 45000);
     try {
-      const response = await fetch(BASE + path, {method:'GET', cache:'no-store', credentials:'omit', headers:{Authorization:`Bearer ${token}`}, signal:controller.signal});
+      const headers = {Authorization:`Bearer ${token}`};
+      if (body) headers['Content-Type'] = 'application/json';
+      const response = await fetch(BASE + path, {
+        method,
+        cache:'no-store',
+        credentials:'omit',
+        headers,
+        body:body ? JSON.stringify(body) : undefined,
+        signal:controller.signal,
+      });
       if (binary) {
         if (!response.ok) {
           let message = `HTTP ${response.status}`;
           try { const e = await response.json(); message = e.error?.message || message; } catch {}
-          throw new Error(message);
+          const error = new Error(message); error.status = response.status; throw error;
         }
         return {blob:await response.blob(), disposition:response.headers.get('content-disposition') || ''};
       }
@@ -32,7 +48,7 @@
       try { envelope = await response.json(); } catch { throw new Error('Backend nie zwrócił poprawnej odpowiedzi.'); }
       if (!response.ok || envelope.ok !== true) {
         const error = new Error(envelope.error?.message || 'Operacja nie została potwierdzona.');
-        error.status = response.status; error.code = envelope.error?.code; throw error;
+        error.status = response.status; error.code = envelope.error?.code; error.retryable = envelope.error?.retryable; throw error;
       }
       return envelope.data;
     } catch (error) {
@@ -140,6 +156,106 @@
     } catch(e){setMessage(e.message,true);}
   }
 
+  function ensureUserAdminPanel() {
+    if (el('leaderUserAdmin')) return;
+    const panel = document.createElement('section');
+    panel.id = 'leaderUserAdmin';
+    panel.className = 'leader-section';
+    panel.setAttribute('aria-labelledby','leaderUserAdminTitle');
+    panel.innerHTML = `
+      <h3 id="leaderUserAdminTitle">Użytkownicy aplikacji</h3>
+      <p class="scope-note">LEADER może dodawać konta WORKER i zmieniać hasła pracowników WORKER oraz własne. ADMIN może zarządzać hasłami wszystkich ról i tworzyć dowolną rolę. Zmiana hasła unieważnia wszystkie aktywne sesje wskazanego użytkownika.</p>
+      <p id="leaderUserStatus" class="scope-note" role="status" aria-live="polite"></p>
+      <div class="leader-toolbar"><button id="leaderUsersRefresh" type="button">Odśwież użytkowników</button><span id="leaderUsersCount" class="scope-note"></span></div>
+      <div id="leaderUsersList" class="leader-list"></div>
+      <div class="leader-grid leader-user-grid">
+        <form id="leaderCreateUserForm" class="leader-user-form">
+          <h4>Dodaj użytkownika</h4>
+          <label>Imię i nazwisko <input id="leaderNewDisplayName" maxlength="100" required></label>
+          <label>Login <input id="leaderNewLogin" maxlength="64" autocapitalize="none" spellcheck="false" required></label>
+          <label>Rola <select id="leaderNewRole"></select></label>
+          <label>Hasło startowe <input id="leaderNewPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label>
+          <label>Powtórz hasło <input id="leaderNewPassword2" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label>
+          <label>Moniti worker ID <input id="leaderNewMoniti" maxlength="100" placeholder="opcjonalnie"></label>
+          <label>Operator ES <input id="leaderNewEs" maxlength="100" placeholder="opcjonalnie"></label>
+          <button id="leaderCreateUser" type="submit">Dodaj użytkownika</button>
+        </form>
+        <form id="leaderResetPasswordForm" class="leader-user-form">
+          <h4>Zmień hasło</h4>
+          <label>Użytkownik <select id="leaderPasswordEmployee" required></select></label>
+          <label>Nowe hasło <input id="leaderResetPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label>
+          <label>Powtórz nowe hasło <input id="leaderResetPassword2" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label>
+          <p class="scope-note">Po zapisie dotychczasowe sesje tego użytkownika zostaną unieważnione.</p>
+          <button id="leaderResetPasswordButton" type="submit">Zmień hasło</button>
+        </form>
+      </div>`;
+    el('leaderPanel').append(panel);
+
+    el('leaderUsersRefresh').addEventListener('click',()=>loadUsers());
+    el('leaderCreateUserForm').addEventListener('submit',createUser);
+    el('leaderResetPasswordForm').addEventListener('submit',resetPassword);
+  }
+
+  function setUserControlsDisabled(value) {
+    for (const id of ['leaderUsersRefresh','leaderNewDisplayName','leaderNewLogin','leaderNewRole','leaderNewPassword','leaderNewPassword2','leaderNewMoniti','leaderNewEs','leaderCreateUser','leaderPasswordEmployee','leaderResetPassword','leaderResetPassword2','leaderResetPasswordButton']) {
+      if (el(id)) el(id).disabled = value;
+    }
+  }
+
+  function renderUsers() {
+    ensureUserAdminPanel();
+    el('leaderUsersCount').textContent = `${users.length} kont`;
+    const list=el('leaderUsersList'); list.replaceChildren();
+    for(const user of users){
+      const row=document.createElement('div'); row.className='leader-row leader-user-row';
+      const name=document.createElement('strong'); name.textContent=user.display_name;
+      const meta=document.createElement('span'); meta.textContent=`${user.employee_id} · ${user.login} · ${user.role} · ${user.active?'aktywne':'nieaktywne'}${user.es_worker_id?` · ES ${user.es_worker_id}`:''}${user.moniti_worker_id?` · Moniti ${user.moniti_worker_id}`:''}`;
+      row.append(name,meta); list.append(row);
+    }
+    const select=el('leaderPasswordEmployee'); select.replaceChildren();
+    const allowed=users.filter(u=>u.can_reset_password);
+    for(const user of allowed){const option=document.createElement('option');option.value=user.employee_id;option.textContent=`${user.display_name} (${user.employee_id} · ${user.role})`;select.append(option);}
+    const roleSelect=el('leaderNewRole'); roleSelect.replaceChildren();
+    const roles=role==='ADMIN'?['WORKER','LEADER','ADMIN']:['WORKER'];
+    for(const value of roles){const option=document.createElement('option');option.value=value;option.textContent={WORKER:'Pracownik',LEADER:'Lider',ADMIN:'Administrator'}[value];roleSelect.append(option);}
+    el('leaderResetPasswordButton').disabled=userBusy||allowed.length===0;
+  }
+
+  async function loadUsers(silent=false) {
+    if(!token||userBusy)return;
+    const gen=generation;userBusy=true;setUserControlsDisabled(true);if(!silent)setUserMessage('Odczyt kont użytkowników…');
+    try{const data=await request('mol-app-v2-user-list');if(gen!==generation)return;users=data?.items||[];renderUsers();if(!silent)setUserMessage('Lista użytkowników odświeżona.');}
+    catch(e){if(gen===generation)setUserMessage(e.message,true);}
+    finally{if(gen===generation){userBusy=false;setUserControlsDisabled(false);if(el('leaderPasswordEmployee'))el('leaderResetPasswordButton').disabled=!users.some(u=>u.can_reset_password);}}
+  }
+
+  async function createUser(event) {
+    event.preventDefault(); if(userBusy||!token)return;
+    const p1=el('leaderNewPassword').value,p2=el('leaderNewPassword2').value;
+    if(p1!==p2)return setUserMessage('Hasła nie są identyczne.',true);
+    const body={request_id:crypto.randomUUID(),display_name:el('leaderNewDisplayName').value.trim(),login:el('leaderNewLogin').value.trim().toLowerCase(),role:el('leaderNewRole').value,initial_password:p1,moniti_worker_id:el('leaderNewMoniti').value.trim(),es_worker_id:el('leaderNewEs').value.trim()};
+    userBusy=true;setUserControlsDisabled(true);setUserMessage('Dodawanie użytkownika…');
+    try{const data=await request('mol-app-v2-user-create',{method:'POST',body});el('leaderCreateUserForm').reset();el('leaderNewPassword').value='';el('leaderNewPassword2').value='';setUserMessage(`Dodano konto ${data.display_name} (${data.employee_id}).`);await refreshTeam(true);users=[];}
+    catch(e){setUserMessage(e.message,true);}
+    finally{body.initial_password='';userBusy=false;setUserControlsDisabled(false);await loadUsers(true);}
+  }
+
+  async function resetPassword(event) {
+    event.preventDefault();if(userBusy||!token)return;
+    const p1=el('leaderResetPassword').value,p2=el('leaderResetPassword2').value,employee_id=el('leaderPasswordEmployee').value;
+    if(!employee_id)return setUserMessage('Wybierz użytkownika.',true);
+    if(p1!==p2)return setUserMessage('Hasła nie są identyczne.',true);
+    const body={request_id:crypto.randomUUID(),employee_id,new_password:p1};
+    userBusy=true;setUserControlsDisabled(true);setUserMessage('Zmiana hasła i unieważnianie sesji…');
+    try{
+      const data=await request('mol-app-v2-user-password-reset',{method:'POST',body});
+      el('leaderResetPassword').value='';el('leaderResetPassword2').value='';
+      if(data.self_session_revoked){setUserMessage('Hasło zmienione. Twoja sesja została unieważniona — za chwilę wrócisz do logowania.');try{sessionStorage.removeItem('mol.v2.session');}catch{}setTimeout(()=>location.reload(),1200);return;}
+      setUserMessage(`Hasło użytkownika ${data.display_name} zostało zmienione. Aktywne sesje unieważniono.`);
+    }catch(e){setUserMessage(e.message,true);}
+    finally{body.new_password='';userBusy=false;setUserControlsDisabled(false);}
+  }
+
   el('leaderRefresh').addEventListener('click',()=>refreshTeam());
   el('leaderHistoryRefresh').addEventListener('click',loadHistory);
   el('leaderReportRun').addEventListener('click',loadReport);
@@ -147,13 +263,18 @@
   el('leaderExportXlsx').addEventListener('click',()=>download('xlsx'));
 
   window.molLeader = {
-    hide(){ generation++; token=''; role=''; selectedEmployee=''; el('leaderPanel').hidden=true; el('leaderTeamList').replaceChildren(); el('leaderHistoryBody').replaceChildren(); el('leaderReportBody').replaceChildren(); setMessage(''); },
+    hide(){
+      generation++; token=''; role=''; actorEmployee=''; selectedEmployee=''; users=[]; busy=false; userBusy=false;
+      el('leaderPanel').hidden=true; el('leaderTeamList').replaceChildren(); el('leaderHistoryBody').replaceChildren(); el('leaderReportBody').replaceChildren();
+      if(el('leaderUsersList'))el('leaderUsersList').replaceChildren();setMessage('');setUserMessage('');
+    },
     activate(data,t){
       if (!['LEADER','ADMIN'].includes(data?.user?.role)) return this.hide();
       if (token===t && role===data.user.role) return;
-      generation++; token=t; role=data.user.role; selectedEmployee='';
+      generation++; token=t; role=data.user.role; actorEmployee=data.user.employee_id; selectedEmployee=''; users=[];
       const max=today(); for(const id of ['leaderDateTo','leaderReportTo']){el(id).value=max;el(id).max=max;} for(const id of ['leaderDateFrom','leaderReportFrom']){el(id).value=daysAgo(30);el(id).max=max;}
-      el('leaderPanel').hidden=false; el('leaderHistoryTitle').textContent='Historia pracownika'; el('leaderHistoryEmployee').textContent='Wybierz osobę z listy.'; renderHistory({items:[]}); renderReport({items:[],count:0}); refreshTeam();
+      el('leaderPanel').hidden=false; el('leaderHistoryTitle').textContent='Historia pracownika'; el('leaderHistoryEmployee').textContent='Wybierz osobę z listy.'; renderHistory({items:[]}); renderReport({items:[],count:0});
+      ensureUserAdminPanel(); refreshTeam(); loadUsers();
     }
   };
 })();
