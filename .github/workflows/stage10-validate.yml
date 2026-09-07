@@ -27,6 +27,7 @@ jobs:
           node --check stage10/web/app.js
           node --check stage10/web/details.js
           node --check stage10/web/worktime.js
+          node --check stage10/web/leader-messages.js
       - name: Check approved role model
         run: |
           grep -q 'WORKER: Object.freeze({ mobile: true, web: false' stage10/shared/roles.js
@@ -50,6 +51,8 @@ jobs:
           test -f stage10/mobile/manager.css
           test -f stage10/web/details.css
           test -f stage10/web/worktime.js
+          test -f stage10/web/leader-messages.js
+          test -f stage10/web/leader-messages.css
           grep -q 'Zaloguj' stage10/mobile/login.html
           grep -q 'Panel internetowy jest dostępny wyłącznie dla ról LEADER i ADMIN' stage10/web/login.html
           grep -q 'Sesja wygasła' stage10/shared/states.js
@@ -117,11 +120,30 @@ jobs:
           grep -q 'https://atybus-create.github.io/mol-magazyn-terminy-pwa/' stage10/shared/warehouse-tools.js
           grep -q 'Batch reader' stage10/shared/warehouse-tools.js
           grep -q 'https://atybus-create.github.io/mol-magazyn-terminy-pwa/batch-reader/' stage10/shared/warehouse-tools.js
+          grep -q 'loadWarehouseConfig' stage10/mobile/app.js
+          grep -q '../shared/warehouse-tools.js' stage10/mobile/app.js
           grep -q 'data-warehouse-tools' stage10/mobile/worker-details.js
           grep -q "selected.code !== 'MAGAZYN'" stage10/mobile/worker-details.js
           grep -q "selected.code === 'MAGAZYN'" stage10/mobile/worker-details.js
           grep -q 'target="_blank" rel="noopener noreferrer"' stage10/mobile/worker-details.js
           grep -q 'Proces MAGAZYN pozostaje aktywny' stage10/mobile/worker-details.js
+          grep -q 'mol:stage10-demo-process-select' stage10/mobile/app.js
+      - name: Check leader manual communication
+        run: |
+          grep -q "leaderMessagesButton.dataset.section = 'leader-messages'" stage10/web/app.js
+          grep -q '>Komunikaty</span>' stage10/web/app.js
+          grep -q 'Wyślij komunikat' stage10/web/leader-messages.js
+          grep -q 'Wszyscy aktualnie w pracy' stage10/web/leader-messages.js
+          grep -q 'maxlength="2000"' stage10/web/leader-messages.js
+          grep -q 'Wymagaj potwierdzenia odbioru' stage10/web/leader-messages.js
+          grep -q "requestType: 'leader-message'" stage10/web/leader-messages.js
+          grep -q 'recipientIds:' stage10/web/leader-messages.js
+          grep -q 'allOpen:' stage10/web/leader-messages.js
+          grep -q 'ackRequired:' stage10/web/leader-messages.js
+          grep -q 'manager-messages' stage10/mobile/manager.js
+          grep -q 'data-mobile-message-all-open' stage10/mobile/manager.js
+          grep -q 'data-mobile-message-ack' stage10/mobile/manager.js
+          grep -q "mol:stage10-demo-leader-message" stage10/mobile/manager.js
       - name: Check no secrets in Stage 10
         run: |
           ! grep -R -E 'Bearer [A-Za-z0-9._-]{20,}|pbkdf2-sha256\$600000\$|PHPSESSID=|CHAT_ALERT_WEBHOOK|password_hash' stage10
