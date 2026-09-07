@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "stage": 11,
-  "status": "BACKEND_GAPS_CLOSED_PENDING_FINAL_AUDIT",
+  "status": "BACKEND_READY_FOR_FRONTEND_INTEGRATION",
   "accepted_frontend_stage": 10,
   "date": "2026-09-07",
   "source_of_truth": "active n8n workflows + V2 Data Tables",
@@ -15,15 +15,16 @@
       "REPORT_PERFORMANCE",
       "REPORT_EXPORT",
       "AUDIT_HISTORY"
-    ]
+    ],
+    "validation_errors": 0
   },
   "public_read_endpoints": {
     "leader_team": {"workflow_id": "qaAkW6vHaRtLxq0Z", "method": "GET", "path": "mol-app-v2-leader-team"},
-    "employee_history": {"workflow_id": "lkqTVrFEeWpQaPTl", "method": "GET", "path": "mol-app-v2-employee-history"},
-    "report_attendance": {"workflow_id": "avbxQqBwiYG8KhrS", "method": "GET", "path": "mol-app-v2-report-attendance"},
-    "report_performance": {"workflow_id": "apaA176w09BdBkex", "method": "GET", "path": "mol-app-v2-report-performance"},
-    "report_export": {"workflow_id": "l0Pq8sEusnT5IDhI", "method": "GET", "path": "mol-app-v2-report-export"},
-    "audit_history": {"workflow_id": "xvrxTXDn2Dh3y3Wx", "method": "GET", "path": "mol-app-v2-audit-history"},
+    "employee_history": {"workflow_id": "lkqTVrFEeWpQaPTl", "method": "GET", "path": "mol-app-v2-employee-history", "pagination": true},
+    "report_attendance": {"workflow_id": "avbxQqBwiYG8KhrS", "method": "GET", "path": "mol-app-v2-report-attendance", "multi_employee": true},
+    "report_performance": {"workflow_id": "apaA176w09BdBkex", "method": "GET", "path": "mol-app-v2-report-performance", "multi_employee": true},
+    "report_export": {"workflow_id": "l0Pq8sEusnT5IDhI", "method": "GET", "path": "mol-app-v2-report-export", "report_types": ["attendance", "performance"]},
+    "audit_history": {"workflow_id": "xvrxTXDn2Dh3y3Wx", "method": "GET", "path": "mol-app-v2-audit-history", "pagination": true},
     "worker_status": {"workflow_id": "yXJ9hBTKl2yFBTVO", "method": "GET", "path": "mol-app-v2-worker-status"},
     "norm_daily": {"workflow_id": "7OJ48TN6IEkQqrMW", "method": "GET", "path": "mol-app-v2-norms-daily"},
     "norm_monthly": {"workflow_id": "ZenbZql84avHIz9b", "method": "GET", "path": "mol-app-v2-norms-monthly"},
@@ -54,22 +55,28 @@
     "session_heartbeat": true,
     "employee_full_history": true,
     "employee_history_pagination": true,
+    "direct_correction_reason_in_history": true,
     "attendance_multi_employee_report": true,
     "attendance_process_times": true,
     "attendance_direct_correction_events": true,
-    "attendance_status_filter": true,
+    "attendance_status_filter_for_existing_day_records": true,
     "performance_period_report": true,
     "performance_weighted_group_summary": true,
     "export_attendance_and_performance": true,
     "audit_history_endpoint": true,
     "audit_pagination": true,
+    "audit_correction_employee_resolution": true,
     "audit_sensitive_field_sanitization": true
   },
-  "report_limits": {
+  "report_semantics": {
+    "absence_synthesis": false,
+    "absence_synthesis_reason": "No work-schedule/leave calendar exists; missing attendance row is not treated as a synthetic NOT_STARTED absence.",
     "max_date_range_days": 367,
     "max_selected_employees": 100,
     "history_limit_max": 500,
-    "cursor_format": "o:N"
+    "cursor_format": "o:N",
+    "combined_units": "PAK + PICK/3",
+    "group_percent_rule": "sum numerators / sum denominators; never average percentages"
   },
   "security": {
     "leader_reads_roles": ["LEADER", "ADMIN"],
@@ -105,8 +112,16 @@
     "authenticated_e2e_status": "DEFERRED_TO_NORMAL_FRONTEND_LOGIN_INTEGRATION",
     "authenticated_e2e_reason": "Tool safety blocked manual password transfer; no bypass attempted."
   },
+  "documentation": {
+    "base_openapi": "docs/v2/openapi.json",
+    "stage11_openapi_addendum": "docs/v2/openapi-stage11-addendum.json",
+    "human_contract": "docs/v2/api-contract.md",
+    "closeout": "docs/v2/stage-11-backend-gap-closeout-20260907.md",
+    "merge_addendum_before_release_candidate": true
+  },
   "deferred_by_plan_not_backend_gap": [
     "final frontend API integration",
+    "authenticated E2E through normal integrated login",
     "Android device registration/push token",
     "background push delivery",
     "sound/vibration/locked-screen behavior",
