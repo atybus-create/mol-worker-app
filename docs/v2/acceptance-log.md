@@ -11,7 +11,7 @@
 | 7 | ES, normy i spójny status | PASS techniczny na żywych danych 2026-09-07: realny baseline, dodatni PAK, `MATCH_PROCESS`, norma, publiczne worker-status, Google Sheet, Drive mirror, czyste lock/recovery. Dowód: stage7-stage8b-live-evidence-20260907.md | Jawnie odebrany przez użytkownika 2026-09-07 | ODEBRANY |
 | 8 | Alerty i komunikacja | PASS: MANUAL, RECIPIENTS, LIST history/changes, SHOWN, ACK, Drive mirror, worker-status, realny START/STOP Moniti i recovery; realny Context ES sprawdzony dla `NO_APP` i `MATCH_PROCESS`, bez uruchamiania automatów | Jawnie odebrany przez użytkownika 2026-09-07 | ODEBRANY |
 | 9 | Panel lidera, raporty, użytkownicy i kolejka korekt | PASS: aktywne i poprawne serwisy, publiczne bramki 401 bez sesji, wcześniejsze pełne E2E user-admin/status/corrections; protokół `stage-9-closeout-20260907.md` | Panel testowy obejrzany i zaakceptowany przez użytkownika 2026-09-07 | ODEBRANY |
-| 10 | Docelowy frontend V2: mobile WORKER + WWW LEADER/ADMIN | Design zatwierdzony; implementacja rozpoczęta od wspólnego design systemu | Wizualizacje zaakceptowane 2026-09-07 | W TOKU |
+| 10 | Docelowy frontend V2: aplikacja mobilna role-based + WWW LEADER/ADMIN | Design zatwierdzony; implementacja rozpoczęta od wspólnego design systemu | Wizualizacje zaakceptowane 2026-09-07 | W TOKU |
 | 11 | Integracja docelowych frontendów z zaakceptowanym backendem | — | — | NIE ROZPOCZĘTO |
 | 12 | Pełny regres V2 / Release Candidate | — | — | NIE ROZPOCZĘTO |
 | 13 | Android APK/AAB | — | — | NIE ROZPOCZĘTO |
@@ -59,12 +59,16 @@ Frontend użyty do odbioru Etapu 9 pozostaje narzędziem testowym. Nie jest doce
 
 ## Etap 10 — W TOKU
 
-Etap 10 buduje docelowy frontend na zaakceptowanym backendzie Stage 9. Użytkownik 2026-09-07 zaakceptował kierunek wizualny dla:
+Etap 10 buduje docelowy frontend na zaakceptowanym backendzie Stage 9. Użytkownik 2026-09-07 zaakceptował kierunek wizualny dla aplikacji mobilnej oraz panelu WWW.
 
-1. aplikacji mobilnej WORKER,
-2. panelu WWW LEADER/ADMIN.
+Model dostępu docelowego:
 
-WORKER docelowo korzysta z telefonu. Panel WWW jest dostępny wyłącznie dla LEADER/ADMIN. Oba interfejsy korzystają ze wspólnego design systemu, aby zachować jeden produkt wizualny i te same znaczenia statusów.
+1. WORKER korzysta wyłącznie z aplikacji mobilnej.
+2. LEADER i ADMIN mogą korzystać z aplikacji mobilnej z dodatkowymi ekranami wynikającymi z roli.
+3. LEADER i ADMIN mają dodatkowo dostęp do rozbudowanego panelu WWW.
+4. WORKER nie ma dostępu do panelu WWW ani do menedżerskich danych przez bezpośrednie API.
+
+Mobile i WWW korzystają ze wspólnego design systemu, aby zachować jeden produkt wizualny i te same znaczenia statusów.
 
 ## Historyczny test odbiorowy etapu 1
 
