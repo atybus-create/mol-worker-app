@@ -17,6 +17,7 @@ jobs:
       - name: Check Stage 10 JavaScript
         run: |
           node --check stage10/shared/roles.js
+          node --check stage10/shared/processes.js
           node --check stage10/shared/auth-demo.js
           node --check stage10/shared/states.js
           node --check stage10/mobile/app.js
@@ -32,6 +33,12 @@ jobs:
           grep -q 'WORKER nie otrzymuje panelu WWW' stage10/README.md
           grep -q 'Panel WWW niedostępny dla WORKER' stage10/web/app.js
           grep -q 'managerMobileNav' stage10/mobile/index.html
+      - name: Check canonical process catalog and BIURO scope
+        run: |
+          for code in PAKOWANIE KOMPLETACJA DYZUR ZWROTY BIURO PORZADKI_KARTONY PRZYGOTOWANIE_STANOWISKA MAGAZYN PRZERWA INNE; do grep -q "$code" stage10/shared/processes.js; done
+          grep -q "filter((code) => code !== 'BIURO')" stage10/shared/processes.js
+          grep -q 'allowedProcesses = window.MOLProcesses.allowedFor(role)' stage10/mobile/worker-details.js
+          ! grep -R -q 'SORTOWANIE\|Sortowanie\|SORT</small>' stage10
       - name: Check final UI surfaces
         run: |
           test -f stage10/mobile/login.html
@@ -49,6 +56,16 @@ jobs:
           grep -q 'Korekty' stage10/mobile/manager.js
           grep -q 'Eksport XLSX' stage10/web/details.js
           grep -q 'Historia operacji' stage10/web/details.js
+      - name: Check leader output and multi-employee reports
+        run: |
+          grep -q 'PICK dziś' stage10/web/index.html
+          grep -q 'PAK dziś' stage10/web/index.html
+          grep -q 'PICK dzisiaj' stage10/mobile/index.html
+          grep -q 'PAK dzisiaj' stage10/mobile/index.html
+          grep -q 'Zaznacz wszystkich' stage10/web/details.js
+          grep -q 'Generuj raport dla zaznaczonych' stage10/web/details.js
+          grep -q 'employeeIds: checkedIds()' stage10/web/details.js
+          grep -q 'data-mobile-report-generate' stage10/mobile/manager.js
       - name: Check no secrets in Stage 10
         run: |
           ! grep -R -E 'Bearer [A-Za-z0-9._-]{20,}|pbkdf2-sha256\$600000\$|PHPSESSID=|CHAT_ALERT_WEBHOOK|password_hash' stage10
