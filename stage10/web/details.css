@@ -24,12 +24,26 @@
 .web-stat-grid small,.web-stat-grid strong { display:block; }
 .web-stat-grid small { color:var(--mol-text-muted); }
 .web-stat-grid strong { margin-top:6px; font-size:24px; }
-.report-summary article:nth-child(2) strong,.report-summary article:nth-child(3) strong { color:var(--mol-cyan); }
+.norm-summary-card span,.norm-summary-card b { display:block; }
+.norm-summary-card span { margin-top:4px; color:var(--mol-text-muted); font-size:12px; }
+.norm-summary-card b { margin-top:4px; color:var(--mol-teal); font-size:15px; }
+.leader-performance-periods { display:grid; gap:10px; margin:12px 0; }
+.leader-performance-period { padding:12px; border:1px solid rgba(81,178,220,.14); border-radius:11px; background:rgba(3,18,29,.55); }
+.leader-performance-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:9px; }
+.leader-performance-head small { color:var(--mol-text-muted); }
+.leader-performance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+.leader-performance-grid span { padding:8px; border-radius:8px; background:rgba(255,255,255,.035); }
+.leader-performance-grid small,.leader-performance-grid strong,.leader-performance-grid em,.leader-performance-grid b { display:block; }
+.leader-performance-grid small { color:var(--mol-text-muted); font-size:9px; }
+.leader-performance-grid strong { margin-top:4px; font-size:15px; }
+.leader-performance-grid em { margin-top:2px; color:var(--mol-text-muted); font-size:11px; font-style:normal; }
+.leader-performance-grid b { margin-top:3px; color:var(--mol-teal); font-size:13px; }
 .detail-table-card { padding:16px; overflow:auto; }
 .detail-table-card h2 { margin:0 0 4px; font-size:18px; }
 .detail-table-head { margin-bottom:12px; }
 .detail-table-head small { color:var(--mol-text-muted); }
 .detail-table-card table { min-width:860px; }
+.detail-table-card .norm-report-table { min-width:1320px; }
 .report-empty { padding:28px; text-align:center; color:var(--mol-text-muted); }
 .correction-status { font-size:10px; font-weight:800; border-radius:999px; padding:4px 8px; }
 .correction-status.pending { color:var(--mol-yellow); background:var(--mol-warning-bg); }
@@ -59,6 +73,6 @@
 .report-bars { display:flex; align-items:end; gap:12px; height:110px; margin-top:20px; }
 .report-bars i { flex:1; max-width:54px; background:linear-gradient(180deg,var(--mol-cyan),var(--mol-blue)); border-radius:6px 6px 1px 1px; }
 .report-line { width:100%; height:110px; margin-top:18px; color:var(--mol-cyan); }
-@media(max-width:1280px){.report-people-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.report-person{grid-template-columns:auto 1fr}.report-person-output{grid-column:2;justify-content:start}}
+@media(max-width:1280px){.report-people-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.report-person{grid-template-columns:auto 1fr}.report-person-output{grid-column:2;justify-content:start}.leader-performance-grid{grid-template-columns:1fr}}
 @media(max-width:1100px){.web-stat-grid{grid-template-columns:repeat(2,1fr)}.user-layout,.report-visuals{grid-template-columns:1fr}.user-row{grid-template-columns:1fr 100px 100px}.user-row-actions{grid-column:1/-1;justify-content:flex-start}.audit-item{grid-template-columns:120px 1fr}.audit-item span:nth-child(3),.audit-item span:nth-child(4){display:none}.report-toolbar{top:0}}
-@media(max-width:680px){.web-stat-grid{grid-template-columns:1fr}.view-toolbar{display:grid}.view-toolbar input,.view-toolbar select,.view-toolbar .mol-button{width:100%}.user-row{grid-template-columns:1fr}.audit-item{grid-template-columns:1fr}.report-selector-head{align-items:flex-start;flex-direction:column}.report-people-grid{grid-template-columns:1fr}.report-selector-actions{width:100%}.report-selector-actions button{flex:1}.report-person-output{grid-template-columns:repeat(3,1fr);width:100%}}
+@media(max-width:680px){.web-stat-grid{grid-template-columns:1fr}.view-toolbar{display:grid}.view-toolbar input,.view-toolbar select,.view-toolbar .mol-button{width:100%}.user-row{grid-template-columns:1fr}.audit-item{grid-template-columns:1fr}.report-selector-head{align-items:flex-start;flex-direction:column}.report-people-grid{grid-template-columns:1fr}.report-selector-actions{width:100%}.report-selector-actions button{flex:1}.report-person-output{grid-template-columns:repeat(3,1fr);width:100%}.leader-performance-head{align-items:flex-start;flex-direction:column}}
