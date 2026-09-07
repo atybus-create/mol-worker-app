@@ -15,6 +15,11 @@
     return;
   }
 
+  const detailsStyles = document.createElement('link');
+  detailsStyles.rel = 'stylesheet';
+  detailsStyles.href = './details.css';
+  document.head.append(detailsStyles);
+
   shell.dataset.role = role;
   document.querySelector('.profile small').textContent = role === 'ADMIN' ? 'Administrator' : 'Lider zespołu';
 
@@ -50,6 +55,10 @@
   };
 
   rows.forEach((row) => row.addEventListener('click', () => selectEmployee(row)));
+
+  const detailsScript = document.createElement('script');
+  detailsScript.src = './details.js';
+  document.body.append(detailsScript);
 
   showSection('team');
 })();
