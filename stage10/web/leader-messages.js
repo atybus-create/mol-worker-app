@@ -111,13 +111,18 @@
     if (onload) script.onload = onload;
     document.head.append(script);
   };
-  if (!window.ESTYL_LOGO) {
-    loadScript('../../logo.js', () => loadScript('../shared/brand.js'));
-  } else {
-    loadScript('../shared/brand.js');
+
+  // Stage 10 preview used demo-only completion scripts. In Stage 11B the live client
+  // is authoritative, so demo augmenters and the legacy ESTYL raster logo stay off.
+  if (!window.MOLApi) {
+    if (!window.ESTYL_LOGO) {
+      loadScript('../../logo.js', () => loadScript('../shared/brand.js'));
+    } else {
+      loadScript('../shared/brand.js');
+    }
+    ['./weighted-report.js', './worktime-completion.js', './leader-message-history.js', './spec-completion.js']
+      .forEach((src) => loadScript(src));
   }
-  ['./weighted-report.js', './worktime-completion.js', './leader-message-history.js', './spec-completion.js']
-    .forEach((src) => loadScript(src));
 
   sync();
 })();
