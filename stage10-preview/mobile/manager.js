@@ -10,10 +10,10 @@
   document.head.append(managerStyles);
 
   const reportPeople = [
-    { id: 'MOL031', name: 'Aneta Nowak', attendance: '07:45', norm: 88, pick: 318, pack: 124 },
-    { id: 'MOL027', name: 'Kamil Kaczmarek', attendance: '08:12', norm: 96, pick: 402, pack: 151 },
-    { id: 'MOL011', name: 'Piotr Wiśniewski', attendance: '08:15', norm: 103, pick: 447, pack: 168 },
-    { id: 'MOL029', name: 'Tomasz Wójcik', attendance: '06:30', norm: 72, pick: 204, pack: 86 }
+    { id: 'MOL031', name: 'Aneta Nowak', attendance: '07:45', pickTotal: 1637, pickEligible: 1526, pickOutside: 111, pickTime: '15:11', pickNorm: 87, packTotal: 652, packEligible: 604, packOutside: 48, packTime: '10:52', packNorm: 89, total: 2289, totalEligible: 2130, totalOutside: 159, totalTime: '26:03', totalNorm: 88 },
+    { id: 'MOL027', name: 'Kamil Kaczmarek', attendance: '08:12', pickTotal: 1884, pickEligible: 1812, pickOutside: 72, pickTime: '15:42', pickNorm: 98, packTotal: 728, packEligible: 698, packOutside: 30, packTime: '09:48', packNorm: 93, total: 2612, totalEligible: 2510, totalOutside: 102, totalTime: '25:30', totalNorm: 96 },
+    { id: 'MOL011', name: 'Piotr Wiśniewski', attendance: '08:15', pickTotal: 2110, pickEligible: 2054, pickOutside: 56, pickTime: '16:10', pickNorm: 105, packTotal: 792, packEligible: 764, packOutside: 28, packTime: '10:16', packNorm: 101, total: 2902, totalEligible: 2818, totalOutside: 84, totalTime: '26:26', totalNorm: 103 },
+    { id: 'MOL029', name: 'Tomasz Wójcik', attendance: '06:30', pickTotal: 1096, pickEligible: 981, pickOutside: 115, pickTime: '13:28', pickNorm: 69, packTotal: 466, packEligible: 412, packOutside: 54, packTime: '08:35', packNorm: 75, total: 1562, totalEligible: 1393, totalOutside: 169, totalTime: '22:03', totalNorm: 72 }
   ];
 
   const root = shell;
@@ -33,16 +33,17 @@
   reports.innerHTML = `
     <button class="manager-back" type="button">← Zespół</button>
     <p class="mol-kicker">LEADER / ADMIN</p>
-    <h2>Raporty</h2>
-    <div class="manager-filter mol-card"><label>Od <input type="date" value="2026-09-01"></label><label>Do <input type="date" value="2026-09-07"></label></div>
+    <h2>Raport norm</h2>
+    <div class="manager-filter mol-card"><label>Od <input data-mobile-report-from type="date" value="2026-09-01"></label><label>Do <input data-mobile-report-to type="date" value="2026-09-07"></label></div>
     <section class="mol-card mobile-report-selector">
       <div class="mobile-report-head"><div><small>Pracownicy do raportu</small><strong data-mobile-report-count>Wybrano 3</strong></div><div><button type="button" data-mobile-report-all>Wszyscy</button><button type="button" data-mobile-report-clear>Wyczyść</button></div></div>
       <div class="mobile-report-people">
-        ${reportPeople.map((person, index) => `<label><input type="checkbox" value="${person.id}" ${index < 3 ? 'checked' : ''}><span><b>${person.name}</b><small>${person.id} · PICK ${person.pick} · PAK ${person.pack} · ${person.norm}%</small></span></label>`).join('')}
+        ${reportPeople.map((person, index) => `<label><input type="checkbox" value="${person.id}" ${index < 3 ? 'checked' : ''}><span><b>${person.name}</b><small>${person.id} · PICK/PAK łącznie ${person.total} · do normy ${person.totalEligible} · poza ${person.totalOutside}</small></span></label>`).join('')}
       </div>
       <button class="mol-button mol-button--primary" type="button" data-mobile-report-generate>Generuj raport dla zaznaczonych</button>
     </section>
-    <div class="manager-mobile-grid"><article class="mol-card"><small>Wybrani</small><strong data-mobile-report-selected>3</strong></article><article class="mol-card"><small>Śr. norma</small><strong data-mobile-report-norm>96%</strong></article></div>
+    <div class="manager-mobile-grid"><article class="mol-card"><small>Wybrani</small><strong data-mobile-report-selected>3</strong></article><article class="mol-card"><small>Śr. PICK/PAK</small><strong data-mobile-report-norm>96%</strong></article></div>
+    <p class="mol-muted" data-mobile-report-range>Zakres 01.09.2026–07.09.2026</p>
     <div class="mol-card manager-report-list" data-mobile-report-list></div>
     <div class="manager-actions"><button class="mol-button" data-mobile-export="CSV">CSV</button><button class="mol-button mol-button--primary" data-mobile-export="XLSX">XLSX</button></div>`;
 
@@ -95,13 +96,18 @@
     reports.querySelector('[data-mobile-report-count]').textContent = `Wybrano ${count}`;
     reports.querySelector('[data-mobile-report-generate]').disabled = count === 0;
   };
+  const formatDate = (value) => value ? value.split('-').reverse().join('.') : '—';
+  const metricBlock = (label, total, eligible, outside, time, norm) => `<span><small>${label}</small><b>Łącznie ${total}</b><em>Do normy ${eligible}</em><i>Poza normą ${outside}</i><strong>Czas ${time} · ${norm}%</strong></span>`;
   const renderReport = () => {
     const selected = new Set(checkedIds());
     const rows = reportPeople.filter((person) => selected.has(person.id));
     reports.querySelector('[data-mobile-report-selected]').textContent = String(rows.length);
-    reports.querySelector('[data-mobile-report-norm]').textContent = rows.length ? `${Math.round(rows.reduce((sum, row) => sum + row.norm, 0) / rows.length)}%` : '—';
+    reports.querySelector('[data-mobile-report-norm]').textContent = rows.length ? `${Math.round(rows.reduce((sum, row) => sum + row.totalNorm, 0) / rows.length)}%` : '—';
+    const from = reports.querySelector('[data-mobile-report-from]').value;
+    const to = reports.querySelector('[data-mobile-report-to]').value;
+    reports.querySelector('[data-mobile-report-range]').textContent = `Zakres ${formatDate(from)}–${formatDate(to)}`;
     reports.querySelector('[data-mobile-report-list]').innerHTML = rows.length
-      ? rows.map((person) => `<div><span><b>${person.name}</b><small>${person.id} · ${person.attendance}</small></span><span class="mobile-report-output"><b>PICK ${person.pick}</b><b>PAK ${person.pack}</b><b>${person.norm}%</b></span></div>`).join('')
+      ? rows.map((person) => `<article class="mobile-norm-report"><div><b>${person.name}</b><small>${person.id}</small></div><div class="mobile-norm-grid">${metricBlock('PICK', person.pickTotal, person.pickEligible, person.pickOutside, person.pickTime, person.pickNorm)}${metricBlock('PAK', person.packTotal, person.packEligible, person.packOutside, person.packTime, person.packNorm)}${metricBlock('PICK/PAK', person.total, person.totalEligible, person.totalOutside, person.totalTime, person.totalNorm)}</div></article>`).join('')
       : '<p class="mol-muted">Zaznacz co najmniej jednego pracownika.</p>';
   };
 
@@ -116,7 +122,7 @@
   });
   reports.querySelector('[data-mobile-report-generate]').addEventListener('click', renderReport);
   reports.querySelectorAll('[data-mobile-export]').forEach((button) => button.addEventListener('click', () => {
-    window.dispatchEvent(new CustomEvent('mol:stage10-demo-export', { detail: { format: button.dataset.mobileExport, employeeIds: checkedIds(), role } }));
+    window.dispatchEvent(new CustomEvent('mol:stage10-demo-export', { detail: { format: button.dataset.mobileExport, employeeIds: checkedIds(), from: reports.querySelector('[data-mobile-report-from]').value, to: reports.querySelector('[data-mobile-report-to]').value, role } }));
   }));
 
   managerNav.querySelectorAll('[data-manager-target]').forEach((button) => button.addEventListener('click', () => showManager(button.dataset.managerTarget)));

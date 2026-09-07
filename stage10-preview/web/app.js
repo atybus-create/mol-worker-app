@@ -43,10 +43,10 @@
   const employeeStatus = document.getElementById('employeeStatus');
   const employeeAttendance = document.getElementById('employeeAttendance');
   const employeeNoProcess = document.getElementById('employeeNoProcess');
-  const employeeNorm = document.getElementById('employeeNorm');
-  const employeePick = document.getElementById('employeePick');
-  const employeePack = document.getElementById('employeePack');
   const employeeProcess = document.getElementById('employeeProcess');
+
+  const performanceFields = [...document.querySelectorAll('[data-performance-field]')];
+  const formatPerformance = (field, value) => field.toLowerCase().endsWith('norm') ? `${value}%` : value;
 
   const selectEmployee = (row) => {
     rows.forEach((candidate) => candidate.classList.toggle('is-selected', candidate === row));
@@ -55,10 +55,11 @@
     employeeStatus.textContent = row.dataset.status;
     employeeAttendance.textContent = row.dataset.attendance;
     employeeNoProcess.textContent = row.dataset.noProcess;
-    employeeNorm.textContent = `${row.dataset.norm}%`;
-    employeePick.textContent = row.dataset.pick;
-    employeePack.textContent = row.dataset.pack;
     employeeProcess.textContent = row.dataset.process;
+    performanceFields.forEach((fieldNode) => {
+      const field = fieldNode.dataset.performanceField;
+      fieldNode.textContent = formatPerformance(field, row.dataset[field] ?? '—');
+    });
     employeeStatus.className = 'mol-chip ' + (row.dataset.status === 'W PRACY' ? 'mol-chip--success' : row.dataset.status === 'PRZERWA' ? 'mol-chip--warning' : 'mol-chip--danger');
   };
 
