@@ -29,23 +29,41 @@
 
   const sidebarNav = document.querySelector('.sidebar nav');
   const performanceButton = sidebarNav?.querySelector('[data-section="reports"]');
+  let worktimeButton = null;
+  let leaderMessagesButton = null;
   if (performanceButton) {
     const label = performanceButton.querySelector('span');
     if (label) label.textContent = 'Wydajność';
-    const worktimeButton = document.createElement('button');
+
+    worktimeButton = document.createElement('button');
     worktimeButton.type = 'button';
     worktimeButton.dataset.section = 'worktime';
     worktimeButton.innerHTML = '◷ <span>Czas pracy</span>';
     performanceButton.after(worktimeButton);
+
+    leaderMessagesButton = document.createElement('button');
+    leaderMessagesButton.type = 'button';
+    leaderMessagesButton.dataset.section = 'leader-messages';
+    leaderMessagesButton.innerHTML = '✉ <span>Komunikaty</span>';
+    worktimeButton.after(leaderMessagesButton);
   }
 
   const performanceView = document.querySelector('[data-view="reports"]');
-  if (performanceView && !document.querySelector('[data-view="worktime"]')) {
-    const worktimeView = document.createElement('section');
+  let worktimeView = document.querySelector('[data-view="worktime"]');
+  if (performanceView && !worktimeView) {
+    worktimeView = document.createElement('section');
     worktimeView.className = 'view';
     worktimeView.dataset.view = 'worktime';
     worktimeView.hidden = true;
     performanceView.after(worktimeView);
+  }
+
+  if (worktimeView && !document.querySelector('[data-view="leader-messages"]')) {
+    const leaderMessagesView = document.createElement('section');
+    leaderMessagesView.className = 'view';
+    leaderMessagesView.dataset.view = 'leader-messages';
+    leaderMessagesView.hidden = true;
+    worktimeView.after(leaderMessagesView);
   }
 
   const sectionButtons = [...document.querySelectorAll('[data-section]')];
@@ -150,6 +168,10 @@
   const worktimeScript = document.createElement('script');
   worktimeScript.src = './worktime.js';
   document.body.append(worktimeScript);
+
+  const leaderMessagesScript = document.createElement('script');
+  leaderMessagesScript.src = './leader-messages.js';
+  document.body.append(leaderMessagesScript);
 
   showSection('team');
 })();

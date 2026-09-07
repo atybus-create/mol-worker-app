@@ -22,6 +22,7 @@
   managerNav.className = 'manager-actions';
   managerNav.innerHTML = `
     <button class="mol-button" data-manager-target="manager-reports">Raporty</button>
+    <button class="mol-button" data-manager-target="manager-messages">Komunikaty</button>
     <button class="mol-button" data-manager-target="manager-corrections">Korekty</button>
     <button class="mol-button" data-manager-target="manager-users">Użytkownicy</button>`;
   teamPanel.append(managerNav);
@@ -46,6 +47,25 @@
     <p class="mol-muted" data-mobile-report-range>Zakres 01.09.2026–07.09.2026</p>
     <div class="mol-card manager-report-list" data-mobile-report-list></div>
     <div class="manager-actions"><button class="mol-button" data-mobile-export="CSV">CSV</button><button class="mol-button mol-button--primary" data-mobile-export="XLSX">XLSX</button></div>`;
+
+  const messages = document.createElement('section');
+  messages.className = 'screen-placeholder manager-mobile manager-detail';
+  messages.dataset.panel = 'manager-messages';
+  messages.hidden = true;
+  messages.innerHTML = `
+    <button class="manager-back" type="button">← Zespół</button>
+    <p class="mol-kicker">Komunikacja · LEADER / ADMIN</p><h2>Wyślij komunikat</h2>
+    <section class="mol-card mobile-message-composer">
+      <label class="mobile-message-all"><input type="checkbox" data-mobile-message-all-open><span><b>Wszyscy aktualnie w pracy</b><small>Wysyłka do wszystkich z otwartym dniem.</small></span></label>
+      <div class="mobile-report-head"><div><small>Odbiorcy</small><strong data-mobile-message-count>Wybrano 1</strong></div><div><button type="button" data-mobile-message-select-all>Wszyscy</button><button type="button" data-mobile-message-clear>Wyczyść</button></div></div>
+      <div class="mobile-report-people" data-mobile-message-recipients>
+        ${reportPeople.map((person, index) => `<label><input type="checkbox" value="${person.id}" ${index === 0 ? 'checked' : ''}><span><b>${person.name}</b><small>${person.id} · dzień OPEN</small></span></label>`).join('')}
+      </div>
+      <label class="mobile-message-content">Treść<textarea rows="5" maxlength="2000" data-mobile-message-content placeholder="Napisz komunikat…"></textarea><small><span data-mobile-message-length>0</span>/2000</small></label>
+      <label class="mobile-message-all"><input type="checkbox" data-mobile-message-ack><span><b>Wymagaj potwierdzenia odbioru</b><small>Pracownik zobaczy przycisk potwierdzenia.</small></span></label>
+      <button class="mol-button mol-button--primary" type="button" data-mobile-message-send>Wyślij komunikat</button>
+      <p class="mol-muted" data-mobile-message-status>Podgląd Etapu 10 — bez realnego wysyłania.</p>
+    </section>`;
 
   const corrections = document.createElement('section');
   corrections.className = 'screen-placeholder manager-mobile manager-detail';
@@ -75,10 +95,11 @@
     <button class="mol-button mol-button--primary manager-create-user">Dodaj użytkownika</button>`;
 
   root.insertBefore(reports, document.querySelector('.bottom-nav'));
+  root.insertBefore(messages, document.querySelector('.bottom-nav'));
   root.insertBefore(corrections, document.querySelector('.bottom-nav'));
   root.insertBefore(users, document.querySelector('.bottom-nav'));
 
-  const managerPanels = [reports, corrections, users];
+  const managerPanels = [reports, messages, corrections, users];
   const allPanels = () => [...document.querySelectorAll('[data-panel]')];
   const dashboard = [...document.querySelectorAll('.worker-hero, .work-status, .kpi-grid, .section-block, .active-process')];
 
@@ -128,8 +149,50 @@
     window.dispatchEvent(new CustomEvent('mol:stage10-demo-export', { detail: { format: button.dataset.mobileExport, employeeIds: checkedIds(), from: reports.querySelector('[data-mobile-report-from]').value, to: reports.querySelector('[data-mobile-report-to]').value, role } }));
   }));
 
+  const messageAllOpen = messages.querySelector('[data-mobile-message-all-open]');
+  const messageInputs = [...messages.querySelectorAll('[data-mobile-message-recipients] input')];
+  const messageContent = messages.querySelector('[data-mobile-message-content]');
+  const messageAck = messages.querySelector('[data-mobile-message-ack]');
+  const messageSend = messages.querySelector('[data-mobile-message-send]');
+  const mobileSelectedIds = () => messageInputs.filter((input) => input.checked).map((input) => input.value);
+  const syncMessage = () => {
+    const count = mobileSelectedIds().length;
+    messages.querySelector('[data-mobile-message-count]').textContent = messageAllOpen.checked ? 'Wszyscy aktualnie OPEN' : `Wybrano ${count}`;
+    messageInputs.forEach((input) => { input.disabled = messageAllOpen.checked; });
+    messages.querySelector('[data-mobile-message-select-all]').disabled = messageAllOpen.checked;
+    messages.querySelector('[data-mobile-message-clear]').disabled = messageAllOpen.checked;
+    messageSend.disabled = !messageContent.value.trim() || (!messageAllOpen.checked && count === 0);
+  };
+  messageAllOpen.addEventListener('change', syncMessage);
+  messageInputs.forEach((input) => input.addEventListener('change', syncMessage));
+  messageContent.addEventListener('input', () => {
+    messages.querySelector('[data-mobile-message-length]').textContent = String(messageContent.value.length);
+    syncMessage();
+  });
+  messages.querySelector('[data-mobile-message-select-all]').addEventListener('click', () => {
+    messageInputs.forEach((input) => { input.checked = true; });
+    syncMessage();
+  });
+  messages.querySelector('[data-mobile-message-clear]').addEventListener('click', () => {
+    messageInputs.forEach((input) => { input.checked = false; });
+    syncMessage();
+  });
+  messageSend.addEventListener('click', () => {
+    const detail = {
+      requestType: 'leader-message',
+      recipientIds: messageAllOpen.checked ? null : mobileSelectedIds(),
+      allOpen: messageAllOpen.checked,
+      content: messageContent.value.trim(),
+      ackRequired: messageAck.checked,
+      role
+    };
+    window.dispatchEvent(new CustomEvent('mol:stage10-demo-leader-message', { detail }));
+    messages.querySelector('[data-mobile-message-status]').textContent = messageAllOpen.checked ? 'Podgląd: przygotowano wysyłkę do wszystkich OPEN.' : `Podgląd: przygotowano wysyłkę do ${detail.recipientIds.length} odbiorców.`;
+  });
+
   managerNav.querySelectorAll('[data-manager-target]').forEach((button) => button.addEventListener('click', () => showManager(button.dataset.managerTarget)));
   managerPanels.forEach((panel) => panel.querySelector('.manager-back').addEventListener('click', () => showManager('team')));
   updateCount();
   renderReport();
+  syncMessage();
 })();

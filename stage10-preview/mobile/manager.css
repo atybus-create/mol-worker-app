@@ -1,4 +1,4 @@
-.manager-actions { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:14px; }
+.manager-actions { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:14px; }
 .manager-actions .mol-button { padding-inline:10px; }
 .manager-detail { padding-top:12px; }
 .manager-back { border:0; background:none; color:var(--mol-cyan); padding:0; min-height:42px; cursor:pointer; }
@@ -32,6 +32,7 @@
 .mobile-norm-grid em { color:var(--mol-green); }
 .mobile-norm-grid i { color:var(--mol-yellow); }
 .mobile-norm-grid strong { margin-top:4px; color:var(--mol-teal); font-size:12px; }
+.mobile-message-composer{padding:15px;margin-top:16px}.mobile-message-all{display:flex;align-items:flex-start;gap:10px;padding:11px;border:1px solid rgba(81,178,220,.16);border-radius:10px;background:rgba(3,18,29,.58)}.mobile-message-all span{display:grid;gap:3px}.mobile-message-all small{color:var(--mol-text-muted);font-size:10px;line-height:1.4}.mobile-message-content{display:grid;gap:6px;margin:12px 0;color:var(--mol-text-muted);font-size:11px}.mobile-message-content textarea{width:100%;border:1px solid var(--mol-border);border-radius:10px;background:rgba(3,18,29,.82);color:var(--mol-text);padding:11px;resize:vertical;font:inherit;line-height:1.45}.mobile-message-content>small{text-align:right;color:var(--mol-text-dim)}.mobile-message-composer>.mol-button{width:100%;margin-top:12px}
 .manager-correction-list { display:grid; gap:10px; margin-top:16px; }
 .correction-item { padding:15px; display:grid; gap:12px; }
 .correction-item small { display:block; margin-top:4px; color:var(--mol-text-muted); }
@@ -48,4 +49,4 @@
 .manager-user-list article { padding:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .manager-user-list small { display:block; color:var(--mol-text-muted); margin-top:4px; }
 .manager-create-user { width:100%; margin-top:12px; }
-@media (max-width:390px){.manager-actions{grid-template-columns:1fr}.manager-filter{grid-template-columns:1fr}.correction-actions{grid-template-columns:1fr}.manager-user-list article{align-items:flex-start;flex-direction:column}.manager-user-list .mol-button{width:100%}}
+@media (max-width:390px){.manager-actions{grid-template-columns:1fr 1fr}.manager-filter{grid-template-columns:1fr}.correction-actions{grid-template-columns:1fr}.manager-user-list article{align-items:flex-start;flex-direction:column}.manager-user-list .mol-button{width:100%}}
