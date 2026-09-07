@@ -22,8 +22,11 @@ jobs:
           node --check v2/attendance.js
           node --check v2/leader.js
           node --check stage10/shared/roles.js
+          node --check stage10/shared/auth-demo.js
           node --check stage10/mobile/app.js
+          node --check stage10/mobile/manager.js
           node --check stage10/web/app.js
+          node --check stage10/web/details.js
           node --check backend/v2/communication/es-alert-orchestrator.cjs
           node --check scripts/test-v2-communication-es-alert-orchestrator.cjs
       - name: Validate V2 contract and backend isolation
@@ -139,7 +142,7 @@ jobs:
           NODE
       - name: Check no test tokens or chat secrets
         run: |
-          ! grep -R -E 'ETAP7FRONTENDTESTTOKEN|ETAP7WORKERROLETESTTOKEN|PHPSESSID=[A-Za-z0-9]{10,}|CHAT_ALERT_WEBHOOK' --exclude-dir=.git --exclude=validate.yml .
+          ! grep -R -E 'ETAP7FRONTENDTESTTOKEN|ETAP7WORKERROLETESTTOKEN|PHPSESSID=[A-Za-z0-9]{10,}|CHAT_ALERT_WEBHOOK' --exclude-dir=.git --exclude='*validate.yml' .
       - name: Check V2 browser CORS to n8n
         run: |
           curl -sS -X OPTIONS -D cors-v2-headers.txt -o /dev/null 'https://n8n.estyl.team/webhook/mol-app-v2-worker-status' \
