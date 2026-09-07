@@ -14,6 +14,8 @@ Pełny audyt wymagania → frontend → backend:
 - LEADER — aplikacja mobilna + widoki menedżerskie + WWW.
 - ADMIN — aplikacja mobilna + widoki menedżerskie/admin + WWW.
 
+**WORKER nie otrzymuje panelu WWW ani menedżerskich ekranów mobilnych.**
+
 Backend jest zawsze źródłem autoryzacji; ukrycie elementu UI nie jest zabezpieczeniem.
 
 ## Procesy
