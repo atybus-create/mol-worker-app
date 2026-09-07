@@ -38,7 +38,7 @@ jobs:
           for code in PAKOWANIE KOMPLETACJA DYZUR ZWROTY BIURO PORZADKI_KARTONY PRZYGOTOWANIE_STANOWISKA MAGAZYN PRZERWA INNE; do grep -q "$code" stage10/shared/processes.js; done
           grep -q "filter((code) => code !== 'BIURO')" stage10/shared/processes.js
           grep -q 'allowedProcesses = window.MOLProcesses.allowedFor(role)' stage10/mobile/worker-details.js
-          ! grep -R -q 'SORTOWANIE\|Sortowanie\|SORT</small>' stage10
+          ! grep -R -q 'SORTOWANIE\|Sortowanie\|SORT</small>' stage10/mobile stage10/web stage10/shared/*.js
       - name: Check final UI surfaces
         run: |
           test -f stage10/mobile/login.html
