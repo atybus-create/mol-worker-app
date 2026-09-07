@@ -25,6 +25,7 @@ jobs:
           node --check stage10/mobile/manager.js
           node --check stage10/web/app.js
           node --check stage10/web/details.js
+          node --check stage10/web/worktime.js
       - name: Check approved role model
         run: |
           grep -q 'WORKER: Object.freeze({ mobile: true, web: false' stage10/shared/roles.js
@@ -47,6 +48,7 @@ jobs:
           test -f stage10/mobile/worker-details.css
           test -f stage10/mobile/manager.css
           test -f stage10/web/details.css
+          test -f stage10/web/worktime.js
           grep -q 'Zaloguj' stage10/mobile/login.html
           grep -q 'Panel internetowy jest dostępny wyłącznie dla ról LEADER i ADMIN' stage10/web/login.html
           grep -q 'Sesja wygasła' stage10/shared/states.js
@@ -96,6 +98,17 @@ jobs:
           grep -q 'data-mobile-report-to' stage10/mobile/manager.js
           grep -q '1 PAK = 1 j.n., 3 PICK = 1 j.n.' stage10/mobile/manager.js
           grep -q 'employeeIds: checkedIds()' stage10/mobile/manager.js
+      - name: Check separate work time reporting
+        run: |
+          grep -q "label.textContent = 'Wydajność'" stage10/web/app.js
+          grep -q "worktimeButton.dataset.section = 'worktime'" stage10/web/app.js
+          grep -q 'Raport czasu pracy' stage10/web/worktime.js
+          grep -q 'Oddzielony od raportu wydajności' stage10/web/worktime.js
+          grep -q 'Zaznacz wszystkich' stage10/web/worktime.js
+          grep -q 'Generuj raport dla zaznaczonych' stage10/web/worktime.js
+          grep -q '<th>START</th><th>STOP</th><th>Czas pracy</th>' stage10/web/worktime.js
+          grep -q "reportType: 'attendance'" stage10/web/worktime.js
+          grep -q 'employeeIds: checkedIds()' stage10/web/worktime.js
       - name: Check no secrets in Stage 10
         run: |
           ! grep -R -E 'Bearer [A-Za-z0-9._-]{20,}|pbkdf2-sha256\$600000\$|PHPSESSID=|CHAT_ALERT_WEBHOOK|password_hash' stage10
