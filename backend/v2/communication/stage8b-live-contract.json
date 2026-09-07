@@ -1,6 +1,6 @@
 {
-  "captured_at": "2026-09-06T18:40:00Z",
-  "status": "WIRED_FAIL_CLOSED_READY_FOR_REAL_DATA_TEST",
+  "captured_at": "2026-09-07T06:57:07Z",
+  "status": "REAL_ES_CONTEXT_VERIFIED_FAIL_CLOSED",
   "components": {
     "source_gate": {"workflow_id":"0bpqCpUMsIRQW8OY","active_version":"935f8165-d20e-4b1a-b17a-69e44dd8c361","active":true,"node_count":8,"autonomous_trigger":"schedule_1_min"},
     "context": {"workflow_id":"qs36Tri1hIQhU5FH","active_version":"998cab14-5eb1-4a1d-9706-0c3baa2e75e4","active":true,"node_count":10,"autonomous_trigger":null},
@@ -24,22 +24,47 @@
   ],
   "safety": {
     "auto_alert_consumer_enabled": false,
-    "es_verified": false,
+    "es_verified_live": false,
     "automatic_rules_enabled": false,
     "history_policy": "HOLD",
     "alert_cutover_outbox_id": 7689,
     "recipient_policy_approved": false,
-    "real_positive_es_test_complete": false,
+    "real_positive_es_test_complete": true,
+    "real_source_context_verified": true,
     "source_gate_batch_size": 1,
     "max_candidates_per_tick": 10,
     "writer_lock_readback": true,
     "stable_request_from_sha256": true,
     "single_atomic_comm_revision_per_source": true
   },
+  "real_data_evidence": {
+    "employee_id": "MOL004",
+    "no_app": {
+      "source_outbox_id": "ES-679996:MOL004:2026-09-07:derived",
+      "context_result": "WORK_OUTSIDE_APP",
+      "communication_write": false
+    },
+    "match_process": {
+      "source_outbox_id": "ES-681193:MOL004:2026-09-07:derived",
+      "source_row_id": 10788,
+      "batch_id": "ES-681193",
+      "process_code": "PAKOWANIE",
+      "delta_pak": 2,
+      "classification": "MATCH_PROCESS",
+      "wrong_process_delta": null,
+      "work_outside_app_delta": null,
+      "no_activity_source_status": "FRESH",
+      "no_activity_verified": true,
+      "no_activity_coverage_ready": false,
+      "communication_write": false
+    },
+    "coverage_note": "NO_ACTIVITY remains fail-closed because the live day contains legitimate pre-app production and therefore coverage is PARTIAL."
+  },
   "runtime_notes": {
     "datatable_contains_filter": "UNSUPPORTED_AT_RUNTIME_USE_EQ_ONLY",
     "legacy_source_at_or_below_cutover": "DO_NOT_CONSUME",
     "expired_nonempty_source_lease": "REQUIRES_OPERATOR",
-    "delivery_policy_missing": "FAIL_CLOSED_COMM_ES_DELIVERY_POLICY_REQUIRED"
+    "delivery_policy_missing": "FAIL_CLOSED_COMM_ES_DELIVERY_POLICY_REQUIRED",
+    "live_es_source_verified_but_gate_not_enabled_without_user_decision": true
   }
 }
