@@ -1,0 +1,1 @@
+Publikacja audytowanego Stage 10 aktualizuje wyłącznie `stage10-preview/**`. `/v2/`, V1 i backend nie są częścią preview publish.
