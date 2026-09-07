@@ -10,10 +10,10 @@
   document.head.append(managerStyles);
 
   const reportPeople = [
-    { id: 'MOL031', name: 'Aneta Nowak', attendance: '07:45', pickTotal: 1637, pickEligible: 1526, pickOutside: 111, pickTime: '15:11', pickNorm: 87, packTotal: 652, packEligible: 604, packOutside: 48, packTime: '10:52', packNorm: 89, total: 2289, totalEligible: 2130, totalOutside: 159, totalTime: '26:03', totalNorm: 88 },
-    { id: 'MOL027', name: 'Kamil Kaczmarek', attendance: '08:12', pickTotal: 1884, pickEligible: 1812, pickOutside: 72, pickTime: '15:42', pickNorm: 98, packTotal: 728, packEligible: 698, packOutside: 30, packTime: '09:48', packNorm: 93, total: 2612, totalEligible: 2510, totalOutside: 102, totalTime: '25:30', totalNorm: 96 },
-    { id: 'MOL011', name: 'Piotr Wiśniewski', attendance: '08:15', pickTotal: 2110, pickEligible: 2054, pickOutside: 56, pickTime: '16:10', pickNorm: 105, packTotal: 792, packEligible: 764, packOutside: 28, packTime: '10:16', packNorm: 101, total: 2902, totalEligible: 2818, totalOutside: 84, totalTime: '26:26', totalNorm: 103 },
-    { id: 'MOL029', name: 'Tomasz Wójcik', attendance: '06:30', pickTotal: 1096, pickEligible: 981, pickOutside: 115, pickTime: '13:28', pickNorm: 69, packTotal: 466, packEligible: 412, packOutside: 54, packTime: '08:35', packNorm: 75, total: 1562, totalEligible: 1393, totalOutside: 169, totalTime: '22:03', totalNorm: 72 }
+    { id: 'MOL031', name: 'Aneta Nowak', attendance: '07:45', pickTotal: 1635, pickEligible: 1524, pickOutside: 111, pickTime: '08:20', pickNorm: 87, packTotal: 652, packEligible: 604, packOutside: 48, packTime: '09:42', packNorm: 89, total: 1197, totalEligible: 1112, totalOutside: 85, totalTime: '18:02', totalNorm: 88 },
+    { id: 'MOL027', name: 'Kamil Kaczmarek', attendance: '08:12', pickTotal: 1884, pickEligible: 1812, pickOutside: 72, pickTime: '08:48', pickNorm: 98, packTotal: 728, packEligible: 698, packOutside: 30, packTime: '10:43', packNorm: 93, total: 1356, totalEligible: 1302, totalOutside: 54, totalTime: '19:31', totalNorm: 95 },
+    { id: 'MOL011', name: 'Piotr Wiśniewski', attendance: '08:15', pickTotal: 2109, pickEligible: 2052, pickOutside: 57, pickTime: '09:18', pickNorm: 105, packTotal: 792, packEligible: 764, packOutside: 28, packTime: '10:48', packNorm: 101, total: 1495, totalEligible: 1448, totalOutside: 47, totalTime: '20:06', totalNorm: 103 },
+    { id: 'MOL029', name: 'Tomasz Wójcik', attendance: '06:30', pickTotal: 1095, pickEligible: 981, pickOutside: 114, pickTime: '06:46', pickNorm: 69, packTotal: 466, packEligible: 412, packOutside: 54, packTime: '07:51', packNorm: 75, total: 831, totalEligible: 739, totalOutside: 92, totalTime: '14:37', totalNorm: 72 }
   ];
 
   const root = shell;
@@ -38,7 +38,7 @@
     <section class="mol-card mobile-report-selector">
       <div class="mobile-report-head"><div><small>Pracownicy do raportu</small><strong data-mobile-report-count>Wybrano 3</strong></div><div><button type="button" data-mobile-report-all>Wszyscy</button><button type="button" data-mobile-report-clear>Wyczyść</button></div></div>
       <div class="mobile-report-people">
-        ${reportPeople.map((person, index) => `<label><input type="checkbox" value="${person.id}" ${index < 3 ? 'checked' : ''}><span><b>${person.name}</b><small>${person.id} · PICK/PAK łącznie ${person.total} · do normy ${person.totalEligible} · poza ${person.totalOutside}</small></span></label>`).join('')}
+        ${reportPeople.map((person, index) => `<label><input type="checkbox" value="${person.id}" ${index < 3 ? 'checked' : ''}><span><b>${person.name}</b><small>${person.id} · PICK/PAK ${person.total} j.n. · do normy ${person.totalEligible} j.n. · poza ${person.totalOutside} j.n.</small></span></label>`).join('')}
       </div>
       <button class="mol-button mol-button--primary" type="button" data-mobile-report-generate>Generuj raport dla zaznaczonych</button>
     </section>
@@ -97,7 +97,10 @@
     reports.querySelector('[data-mobile-report-generate]').disabled = count === 0;
   };
   const formatDate = (value) => value ? value.split('-').reverse().join('.') : '—';
-  const metricBlock = (label, total, eligible, outside, time, norm) => `<span><small>${label}</small><b>Łącznie ${total}</b><em>Do normy ${eligible}</em><i>Poza normą ${outside}</i><strong>Czas ${time} · ${norm}%</strong></span>`;
+  const metricBlock = (label, total, eligible, outside, time, norm) => {
+    const unit = label === 'PICK/PAK' ? ' j.n.' : '';
+    return `<span><small>${label}</small><b>Łącznie ${total}${unit}</b><em>Do normy ${eligible}${unit}</em><i>Poza normą ${outside}${unit}</i><strong>Czas ${time} · ${norm}%</strong></span>`;
+  };
   const renderReport = () => {
     const selected = new Set(checkedIds());
     const rows = reportPeople.filter((person) => selected.has(person.id));
@@ -105,7 +108,7 @@
     reports.querySelector('[data-mobile-report-norm]').textContent = rows.length ? `${Math.round(rows.reduce((sum, row) => sum + row.totalNorm, 0) / rows.length)}%` : '—';
     const from = reports.querySelector('[data-mobile-report-from]').value;
     const to = reports.querySelector('[data-mobile-report-to]').value;
-    reports.querySelector('[data-mobile-report-range]').textContent = `Zakres ${formatDate(from)}–${formatDate(to)}`;
+    reports.querySelector('[data-mobile-report-range]').textContent = `Zakres ${formatDate(from)}–${formatDate(to)} · 1 PAK = 1 j.n., 3 PICK = 1 j.n.`;
     reports.querySelector('[data-mobile-report-list]').innerHTML = rows.length
       ? rows.map((person) => `<article class="mobile-norm-report"><div><b>${person.name}</b><small>${person.id}</small></div><div class="mobile-norm-grid">${metricBlock('PICK', person.pickTotal, person.pickEligible, person.pickOutside, person.pickTime, person.pickNorm)}${metricBlock('PAK', person.packTotal, person.packEligible, person.packOutside, person.packTime, person.packNorm)}${metricBlock('PICK/PAK', person.total, person.totalEligible, person.totalOutside, person.totalTime, person.totalNorm)}</div></article>`).join('')
       : '<p class="mol-muted">Zaznacz co najmniej jednego pracownika.</p>';
