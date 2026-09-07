@@ -12,7 +12,7 @@
 | 8 | Alerty i komunikacja | PASS: MANUAL, RECIPIENTS, LIST history/changes, SHOWN, ACK, Drive mirror, worker-status, realny START/STOP Moniti i recovery; realny Context ES sprawdzony dla `NO_APP` i `MATCH_PROCESS`, bez uruchamiania automatów | Jawnie odebrany przez użytkownika 2026-09-07 | ODEBRANY |
 | 9 | Panel lidera, raporty, użytkownicy i kolejka korekt | PASS: aktywne i poprawne serwisy, publiczne bramki 401 bez sesji, wcześniejsze pełne E2E user-admin/status/corrections; protokół `stage-9-closeout-20260907.md` | Panel testowy obejrzany i zaakceptowany przez użytkownika 2026-09-07 | ODEBRANY |
 | 10 | Docelowy frontend V2: mobile role-based + WWW LEADER/ADMIN; pełny katalog procesów, normy dzienne/miesięczne, komunikacja, monitoring i rozdzielone raporty czasu/wydajności | PASS: dedykowany Stage 10 i pełny regres V2 po końcowym audycie kompletności; izolowany preview Pages PASS | Jawnie odebrany przez użytkownika 2026-09-07 | ODEBRANY |
-| 11 | Domknięcie backendu pod odebrany frontend, a następnie integracja frontendów z backendem | Backend gap closure rozpoczęty po odbiorze Etapu 10; frontend pozostaje zamrożony do ponownego audytu | — | W TOKU — BACKEND |
+| 11 | Domknięcie backendu pod odebrany frontend, a następnie integracja frontendów z backendem | Backend gap closure PASS: monitoring, heartbeat, norm totals, historia+paginacja, raport czasu wielu osób, raport wydajności, eksport, audyt; `stage-11-backend-gap-closeout-20260907.md` | Integracja frontendu jeszcze nie rozpoczęta | BACKEND GOTOWY — INTEGRACJA OCZEKUJE |
 | 12 | Pełny regres V2 / Release Candidate | — | — | NIE ROZPOCZĘTO |
 | 13 | Android APK/AAB | — | — | NIE ROZPOCZĘTO |
 | 14 | Powiadomienia Android w tle | — | — | NIE ROZPOCZĘTO |
@@ -74,7 +74,27 @@ Norma pracownika jest pokazana osobno dla dnia i od początku bieżącego miesi�
 
 Panel lidera rozdziela `Wydajność` i `Czas pracy`, obsługuje jednego/wielu/wszystkich pracowników i dowolny zakres dat. Komunikaty lidera mają osobny ekran oraz szybkie wejście z wybranego pracownika. Monitoring obejmuje proces, czasy, wyniki, alerty, aktywność aplikacji i diagnostykę źródła ES.
 
-Audyt `stage-10-frontend-backend-audit-20260907.md` wykazał kilka braków kontraktowych backendu. Na polecenie użytkownika po odbiorze Etapu 10 frontend zostaje zamrożony, a Etap 11 rozpoczyna się od uzupełnienia backendu. Dopiero po ponownym audycie można rozpocząć integrację finalnego frontendu.
+## Etap 11A — BACKEND GOTOWY DO INTEGRACJI
+
+Po odbiorze Etapu 10 użytkownik zlecił najpierw uzupełnienie backendu, bez ruszania finalnego frontendu. Zamknięto luki wskazane w `stage-10-frontend-backend-audit-20260907.md`.
+
+Najważniejsze rozszerzenia:
+
+- jawne total/eligible/outside norm,
+- heartbeat `SESSIONS.last_seen_at`,
+- app activity, alerty i diagnostyka ES w leader-team,
+- pełna historia pracownika + paginowany timeline,
+- raport czasu jednego/wielu/wszystkich z procesami i korektami,
+- nowy raport wydajności z ważoną agregacją,
+- eksport attendance/performance,
+- nowy paginowany audit-history,
+- bezpośrednie `ATTENDANCE_CORRECTED` i `WORK_REOPENED` w historii/raporcie.
+
+Kontrakt live: `backend/v2/stage11-live-contract.json`. Protokół: `docs/v2/stage-11-backend-gap-closeout-20260907.md`.
+
+Na poziomie funkcjonalnym końcowy audyt nie wykazał już brakującego kontraktu backendowego wymaganego przez odebrany frontend Etapu 10. Pełny authenticated E2E nowych odczytów zostaje wykonany przez normalne logowanie podczas integracji frontendu; ręczne przekazanie hasła przez narzędzie zostało zablokowane i nie było obchodzone.
+
+Integracja `stage10/` nie została jeszcze rozpoczęta.
 
 ## Historyczny test odbiorowy etapu 1
 
