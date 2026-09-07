@@ -43,17 +43,17 @@
 
         <div class="dashboard-grid">
           <section class="mol-card team-card">
-            <div class="card-head"><div><h2>Lista pracowników</h2><span>12 osób</span></div><div class="filters"><input type="search" placeholder="Szukaj pracownika"><select><option>Wszyscy</option><option>W pracy</option><option>Bez procesu</option><option>Alert</option></select></div></div>
+            <div class="card-head"><div><h2>Lista pracowników</h2><span>12 osób · wykonanie od początku dnia</span></div><div class="filters"><input type="search" placeholder="Szukaj pracownika"><select><option>Wszyscy</option><option>W pracy</option><option>Bez procesu</option><option>Alert</option></select></div></div>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>Pracownik / ID</th><th>Status pracy</th><th>Aktualny proces</th><th>Obecność</th><th>Norma</th><th>Alerty</th></tr></thead>
+                <thead><tr><th>Pracownik / ID</th><th>Status pracy</th><th>Aktualny proces</th><th>Obecność</th><th>PICK dziś</th><th>PAK dziś</th><th>Norma</th><th>Alerty</th></tr></thead>
                 <tbody id="teamRows">
-                  <tr data-employee="Kamil Kaczmarek" data-id="MOL027" data-status="W PRACY" data-process="Pakowanie (PAK)" data-attendance="08:12" data-no-process="00:06" data-norm="96"><td><b>Kamil Kaczmarek</b><small>MOL027</small></td><td><span class="status success">● W PRACY</span></td><td>Pakowanie <small>PAK</small></td><td>08:12</td><td class="good">96%</td><td>—</td></tr>
-                  <tr class="is-selected" data-employee="Aneta Nowak" data-id="MOL031" data-status="W PRACY" data-process="Kompletacja (KOM)" data-attendance="07:45" data-no-process="00:12" data-norm="88"><td><b>Aneta Nowak</b><small>MOL031</small></td><td><span class="status success">● W PRACY</span></td><td>Kompletacja <small>KOM</small></td><td>07:45</td><td class="warn">88%</td><td><span class="alert">▲ 1</span></td></tr>
-                  <tr data-employee="Tomasz Wójcik" data-id="MOL029" data-status="PRZERWA" data-process="Brak procesu" data-attendance="06:30" data-no-process="00:24" data-norm="72"><td><b>Tomasz Wójcik</b><small>MOL029</small></td><td><span class="status warning">● PRZERWA</span></td><td>—</td><td>06:30</td><td class="warn">72%</td><td>—</td></tr>
-                  <tr data-employee="Magda Zielińska" data-id="MOL033" data-status="BRAK STARTU" data-process="Brak procesu" data-attendance="00:00" data-no-process="00:00" data-norm="0"><td><b>Magda Zielińska</b><small>MOL033</small></td><td><span class="status muted">■ BRAK STARTU</span></td><td>—</td><td>00:00</td><td class="danger">0%</td><td><span class="alert">▲ 1</span></td></tr>
-                  <tr data-employee="Piotr Wiśniewski" data-id="MOL011" data-status="W PRACY" data-process="Sortowanie (SORT)" data-attendance="08:15" data-no-process="00:04" data-norm="103"><td><b>Piotr Wiśniewski</b><small>MOL011</small></td><td><span class="status success">● W PRACY</span></td><td>Sortowanie <small>SORT</small></td><td>08:15</td><td class="good">103%</td><td>—</td></tr>
-                  <tr data-employee="Joanna Mazur" data-id="MOL018" data-status="W PRACY" data-process="Pakowanie (PAK)" data-attendance="08:01" data-no-process="00:08" data-norm="92"><td><b>Joanna Mazur</b><small>MOL018</small></td><td><span class="status success">● W PRACY</span></td><td>Pakowanie <small>PAK</small></td><td>08:01</td><td class="good">92%</td><td>—</td></tr>
+                  <tr data-employee="Kamil Kaczmarek" data-id="MOL027" data-status="W PRACY" data-process="Pakowanie" data-attendance="08:12" data-no-process="00:06" data-pick="402" data-pack="151" data-norm="96"><td><b>Kamil Kaczmarek</b><small>MOL027</small></td><td><span class="status success">● W PRACY</span></td><td>Pakowanie <small>PAKOWANIE</small></td><td>08:12</td><td><strong>402</strong></td><td><strong>151</strong></td><td class="good">96%</td><td>—</td></tr>
+                  <tr class="is-selected" data-employee="Aneta Nowak" data-id="MOL031" data-status="W PRACY" data-process="Kompletacja" data-attendance="07:45" data-no-process="00:12" data-pick="318" data-pack="124" data-norm="88"><td><b>Aneta Nowak</b><small>MOL031</small></td><td><span class="status success">● W PRACY</span></td><td>Kompletacja <small>KOMPLETACJA</small></td><td>07:45</td><td><strong>318</strong></td><td><strong>124</strong></td><td class="warn">88%</td><td><span class="alert">▲ 1</span></td></tr>
+                  <tr data-employee="Tomasz Wójcik" data-id="MOL029" data-status="PRZERWA" data-process="Przerwa" data-attendance="06:30" data-no-process="00:24" data-pick="204" data-pack="86" data-norm="72"><td><b>Tomasz Wójcik</b><small>MOL029</small></td><td><span class="status warning">● PRZERWA</span></td><td>Przerwa <small>PRZERWA</small></td><td>06:30</td><td><strong>204</strong></td><td><strong>86</strong></td><td class="warn">72%</td><td>—</td></tr>
+                  <tr data-employee="Magda Zielińska" data-id="MOL033" data-status="BRAK STARTU" data-process="Brak procesu" data-attendance="00:00" data-no-process="00:00" data-pick="0" data-pack="0" data-norm="0"><td><b>Magda Zielińska</b><small>MOL033</small></td><td><span class="status muted">■ BRAK STARTU</span></td><td>—</td><td>00:00</td><td><strong>0</strong></td><td><strong>0</strong></td><td class="danger">0%</td><td><span class="alert">▲ 1</span></td></tr>
+                  <tr data-employee="Piotr Wiśniewski" data-id="MOL011" data-status="W PRACY" data-process="Zwroty" data-attendance="08:15" data-no-process="00:04" data-pick="447" data-pack="168" data-norm="103"><td><b>Piotr Wiśniewski</b><small>MOL011</small></td><td><span class="status success">● W PRACY</span></td><td>Zwroty <small>ZWROTY</small></td><td>08:15</td><td><strong>447</strong></td><td><strong>168</strong></td><td class="good">103%</td><td>—</td></tr>
+                  <tr data-employee="Joanna Mazur" data-id="MOL018" data-status="W PRACY" data-process="Magazyn" data-attendance="08:01" data-no-process="00:08" data-pick="355" data-pack="139" data-norm="92"><td><b>Joanna Mazur</b><small>MOL018</small></td><td><span class="status success">● W PRACY</span></td><td>Magazyn <small>MAGAZYN</small></td><td>08:01</td><td><strong>355</strong></td><td><strong>139</strong></td><td class="good">92%</td><td>—</td></tr>
                 </tbody>
               </table>
             </div>
@@ -62,8 +62,9 @@
           <aside class="mol-card employee-card">
             <div class="card-head"><div><p class="mol-kicker">Szybki podgląd</p><h2 id="employeeName">Aneta Nowak</h2><small id="employeeId">MOL031</small></div><span id="employeeStatus" class="mol-chip mol-chip--success">W PRACY</span></div>
             <div class="employee-kpis"><article><small>Obecność dzisiaj</small><strong id="employeeAttendance">07:45</strong></article><article><small>Czas bez procesu</small><strong id="employeeNoProcess">00:12</strong></article><article><small>Norma dzienna</small><strong id="employeeNorm">88%</strong></article></div>
-            <div class="process-summary"><small>Aktualny proces</small><strong id="employeeProcess">Kompletacja (KOM)</strong></div>
-            <div class="employee-actions"><button class="mol-button">Historia</button><button class="mol-button">Raport pracownika</button></div>
+            <div class="employee-output" aria-label="Dzisiejsze wykonanie"><article><small>PICK dzisiaj</small><strong id="employeePick">318</strong></article><article><small>PAK dzisiaj</small><strong id="employeePack">124</strong></article></div>
+            <div class="process-summary"><small>Aktualny proces</small><strong id="employeeProcess">Kompletacja</strong></div>
+            <div class="employee-actions"><button class="mol-button">Historia</button><button class="mol-button" data-section="reports">Raport pracownika</button></div>
           </aside>
         </div>
 
@@ -78,12 +79,13 @@
         </div>
       </section>
 
-      <section class="view" data-view="reports" hidden><div class="page-title"><div><p class="mol-kicker">Analiza</p><h1>Raporty</h1></div></div><div class="mol-card placeholder"><h2>Raport obecności i norm</h2><p>Filtry dat, pracownik/cały zespół, obecność, normy, świeżość danych oraz eksport CSV/XLSX.</p></div></section>
+      <section class="view" data-view="reports" hidden><div class="page-title"><div><p class="mol-kicker">Analiza</p><h1>Raporty</h1></div></div><div class="mol-card placeholder"><h2>Raport obecności i norm</h2><p>Zakres dat, wybór wielu pracowników, bieżące PICK/PAK, obecność, normy, świeżość danych oraz eksport CSV/XLSX.</p></div></section>
       <section class="view" data-view="corrections" hidden><div class="page-title"><div><p class="mol-kicker">Decyzje</p><h1>Korekty czasu pracy</h1></div></div><div class="mol-card placeholder"><h2>Kolejka korekt</h2><p>Akceptacja i odrzucenie z ochroną hash/version/conflict zgodną z backendem Stage 9.</p></div></section>
       <section class="view" data-view="users" hidden><div class="page-title"><div><p class="mol-kicker">Administracja</p><h1>Użytkownicy</h1></div></div><div class="mol-card placeholder"><h2>Role i konta</h2><p>Tworzenie kont, reset haseł i aktywacja/dezaktywacja z zakresem zależnym od LEADER/ADMIN.</p></div></section>
       <section class="view" data-view="audit" hidden><div class="page-title"><div><p class="mol-kicker">Audyt</p><h1>Historia operacji</h1></div></div><div class="mol-card placeholder"><h2>Bezpieczny log działań</h2><p>Historia operacji administracyjnych bez haseł, hashy i tokenów.</p></div></section>
     </main>
   </div>
+  <script src="../shared/processes.js"></script>
   <script src="../shared/roles.js"></script>
   <script src="./app.js"></script>
 </body>
