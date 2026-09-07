@@ -11,13 +11,28 @@
     attendance: row.dataset.attendance,
     noProcess: row.dataset.noProcess,
     pick: Number(row.dataset.pick || 0),
+    pickTime: row.dataset.pickTime || '00:00',
+    pickNorm: Number(row.dataset.pickNorm || 0),
     pack: Number(row.dataset.pack || 0),
-    norm: Number(row.dataset.norm || 0)
+    packTime: row.dataset.packTime || '00:00',
+    packNorm: Number(row.dataset.packNorm || 0),
+    total: Number(row.dataset.total || 0),
+    totalTime: row.dataset.totalTime || '00:00',
+    totalNorm: Number(row.dataset.totalNorm || 0),
+    monthPick: Number(row.dataset.monthPick || 0),
+    monthPickTime: row.dataset.monthPickTime || '00:00',
+    monthPickNorm: Number(row.dataset.monthPickNorm || 0),
+    monthPack: Number(row.dataset.monthPack || 0),
+    monthPackTime: row.dataset.monthPackTime || '00:00',
+    monthPackNorm: Number(row.dataset.monthPackNorm || 0),
+    monthTotal: Number(row.dataset.monthTotal || 0),
+    monthTotalTime: row.dataset.monthTotalTime || '00:00',
+    monthTotalNorm: Number(row.dataset.monthTotalNorm || 0)
   }));
 
   const reports = document.querySelector('[data-view="reports"]');
   reports.innerHTML = `
-    <div class="page-title"><div><p class="mol-kicker">Analiza zespołu</p><h1>Raporty</h1></div></div>
+    <div class="page-title"><div><p class="mol-kicker">Analiza zespołu</p><h1>Raport norm</h1></div></div>
     <div class="view-toolbar report-toolbar">
       <label>Od <input data-report-from type="date" value="2026-09-01"></label>
       <label>Do <input data-report-to type="date" value="2026-09-07"></label>
@@ -31,13 +46,17 @@
         <div class="report-selector-actions"><button type="button" data-report-all>Zaznacz wszystkich</button><button type="button" data-report-clear>Wyczyść</button></div>
       </div>
       <div class="report-people-grid">
-        ${teamData.map((person, index) => `<label class="report-person"><input type="checkbox" value="${person.id}" ${index < 3 ? 'checked' : ''}><span><b>${person.name}</b><small>${person.id}</small></span><span class="report-person-output"><i>PICK <strong>${person.pick}</strong></i><i>PAK <strong>${person.pack}</strong></i><i>Norma <strong>${person.norm}%</strong></i></span></label>`).join('')}
+        ${teamData.map((person, index) => `<label class="report-person"><input type="checkbox" value="${person.id}" ${index < 3 ? 'checked' : ''}><span><b>${person.name}</b><small>${person.id}</small></span><span class="report-person-output"><i>PICK <strong>${person.monthPick}</strong></i><i>PAK <strong>${person.monthPack}</strong></i><i>PICK/PAK <strong>${person.monthTotalNorm}%</strong></i></span></label>`).join('')}
       </div>
-      <p class="report-help">Raport i eksport obejmują dokładnie zaznaczonych pracowników oraz wybrany zakres dat.</p>
+      <p class="report-help">Możesz wybrać jednego, kilku lub wszystkich pracowników. Raport i eksport obejmują dokładnie zaznaczone osoby oraz wskazany zakres dat.</p>
     </section>
-    <div class="web-stat-grid report-summary"><article class="mol-card"><small>Wybrani pracownicy</small><strong data-report-selected>3</strong></article><article class="mol-card"><small>PICK dzisiaj</small><strong data-report-pick>0</strong></article><article class="mol-card"><small>PAK dzisiaj</small><strong data-report-pack>0</strong></article><article class="mol-card"><small>Śr. norma</small><strong data-report-norm>—</strong></article></div>
-    <div class="report-visuals"><article class="mol-card report-chart"><h2>Obecność</h2><strong class="big">89%</strong><div class="report-bars"><i style="height:68%"></i><i style="height:82%"></i><i style="height:91%"></i><i style="height:87%"></i><i style="height:96%"></i></div></article><article class="mol-card report-chart"><h2>Realizacja norm</h2><strong class="big">91%</strong><svg class="report-line" viewBox="0 0 320 110" aria-label="Trend realizacji norm"><polyline points="5,75 55,62 105,63 155,44 205,50 255,31 315,16" fill="none" stroke="currentColor" stroke-width="5"/></svg></article></div>
-    <section class="mol-card detail-table-card"><div class="detail-table-head"><div><h2>Obecność, wykonanie i normy</h2><small data-report-generated aria-live="polite"></small></div></div><table><thead><tr><th>Data</th><th>Pracownik</th><th>Status</th><th>Obecność</th><th>PICK</th><th>PAK</th><th>Norma</th><th>Świeżość</th></tr></thead><tbody data-report-body></tbody></table></section>`;
+    <div class="web-stat-grid report-summary">
+      <article class="mol-card"><small>Wybrani pracownicy</small><strong data-report-selected>3</strong></article>
+      <article class="mol-card norm-summary-card"><small>PICK</small><strong data-report-pick>0</strong><span data-report-pick-time>00:00</span><b data-report-pick-norm>—</b></article>
+      <article class="mol-card norm-summary-card"><small>PAK</small><strong data-report-pack>0</strong><span data-report-pack-time>00:00</span><b data-report-pack-norm>—</b></article>
+      <article class="mol-card norm-summary-card"><small>PICK/PAK</small><strong data-report-total>0</strong><span data-report-total-time>00:00</span><b data-report-total-norm>—</b></article>
+    </div>
+    <section class="mol-card detail-table-card"><div class="detail-table-head"><div><h2>Normy za wybrany okres</h2><small data-report-generated aria-live="polite"></small></div></div><table class="norm-report-table"><thead><tr><th>Pracownik</th><th>PICK ilość</th><th>PICK czas</th><th>PICK %</th><th>PAK ilość</th><th>PAK czas</th><th>PAK %</th><th>PICK/PAK ilość</th><th>PICK/PAK czas</th><th>PICK/PAK %</th><th>Świeżość</th></tr></thead><tbody data-report-body></tbody></table></section>`;
 
   const checkedIds = () => [...reports.querySelectorAll('.report-people-grid input:checked')].map((input) => input.value);
   const updateSelectionCount = () => {
@@ -46,22 +65,44 @@
     reports.querySelector('[data-report-generate]').disabled = count === 0;
     reports.querySelectorAll('[data-report-export]').forEach((button) => { button.disabled = count === 0; });
   };
+  const toMinutes = (value) => {
+    const [hours, minutes] = String(value || '00:00').split(':').map(Number);
+    return (hours || 0) * 60 + (minutes || 0);
+  };
+  const fromMinutes = (value) => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+  const average = (rows, field) => rows.length ? Math.round(rows.reduce((sum, row) => sum + row[field], 0) / rows.length) : null;
+  const formatDate = (value) => value ? value.split('-').reverse().join('.') : '—';
+
   const renderReport = () => {
     const ids = new Set(checkedIds());
     const selected = teamData.filter((person) => ids.has(person.id));
-    const pick = selected.reduce((sum, person) => sum + person.pick, 0);
-    const pack = selected.reduce((sum, person) => sum + person.pack, 0);
-    const norm = selected.length ? Math.round(selected.reduce((sum, person) => sum + person.norm, 0) / selected.length) : null;
+    const pick = selected.reduce((sum, person) => sum + person.monthPick, 0);
+    const pack = selected.reduce((sum, person) => sum + person.monthPack, 0);
+    const total = selected.reduce((sum, person) => sum + person.monthTotal, 0);
+    const pickTime = selected.reduce((sum, person) => sum + toMinutes(person.monthPickTime), 0);
+    const packTime = selected.reduce((sum, person) => sum + toMinutes(person.monthPackTime), 0);
+    const totalTime = selected.reduce((sum, person) => sum + toMinutes(person.monthTotalTime), 0);
+    const pickNorm = average(selected, 'monthPickNorm');
+    const packNorm = average(selected, 'monthPackNorm');
+    const totalNorm = average(selected, 'monthTotalNorm');
+
     reports.querySelector('[data-report-selected]').textContent = String(selected.length);
     reports.querySelector('[data-report-pick]').textContent = String(pick);
+    reports.querySelector('[data-report-pick-time]').textContent = fromMinutes(pickTime);
+    reports.querySelector('[data-report-pick-norm]').textContent = pickNorm === null ? '—' : `${pickNorm}%`;
     reports.querySelector('[data-report-pack]').textContent = String(pack);
-    reports.querySelector('[data-report-norm]').textContent = norm === null ? '—' : `${norm}%`;
+    reports.querySelector('[data-report-pack-time]').textContent = fromMinutes(packTime);
+    reports.querySelector('[data-report-pack-norm]').textContent = packNorm === null ? '—' : `${packNorm}%`;
+    reports.querySelector('[data-report-total]').textContent = String(total);
+    reports.querySelector('[data-report-total-time]').textContent = fromMinutes(totalTime);
+    reports.querySelector('[data-report-total-norm]').textContent = totalNorm === null ? '—' : `${totalNorm}%`;
+
     reports.querySelector('[data-report-body]').innerHTML = selected.length
-      ? selected.map((person) => `<tr><td>07.09.2026</td><td><b>${person.name}</b><small>${person.id}</small></td><td class="${person.status === 'W PRACY' ? 'good' : person.status === 'PRZERWA' ? 'warn' : 'danger'}">${person.status}</td><td>${person.attendance}</td><td><strong>${person.pick}</strong></td><td><strong>${person.pack}</strong></td><td class="${person.norm >= 90 ? 'good' : person.norm > 0 ? 'warn' : 'danger'}">${person.norm}%</td><td>LIVE</td></tr>`).join('')
-      : '<tr><td colspan="8" class="report-empty">Zaznacz co najmniej jednego pracownika.</td></tr>';
+      ? selected.map((person) => `<tr><td><b>${person.name}</b><small>${person.id}</small></td><td><strong>${person.monthPick}</strong></td><td>${person.monthPickTime}</td><td class="${person.monthPickNorm >= 90 ? 'good' : person.monthPickNorm > 0 ? 'warn' : 'danger'}">${person.monthPickNorm}%</td><td><strong>${person.monthPack}</strong></td><td>${person.monthPackTime}</td><td class="${person.monthPackNorm >= 90 ? 'good' : person.monthPackNorm > 0 ? 'warn' : 'danger'}">${person.monthPackNorm}%</td><td><strong>${person.monthTotal}</strong></td><td>${person.monthTotalTime}</td><td class="${person.monthTotalNorm >= 90 ? 'good' : person.monthTotalNorm > 0 ? 'warn' : 'danger'}">${person.monthTotalNorm}%</td><td>LIVE</td></tr>`).join('')
+      : '<tr><td colspan="11" class="report-empty">Zaznacz co najmniej jednego pracownika.</td></tr>';
     const from = reports.querySelector('[data-report-from]').value;
     const to = reports.querySelector('[data-report-to]').value;
-    reports.querySelector('[data-report-generated]').textContent = selected.length ? `Zakres ${from} – ${to} · ${selected.length} osób` : '';
+    reports.querySelector('[data-report-generated]').textContent = selected.length ? `Zakres ${formatDate(from)} – ${formatDate(to)} · ${selected.length} osób · dane w układzie ilość / czas / procent normy` : '';
   };
 
   reports.querySelectorAll('.report-people-grid input').forEach((input) => input.addEventListener('change', updateSelectionCount));
