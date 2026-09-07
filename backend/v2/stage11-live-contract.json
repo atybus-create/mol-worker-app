@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "stage": 11,
+  "status": "BACKEND_GAPS_CLOSED_PENDING_FINAL_AUDIT",
+  "accepted_frontend_stage": 10,
+  "date": "2026-09-07",
+  "source_of_truth": "active n8n workflows + V2 Data Tables",
+  "leader_read_service": {
+    "workflow_id": "5JJIHXO4rArpa32N",
+    "name": "MOL // APP V2 // LEADER READ SERVICE",
+    "operations": [
+      "LEADER_TEAM",
+      "EMPLOYEE_HISTORY",
+      "REPORT_ATTENDANCE",
+      "REPORT_PERFORMANCE",
+      "REPORT_EXPORT",
+      "AUDIT_HISTORY"
+    ]
+  },
+  "public_read_endpoints": {
+    "leader_team": {"workflow_id": "qaAkW6vHaRtLxq0Z", "method": "GET", "path": "mol-app-v2-leader-team"},
+    "employee_history": {"workflow_id": "lkqTVrFEeWpQaPTl", "method": "GET", "path": "mol-app-v2-employee-history"},
+    "report_attendance": {"workflow_id": "avbxQqBwiYG8KhrS", "method": "GET", "path": "mol-app-v2-report-attendance"},
+    "report_performance": {"workflow_id": "apaA176w09BdBkex", "method": "GET", "path": "mol-app-v2-report-performance"},
+    "report_export": {"workflow_id": "l0Pq8sEusnT5IDhI", "method": "GET", "path": "mol-app-v2-report-export"},
+    "audit_history": {"workflow_id": "xvrxTXDn2Dh3y3Wx", "method": "GET", "path": "mol-app-v2-audit-history"},
+    "worker_status": {"workflow_id": "yXJ9hBTKl2yFBTVO", "method": "GET", "path": "mol-app-v2-worker-status"},
+    "norm_daily": {"workflow_id": "7OJ48TN6IEkQqrMW", "method": "GET", "path": "mol-app-v2-norms-daily"},
+    "norm_monthly": {"workflow_id": "ZenbZql84avHIz9b", "method": "GET", "path": "mol-app-v2-norms-monthly"},
+    "auth_session": {"workflow_id": "li4DQnEefK8DR8hh", "method": "GET", "path": "mol-app-v2-auth-session", "heartbeat": true}
+  },
+  "data_tables": {
+    "EMPLOYEES": "npCr4h1LjhVL205w",
+    "SESSIONS": "JXNEIdijeKfhuwYD",
+    "ATTENDANCE": "HmJugmYliWT0ERn4",
+    "PROCESS_SESSIONS": "4di5yA4jpe0ZEmPL",
+    "WORK_EVENTS": "SsKw8JJaizeIRoS5",
+    "NORM_SNAPSHOTS": "4pJlgFine6QhUQxX",
+    "CONFIG": "x66LbXe5CSpdMIkv",
+    "CORRECTION_APPROVALS": "89iFEkyiyUaThLjU",
+    "CORRECTION_DECISIONS": "Cptf8PNyVNlKGXlm",
+    "ES_POLL_STATE": "XLDbRcZ62PLzCykY",
+    "ALERTS": "W5wg5lF0BwjbQQ4g",
+    "COMMUNICATIONS": "42jIxvSmSVGdlxB8",
+    "COMMANDS": "Oz0NtvJ9SRaVFMc8"
+  },
+  "closed_backend_gaps": {
+    "explicit_norm_totals": true,
+    "combined_norm_units_1_to_3": true,
+    "leader_app_activity": true,
+    "leader_active_alerts": true,
+    "leader_es_mapping_status": true,
+    "admin_operational_visibility_rule": true,
+    "session_heartbeat": true,
+    "employee_full_history": true,
+    "employee_history_pagination": true,
+    "attendance_multi_employee_report": true,
+    "attendance_process_times": true,
+    "attendance_direct_correction_events": true,
+    "attendance_status_filter": true,
+    "performance_period_report": true,
+    "performance_weighted_group_summary": true,
+    "export_attendance_and_performance": true,
+    "audit_history_endpoint": true,
+    "audit_pagination": true,
+    "audit_sensitive_field_sanitization": true
+  },
+  "report_limits": {
+    "max_date_range_days": 367,
+    "max_selected_employees": 100,
+    "history_limit_max": 500,
+    "cursor_format": "o:N"
+  },
+  "security": {
+    "leader_reads_roles": ["LEADER", "ADMIN"],
+    "worker_web_access": false,
+    "anonymous_gate_expected": 401,
+    "cors_origin": "https://atybus-create.github.io",
+    "v1_untouched": true,
+    "automatic_alerts_enabled": false,
+    "moniti_scope_expanded": false,
+    "backend_gap_closure_moniti_business_writes": false
+  },
+  "validation": {
+    "leader_read_service_errors": 0,
+    "new_report_performance_wrapper_errors": 0,
+    "new_audit_history_wrapper_errors": 0,
+    "worker_status_errors": 0,
+    "norm_daily_errors": 0,
+    "norm_monthly_errors": 0,
+    "report_export_errors": 0,
+    "auth_session_heartbeat_errors": 0,
+    "anonymous_401_checked": [
+      "leader-team",
+      "employee-history",
+      "report-attendance",
+      "report-performance",
+      "report-export",
+      "audit-history",
+      "worker-status",
+      "norms-daily",
+      "norms-monthly",
+      "auth-session"
+    ],
+    "authenticated_e2e_status": "DEFERRED_TO_NORMAL_FRONTEND_LOGIN_INTEGRATION",
+    "authenticated_e2e_reason": "Tool safety blocked manual password transfer; no bypass attempted."
+  },
+  "deferred_by_plan_not_backend_gap": [
+    "final frontend API integration",
+    "Android device registration/push token",
+    "background push delivery",
+    "sound/vibration/locked-screen behavior",
+    "APK/AAB build",
+    "warehouse pilot"
+  ]
+}
