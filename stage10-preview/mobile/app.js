@@ -106,6 +106,12 @@
     }));
   });
 
-  loadWorkerDetails();
+  const bootstrapLive = async () => {
+    await loadWorkerDetails();
+    await loadScript('../shared/api.js');
+    await loadScript('./live.js');
+  };
+
+  bootstrapLive();
   show('home');
 })();
