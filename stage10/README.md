@@ -11,9 +11,13 @@ Docelowy produkt powstaje od nowa w `stage10/` na bazie zaakceptowanego backendu
 
 ## Dwa interfejsy
 
-### `mobile/` — WORKER
+### `mobile/` — aplikacja mobilna dla wszystkich ról
 
-Docelowa aplikacja mobilna pracownika magazynu.
+Telefon jest podstawowym interfejsem pracy operacyjnej.
+
+WORKER korzysta wyłącznie z aplikacji mobilnej. LEADER i ADMIN również mogą korzystać z aplikacji mobilnej, ale na podstawie swojej roli otrzymują dodatkowe widoki i funkcje menedżerskie zgodne z zaakceptowanymi wizualizacjami.
+
+Zakres wspólny operacyjny:
 
 - logowanie,
 - START / STOP pracy,
@@ -25,11 +29,19 @@ Docelowa aplikacja mobilna pracownika magazynu.
 - profil i sesja,
 - stany offline / retry / wygasła sesja.
 
-WORKER nie otrzymuje panelu WWW.
+Dodatkowo dla LEADER/ADMIN w aplikacji mobilnej:
 
-### `web/` — LEADER / ADMIN
+- mobilny podgląd zespołu,
+- szybki podgląd pracownika,
+- raporty,
+- kolejka korekt,
+- administracja użytkownikami w zakresie dozwolonym dla roli.
 
-Docelowy panel desktopowy.
+WORKER nie otrzymuje panelu WWW ani menedżerskich ekranów mobilnych.
+
+### `web/` — dodatkowy panel dla LEADER / ADMIN
+
+Docelowy panel desktopowy dostępny obok aplikacji mobilnej.
 
 - widok całego zespołu,
 - szybki podgląd pracownika,
@@ -57,12 +69,13 @@ Zaakceptowany kierunek: ciemny granat/grafit, cyan/teal, wysoki kontrast, czytel
 ## Kolejność implementacji
 
 1. wspólny design system — rozpoczęty,
-2. mobile WORKER shell,
-3. WWW LEADER/ADMIN shell,
-4. komponenty wspólne i stany,
-5. podłączenie backendu Stage 9,
-6. regres responsywności i dostępności,
-7. przejście do Etapu 11 integracyjnego.
+2. mobile shell operacyjny,
+3. mobile role views LEADER/ADMIN,
+4. WWW LEADER/ADMIN shell,
+5. komponenty wspólne i stany,
+6. podłączenie backendu Stage 9,
+7. regres responsywności i dostępności,
+8. przejście do Etapu 11 integracyjnego.
 
 ## Ograniczenia
 
