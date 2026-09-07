@@ -41,6 +41,14 @@
       window.dispatchEvent(new CustomEvent('mol:stage10-demo-action', { detail: { action: button.dataset.action, role } }));
     }));
 
+  const normDrawers = [...document.querySelectorAll('[data-norm-period]')];
+  normDrawers.forEach((drawer) => drawer.addEventListener('toggle', () => {
+    if (!drawer.open) return;
+    normDrawers.forEach((other) => {
+      if (other !== drawer) other.open = false;
+    });
+  }));
+
   const detailsScript = document.createElement('script');
   detailsScript.src = './worker-details.js';
   document.body.append(detailsScript);
