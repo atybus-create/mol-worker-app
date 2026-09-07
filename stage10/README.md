@@ -1,6 +1,6 @@
 # MOL App V2 — Etap 10: docelowy frontend
 
-Status: W TOKU
+Status: GOTOWY TECHNICZNIE DO ODBIORU
 Start: 2026-09-07
 
 ## Zasada
@@ -27,13 +27,14 @@ Zakres wspólny operacyjny:
 - historia,
 - korekta własnego czasu,
 - profil i sesja,
-- stany offline / retry / wygasła sesja.
+- stany offline / retry / wygasła sesja / forbidden / empty.
 
 Dodatkowo dla LEADER/ADMIN w aplikacji mobilnej:
 
 - mobilny podgląd zespołu,
 - szybki podgląd pracownika,
-- raporty,
+- bieżące wykonanie dzienne PICK i PAK obok procentu normy,
+- raporty z wyborem wielu pracowników,
 - kolejka korekt,
 - administracja użytkownikami w zakresie dozwolonym dla roli.
 
@@ -44,14 +45,42 @@ WORKER nie otrzymuje panelu WWW ani menedżerskich ekranów mobilnych.
 Docelowy panel desktopowy dostępny obok aplikacji mobilnej.
 
 - widok całego zespołu,
-- szybki podgląd pracownika,
+- bieżące PICK dzisiaj i PAK dzisiaj dla każdego pracownika,
+- szybki podgląd pracownika z PICK / PAK / normą / obecnością,
 - historia i raporty,
-- CSV/XLSX,
+- raportowanie dowolnie zaznaczonej grupy pracowników,
+- `Zaznacz wszystkich`, `Wyczyść`, licznik zaznaczonych i raport tylko dla wybranych,
+- CSV/XLSX dokładnie dla zaznaczonych osób i zakresu dat,
 - kolejka korekt,
 - administracja użytkownikami zgodna z rolą,
 - historia operacji.
 
 Backend musi odrzucać WORKER niezależnie od ukrycia elementów UI.
+
+## Katalog procesów
+
+Źródło UI: `shared/processes.js`, odwzorowujące zaakceptowany katalog backendu.
+
+Aktywne procesy:
+
+1. `PAKOWANIE` — Pakowanie,
+2. `KOMPLETACJA` — Kompletacja,
+3. `DYZUR` — Dyżur,
+4. `ZWROTY` — Zwroty,
+5. `BIURO` — Biuro,
+6. `PORZADKI_KARTONY` — Porządki – kartony,
+7. `PRZYGOTOWANIE_STANOWISKA` — Przygotowanie stanowiska,
+8. `MAGAZYN` — Magazyn,
+9. `PRZERWA` — Przerwa,
+10. `INNE` — Inne.
+
+Uprawnienia:
+
+- WORKER: wszystkie powyższe poza `BIURO`,
+- LEADER: wszystkie 10,
+- ADMIN: wszystkie 10.
+
+Fikcyjne `SORTOWANIE` nie występuje w finalnym frontendzie.
 
 ## Wspólny design system
 
@@ -66,20 +95,27 @@ Backend musi odrzucać WORKER niezależnie od ukrycia elementów UI.
 
 Zaakceptowany kierunek: ciemny granat/grafit, cyan/teal, wysoki kontrast, czytelne karty, interfejs przemysłowo-logistyczny.
 
-## Kolejność implementacji
+## Stan końcowy Etapu 10
 
-1. wspólny design system — rozpoczęty,
+Zbudowano i zamrożono jako wejście do Etapu 11:
+
+1. wspólny design system,
 2. mobile shell operacyjny,
 3. mobile role views LEADER/ADMIN,
 4. WWW LEADER/ADMIN shell,
 5. komponenty wspólne i stany,
-6. podłączenie backendu Stage 9,
-7. regres responsywności i dostępności,
-8. przejście do Etapu 11 integracyjnego.
+6. kanoniczny katalog procesów i granice `BIURO`,
+7. wieloosobowe raportowanie w UI,
+8. dzienne PICK/PAK w podglądzie zespołu,
+9. responsywne warianty mobile / tablet / desktop,
+10. dedykowane CI Stage 10.
+
+Podłączenie do zaakceptowanych endpointów backendu zaczyna się dopiero w Etapie 11.
 
 ## Ograniczenia
 
 - nie zmieniać V1,
 - nie rozszerzać zgody Moniti,
 - nie włączać automatycznych alertów w Etapie 10,
-- nie przepisywać zaakceptowanej logiki backendu bez konkretnej regresji.
+- nie przepisywać zaakceptowanej logiki backendu bez konkretnej regresji,
+- wszystkie akcje Stage 10 są nadal demonstracyjne i nie wykonują zapisu do backendu.
