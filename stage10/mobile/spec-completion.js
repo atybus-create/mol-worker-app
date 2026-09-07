@@ -33,9 +33,9 @@
     reopen.className = 'mol-button';
     reopen.type = 'button';
     reopen.dataset.action = 'reopen-day';
-    reopen.innerHTML = '↶ <span><strong>Cofnij zakończenie dnia</strong><small>Przywróć dzień do OPEN</small></span>';
+    reopen.innerHTML = '↶ <span><strong>Cofnij zakończenie dnia</strong><small>Przywróć dzień do OPEN bez uruchamiania procesu</small></span>';
     reopen.hidden = validState !== 'CLOSED';
-    reopen.addEventListener('click', () => window.dispatchEvent(new CustomEvent('mol:stage10-demo-action', { detail: { action: 'attendance-reopen' } })));
+    reopen.addEventListener('click', () => window.dispatchEvent(new CustomEvent('mol:stage10-demo-action', { detail: { action: 'attendance-reopen', processAutoStart: false } })));
     quickActions.append(reopen);
   }
 
@@ -64,6 +64,17 @@
     if (startButton) startButton.disabled = true;
     if (stopButton) stopButton.disabled = false;
   }
+
+  startButton?.addEventListener('click', () => {
+    if (startButton.disabled) return;
+    window.dispatchEvent(new CustomEvent('mol:stage10-demo-attendance-transition', { detail: { from: 'NOT_STARTED', to: 'OPEN', nextScreen: 'process' } }));
+    requestAnimationFrame(() => document.querySelector('[data-nav="process"]')?.click());
+  });
+  stopButton?.addEventListener('click', () => {
+    if (stopButton.disabled) return;
+    document.querySelector('[data-panel="process"] [data-process-logout]')?.click();
+    window.dispatchEvent(new CustomEvent('mol:stage10-demo-attendance-transition', { detail: { from: 'OPEN', to: 'CLOSED', closesProcessAtSameInstant: true } }));
+  });
 
   const active = document.querySelector('.active-process');
   if (active) {
@@ -152,6 +163,30 @@
     staleNotice.textContent = 'Przykładowy alert systemowy';
     const description = staleNotice.parentElement?.querySelector('small');
     if (description) description.textContent = 'Automatyczne reguły alertów pozostają OFF/HOLD do etapu powiadomień.';
+  }
+
+  const messagesPanel = document.querySelector('[data-panel="messages"]');
+  if (messagesPanel && !messagesPanel.querySelector('[data-message-scope-tabs]')) {
+    const list = messagesPanel.querySelector('.message-list');
+    const tabs = document.createElement('div');
+    tabs.className = 'day-control-grid';
+    tabs.dataset.messageScopeTabs = 'true';
+    tabs.innerHTML = '<button class="mol-button mol-button--primary" type="button" data-message-scope="new">Nowe</button><button class="mol-button" type="button" data-message-scope="archive">Archiwum</button>';
+    list?.before(tabs);
+    tabs.querySelectorAll('[data-message-scope]').forEach((button) => button.addEventListener('click', () => {
+      tabs.querySelectorAll('button').forEach((node) => node.classList.toggle('mol-button--primary', node === button));
+      messagesPanel.dataset.messageScope = button.dataset.messageScope;
+      window.dispatchEvent(new CustomEvent('mol:stage10-demo-message-scope', { detail: { scope: button.dataset.messageScope } }));
+    }));
+  }
+
+  const correctionForm = document.querySelector('[data-demo-correction]');
+  if (correctionForm && !correctionForm.querySelector('[data-correction-policy]')) {
+    const note = document.createElement('p');
+    note.className = 'day-control-note';
+    note.dataset.correctionPolicy = 'true';
+    note.textContent = 'Pracownik może korygować własny czas do 31 dni wstecz. Starsze korekty wykonuje LEADER/ADMIN.';
+    correctionForm.append(note);
   }
 
   window.addEventListener('mol:stage10-demo-process-activate', (event) => {
