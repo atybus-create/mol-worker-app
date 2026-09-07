@@ -1,7 +1,7 @@
 # MOL App V2 — Etap 10 progress
 
 Data: 2026-09-07
-Status: W TOKU
+Status: GOTOWY TECHNICZNIE DO ODBIORU
 Gałąź: `codex/stage9-closeout-stage10-foundation`
 
 ## Cel
@@ -16,7 +16,26 @@ Budowa docelowego frontendu V2 po odbiorze Etapu 9. Frontend testowy `v2/` nie j
 - wspólne znaczenia statusów success/warning/danger/info,
 - wspólny model możliwości ról,
 - wspólne komponenty logowania,
-- osobna walidacja CI dla Stage 10.
+- wspólne stany loading / empty / offline / retry / expired session / forbidden,
+- osobna walidacja CI dla Stage 10,
+- wspólny kanoniczny katalog procesów `stage10/shared/processes.js`.
+
+### Procesy i role
+
+Finalny frontend odwzorowuje backendowy katalog 10 procesów:
+
+- PAKOWANIE,
+- KOMPLETACJA,
+- DYZUR,
+- ZWROTY,
+- BIURO,
+- PORZADKI_KARTONY,
+- PRZYGOTOWANIE_STANOWISKA,
+- MAGAZYN,
+- PRZERWA,
+- INNE.
+
+WORKER otrzymuje 9 procesów bez BIURO. LEADER i ADMIN otrzymują wszystkie 10. Fikcyjne SORTOWANIE zostało usunięte z docelowego UI i objęte testem regresyjnym.
 
 ### Model dostępu
 
@@ -34,13 +53,14 @@ Gotowy shell wizualno-interakcyjny dla:
 - dashboardu pracy,
 - START/STOP,
 - bieżącego procesu,
-- wyboru procesu,
+- wyboru procesu z pełnego katalogu zależnego od roli,
 - normy i czasu bez procesu,
 - komunikatów i podglądu wiadomości,
 - profilu i historii dnia,
 - własnej korekty czasu,
 - menedżerskiego podglądu zespołu,
-- mobilnych raportów,
+- dziennych liczników PICK i PAK dla pracowników,
+- mobilnych raportów z wyborem wielu pracowników,
 - mobilnej kolejki korekt,
 - mobilnej administracji użytkownikami zależnej od roli.
 
@@ -51,8 +71,12 @@ Gotowy shell wizualno-interakcyjny dla:
 - logowania,
 - dashboardu zespołu,
 - tabeli pracowników,
-- szybkiego podglądu pracownika,
-- raportów i eksportów,
+- bieżących wartości PICK dziś / PAK dziś dla każdego pracownika,
+- szybkiego podglądu pracownika z PICK / PAK / normą / obecnością,
+- raportów z checkboxami i dowolnym wyborem wielu pracowników,
+- funkcji `Zaznacz wszystkich` i `Wyczyść`,
+- podsumowania dokładnie zaznaczonej grupy,
+- eksportów CSV/XLSX dla dokładnie wybranych osób i zakresu dat,
 - kolejki korekt,
 - administracji użytkownikami,
 - historii operacji.
@@ -61,21 +85,20 @@ WORKER otrzymuje ekran odmowy dostępu do WWW.
 
 ## Testy
 
-Dedykowany workflow `Validate Stage 10 frontend`:
+Dedykowany workflow `Validate Stage 10 frontend` sprawdza:
 
-- JavaScript syntax PASS,
-- model ról PASS,
-- wymagane powierzchnie UI PASS,
-- skan sekretów PASS.
+- składnię wszystkich plików JavaScript,
+- model ról,
+- obecność 10 kanonicznych procesów,
+- brak `SORTOWANIE`,
+- ograniczenie `BIURO` dla WORKER,
+- wymagane powierzchnie UI,
+- PICK/PAK w podglądzie zespołu,
+- multi-select raportów,
+- przekazanie listy zaznaczonych `employeeIds` do przyszłej warstwy eksportu,
+- skan sekretów.
 
-Główny `Validate frontend` po zmianach Stage 10:
-
-- składnia PASS,
-- kontrakty i izolacja V2 PASS,
-- dotychczasowe testy auth/attendance/processes PASS,
-- Stage 10 boundaries PASS,
-- skan sekretów PASS,
-- CORS V2 PASS.
+Główny `Validate frontend` nadal chroni dotychczasowe kontrakty V2, V1 i CORS.
 
 ## Bezpieczeństwo
 
@@ -83,14 +106,8 @@ Główny `Validate frontend` po zmianach Stage 10:
 - brak rozszerzenia zgody testowej,
 - automatyczne alerty nadal OFF/HOLD,
 - V1 niezmieniona,
-- nowe ekrany Stage 10 nie posiadają jeszcze aktywnych zapisów do backendu; formularze generują wyłącznie zdarzenia demonstracyjne.
+- nowe ekrany Stage 10 nie posiadają aktywnych zapisów do backendu; formularze i eksporty generują wyłącznie zdarzenia demonstracyjne.
 
-## Pozostało w Etapie 10
+## Brama Etapu 11
 
-1. ujednolicić stany UI: loading / empty / offline / retry / expired session / forbidden,
-2. dopracować dostępność i rozmiary pod telefony magazynowe,
-3. wykonać przegląd wizualny realnego HTML na środowisku preview,
-4. usunąć dane demonstracyjne przed integracją,
-5. zamrozić komponenty frontendowe jako wejście do Etapu 11.
-
-Etap 11 rozpoczyna podłączenie finalnych ekranów do zaakceptowanych endpointów backendu Stage 9.
+Etap 10 jest gotowy technicznie do odbioru po przejściu końcowego CI i publikacji zaktualizowanego izolowanego preview. Po odbiorze Etap 11 podłącza finalne ekrany do zaakceptowanych endpointów backendu Stage 9, w tym przygotuje obsługę raportu dla wielu `employee_id` bez zmiany znaczenia dotychczasowych endpointów.
