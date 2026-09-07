@@ -37,5 +37,9 @@
       window.dispatchEvent(new CustomEvent('mol:stage10-demo-action', { detail: { action: button.dataset.action, role } }));
     }));
 
+  const detailsScript = document.createElement('script');
+  detailsScript.src = './worker-details.js';
+  document.body.append(detailsScript);
+
   show('home');
 })();
