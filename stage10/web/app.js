@@ -44,6 +44,8 @@
   const employeeAttendance = document.getElementById('employeeAttendance');
   const employeeNoProcess = document.getElementById('employeeNoProcess');
   const employeeNorm = document.getElementById('employeeNorm');
+  const employeePick = document.getElementById('employeePick');
+  const employeePack = document.getElementById('employeePack');
   const employeeProcess = document.getElementById('employeeProcess');
 
   const selectEmployee = (row) => {
@@ -54,6 +56,8 @@
     employeeAttendance.textContent = row.dataset.attendance;
     employeeNoProcess.textContent = row.dataset.noProcess;
     employeeNorm.textContent = `${row.dataset.norm}%`;
+    employeePick.textContent = row.dataset.pick;
+    employeePack.textContent = row.dataset.pack;
     employeeProcess.textContent = row.dataset.process;
     employeeStatus.className = 'mol-chip ' + (row.dataset.status === 'W PRACY' ? 'mol-chip--success' : row.dataset.status === 'PRZERWA' ? 'mol-chip--warning' : 'mol-chip--danger');
   };
