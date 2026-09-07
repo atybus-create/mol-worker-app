@@ -1,6 +1,6 @@
 # MOL App V2 — Etap 10: docelowy frontend
 
-Status: GOTOWY TECHNICZNIE DO ODBIORU
+Status: W TOKU — rozszerzenie rozliczenia norm PICK/PAK
 Start: 2026-09-07
 
 ## Zasada
@@ -29,12 +29,25 @@ Zakres wspólny operacyjny:
 - profil i sesja,
 - stany offline / retry / wygasła sesja / forbidden / empty.
 
+Każdy WORKER musi widzieć własne rozliczenie normy w dwóch okresach:
+
+1. **dzisiaj**,
+2. **od pierwszego dnia bieżącego miesiąca kalendarzowego do dziś**.
+
+W obu okresach obowiązuje identyczne rozbicie:
+
+- `PAK` — ilość, czas, procent normy,
+- `PICK` — ilość, czas, procent normy,
+- `PICK/PAK` — łączna ilość, łączny czas, łączny procent normy.
+
 Dodatkowo dla LEADER/ADMIN w aplikacji mobilnej:
 
 - mobilny podgląd zespołu,
 - szybki podgląd pracownika,
-- bieżące wykonanie dzienne PICK i PAK obok procentu normy,
-- raporty z wyborem wielu pracowników,
+- bieżące wykonanie dzienne PICK i PAK wraz z czasem i procentem normy,
+- raporty z wyborem jednego, wielu lub wszystkich pracowników,
+- zakres dat `od` / `do`,
+- raport PICK / PAK / PICK-PAK w układzie ilość / czas / procent,
 - kolejka korekt,
 - administracja użytkownikami w zakresie dozwolonym dla roli.
 
@@ -46,11 +59,14 @@ Docelowy panel desktopowy dostępny obok aplikacji mobilnej.
 
 - widok całego zespołu,
 - bieżące PICK dzisiaj i PAK dzisiaj dla każdego pracownika,
-- szybki podgląd pracownika z PICK / PAK / normą / obecnością,
+- szybki podgląd pracownika z pełnym rozliczeniem dziennym i od początku bieżącego miesiąca,
+- w każdym okresie: PICK, PAK i PICK/PAK jako ilość, czas i procent normy,
 - historia i raporty,
-- raportowanie dowolnie zaznaczonej grupy pracowników,
+- raportowanie jednego, wielu lub wszystkich pracowników,
 - `Zaznacz wszystkich`, `Wyczyść`, licznik zaznaczonych i raport tylko dla wybranych,
+- dowolny zakres dat `od` / `do`,
 - CSV/XLSX dokładnie dla zaznaczonych osób i zakresu dat,
+- raport okresowy zawiera osobno PICK ilość/czas/%, PAK ilość/czas/% oraz PICK/PAK ilość/czas/%,
 - kolejka korekt,
 - administracja użytkownikami zgodna z rolą,
 - historia operacji.
@@ -95,9 +111,9 @@ Fikcyjne `SORTOWANIE` nie występuje w finalnym frontendzie.
 
 Zaakceptowany kierunek: ciemny granat/grafit, cyan/teal, wysoki kontrast, czytelne karty, interfejs przemysłowo-logistyczny.
 
-## Stan końcowy Etapu 10
+## Stan Etapu 10
 
-Zbudowano i zamrożono jako wejście do Etapu 11:
+Zbudowano:
 
 1. wspólny design system,
 2. mobile shell operacyjny,
@@ -107,10 +123,12 @@ Zbudowano i zamrożono jako wejście do Etapu 11:
 6. kanoniczny katalog procesów i granice `BIURO`,
 7. wieloosobowe raportowanie w UI,
 8. dzienne PICK/PAK w podglądzie zespołu,
-9. responsywne warianty mobile / tablet / desktop,
-10. dedykowane CI Stage 10.
+9. rozliczenie WORKER dzisiaj + bieżący miesiąc w układzie PICK / PAK / PICK-PAK: ilość / czas / procent,
+10. analogiczne rozliczenie w panelu lidera i raporcie okresowym,
+11. responsywne warianty mobile / tablet / desktop,
+12. dedykowane CI Stage 10.
 
-Podłączenie do zaakceptowanych endpointów backendu zaczyna się dopiero w Etapie 11.
+Podłączenie do zaakceptowanych endpointów backendu zaczyna się dopiero w Etapie 11. Etap 10 nie może zostać odebrany przed ponownym przejściem CI i obejrzeniem odświeżonego preview po rozszerzeniu norm.
 
 ## Ograniczenia
 
