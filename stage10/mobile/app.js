@@ -7,6 +7,10 @@
   const roleChip = document.getElementById('mobileRoleChip');
   const panelLabel = document.getElementById('mobilePanelLabel');
 
+  const stateScript = document.createElement('script');
+  stateScript.src = '../shared/states.js';
+  document.body.append(stateScript);
+
   shell.dataset.demoRole = role;
   roleChip.textContent = role;
   roleChip.className = `mol-chip role-chip ${role === 'ADMIN' ? 'mol-chip--warning' : 'mol-chip--info'}`;
