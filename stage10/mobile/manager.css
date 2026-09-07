@@ -1,0 +1,28 @@
+.manager-actions { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:14px; }
+.manager-actions .mol-button { padding-inline:10px; }
+.manager-detail { padding-top:12px; }
+.manager-back { border:0; background:none; color:var(--mol-cyan); padding:0; min-height:42px; cursor:pointer; }
+.manager-filter { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:14px; margin-top:16px; }
+.manager-filter label { display:grid; gap:6px; color:var(--mol-text-muted); font-size:11px; }
+.manager-filter input { min-height:42px; border:1px solid var(--mol-border); border-radius:9px; background:rgba(3,18,29,.8); color:var(--mol-text); padding:0 10px; }
+.manager-report-list { padding:8px 14px; }
+.manager-report-list > div { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid rgba(81,178,220,.12); }
+.manager-report-list > div:last-child { border-bottom:0; }
+.manager-report-list span { color:var(--mol-text-muted); font-size:12px; }
+.manager-correction-list { display:grid; gap:10px; margin-top:16px; }
+.correction-item { padding:15px; display:grid; gap:12px; }
+.correction-item small { display:block; margin-top:4px; color:var(--mol-text-muted); }
+.correction-item p { margin:8px 0 0; color:var(--mol-text-muted); font-size:12px; }
+.correction-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.correction-actions button,.accept,.reject { min-height:42px; border-radius:10px; background:none; cursor:pointer; }
+.accept { border:1px solid rgba(25,231,160,.5); color:var(--mol-green); }
+.reject { border:1px solid rgba(255,82,97,.5); color:var(--mol-red); }
+.manager-user-policy { padding:15px; margin:16px 0 10px; }
+.manager-user-policy small,.manager-user-policy strong { display:block; }
+.manager-user-policy small { color:var(--mol-text-muted); }
+.manager-user-policy strong { margin-top:5px; color:var(--mol-cyan); }
+.manager-user-list { display:grid; gap:10px; }
+.manager-user-list article { padding:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.manager-user-list small { display:block; color:var(--mol-text-muted); margin-top:4px; }
+.manager-create-user { width:100%; margin-top:12px; }
+@media (max-width:390px){.manager-actions{grid-template-columns:1fr}.manager-filter{grid-template-columns:1fr}.correction-actions{grid-template-columns:1fr}.manager-user-list article{align-items:flex-start;flex-direction:column}.manager-user-list .mol-button{width:100%}}
