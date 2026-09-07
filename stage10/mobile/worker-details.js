@@ -4,16 +4,17 @@
   styles.href = './worker-details.css';
   document.head.append(styles);
 
+  const shell = document.querySelector('.worker-shell');
+  const role = window.MOLRoles.normalizeRole(new URLSearchParams(location.search).get('role') || shell?.dataset.demoRole || 'WORKER');
+  const allowedProcesses = window.MOLProcesses.allowedFor(role);
   const process = document.querySelector('[data-panel="process"]');
+  const currentProcess = window.MOLProcesses.byCode('PAKOWANIE');
   process.innerHTML = `
     <div class="worker-detail-head"><div><p class="mol-kicker">Praca operacyjna</p><h2>Proces</h2></div><span class="mol-chip mol-chip--success">W PRACY</span></div>
-    <section class="mol-card process-current"><small>Aktualny proces</small><strong>PAKOWANIE</strong><small>Od 08:55 · Kod PAK</small></section>
-    <div class="section-title"><h2>Wybierz proces</h2><span>Lista zależna od uprawnień</span></div>
+    <section class="mol-card process-current"><small>Aktualny proces</small><strong>${currentProcess.name}</strong><small>Kod: ${currentProcess.code}</small></section>
+    <div class="section-title"><h2>Wybierz proces</h2><span>${allowedProcesses.length} dostępnych dla ${role}</span></div>
     <div class="process-grid">
-      <button class="mol-button process-option is-active" type="button"><strong>PAKOWANIE</strong><small>PAK</small></button>
-      <button class="mol-button process-option" type="button"><strong>KOMPLETACJA</strong><small>KOM</small></button>
-      <button class="mol-button process-option" type="button"><strong>SORTOWANIE</strong><small>SORT</small></button>
-      <button class="mol-button process-option" type="button"><strong>PRZERWA</strong><small>BREAK</small></button>
+      ${allowedProcesses.map((item) => `<button class="mol-button process-option${item.code === currentProcess.code ? ' is-active' : ''}" type="button" data-process-code="${item.code}"><strong>${item.name}</strong><small>${item.code}${item.normUnitsPerHour ? ` · norma ${item.normUnitsPerHour}/h` : ''}</small></button>`).join('')}
     </div>
     <button class="mol-button mol-button--danger manager-create-user" type="button">Zakończ tylko proces</button>`;
 
@@ -32,7 +33,7 @@
     <div class="worker-detail-head"><div><p class="mol-kicker">Konto i historia</p><h2>Profil</h2></div><span class="mol-chip mol-chip--success">Sesja aktywna</span></div>
     <div class="profile-grid">
       <section class="mol-card profile-card"><h3>Stan połączenia</h3><div class="connection-state"><span>Backend V2</span><b>ONLINE</b></div><div class="profile-row"><span>Ostatnia synchronizacja</span><strong>teraz</strong></div></section>
-      <section class="mol-card profile-card"><h3>Dzisiejsza historia</h3><div class="profile-row"><span>START pracy</span><strong>06:12</strong></div><div class="profile-row"><span>PAKOWANIE</span><strong>06:15–08:21</strong></div><div class="profile-row"><span>PRZERWA</span><strong>08:21–08:34</strong></div><div class="profile-row"><span>PAKOWANIE</span><strong>od 08:55</strong></div></section>
+      <section class="mol-card profile-card"><h3>Dzisiejsza historia</h3><div class="profile-row"><span>START pracy</span><strong>06:12</strong></div><div class="profile-row"><span>Pakowanie</span><strong>06:15–08:21</strong></div><div class="profile-row"><span>Przerwa</span><strong>08:21–08:34</strong></div><div class="profile-row"><span>Pakowanie</span><strong>od 08:55</strong></div></section>
       <section class="mol-card profile-card"><h3>Korekta czasu pracy</h3><form class="correction-form" data-demo-correction><label>START<input type="datetime-local" value="2026-09-07T06:12"></label><label>STOP<input type="datetime-local"></label><label>Powód<textarea rows="3" minlength="3" maxlength="500" placeholder="Opisz powód korekty"></textarea></label><button class="mol-button" type="submit">Wyślij korektę</button></form></section>
       <button class="mol-button mol-button--danger" type="button">Wyloguj</button>
     </div>`;
@@ -47,7 +48,8 @@
 
   process.querySelectorAll('.process-option').forEach((button) => button.addEventListener('click', () => {
     process.querySelectorAll('.process-option').forEach((candidate) => candidate.classList.toggle('is-active', candidate === button));
-    window.dispatchEvent(new CustomEvent('mol:stage10-demo-process-select', { detail: { process: button.querySelector('strong').textContent } }));
+    const selected = window.MOLProcesses.byCode(button.dataset.processCode);
+    window.dispatchEvent(new CustomEvent('mol:stage10-demo-process-select', { detail: { code: selected.code, name: selected.name, role } }));
   }));
 
   profile.querySelector('[data-demo-correction]')?.addEventListener('submit', (event) => {
