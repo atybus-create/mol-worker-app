@@ -11,7 +11,7 @@
 | 7 | ES, normy i spójny status | PASS techniczny na żywych danych 2026-09-07: realny baseline, dodatni PAK, `MATCH_PROCESS`, norma, publiczne worker-status, Google Sheet, Drive mirror, czyste lock/recovery. Dowód: stage7-stage8b-live-evidence-20260907.md | Jawnie odebrany przez użytkownika 2026-09-07 | ODEBRANY |
 | 8 | Alerty i komunikacja | PASS: MANUAL, RECIPIENTS, LIST history/changes, SHOWN, ACK, Drive mirror, worker-status, realny START/STOP Moniti i recovery; realny Context ES sprawdzony dla `NO_APP` i `MATCH_PROCESS`, bez uruchamiania automatów | Jawnie odebrany przez użytkownika 2026-09-07 | ODEBRANY |
 | 9 | Panel lidera, raporty, użytkownicy i kolejka korekt | PASS: aktywne i poprawne serwisy, publiczne bramki 401 bez sesji, wcześniejsze pełne E2E user-admin/status/corrections; protokół `stage-9-closeout-20260907.md` | Panel testowy obejrzany i zaakceptowany przez użytkownika 2026-09-07 | ODEBRANY |
-| 10 | Docelowy frontend V2: aplikacja mobilna role-based + WWW LEADER/ADMIN | Design zatwierdzony; implementacja rozpoczęta od wspólnego design systemu | Wizualizacje zaakceptowane 2026-09-07 | W TOKU |
+| 10 | Docelowy frontend V2: aplikacja mobilna role-based + WWW LEADER/ADMIN | PASS: Stage10 run `34120893120`, pełny frontend run `34120893114`; procesy/role/PICK-PAK/multi-select/sekrety/izolacja | Kierunek wizualny zaakceptowany; oczekuje odbioru finalnego preview | GOTOWY DO ODBIORU |
 | 11 | Integracja docelowych frontendów z zaakceptowanym backendem | — | — | NIE ROZPOCZĘTO |
 | 12 | Pełny regres V2 / Release Candidate | — | — | NIE ROZPOCZĘTO |
 | 13 | Android APK/AAB | — | — | NIE ROZPOCZĘTO |
@@ -57,9 +57,9 @@ Pełny protokół: [stage-9-closeout-20260907.md](stage-9-closeout-20260907.md).
 
 Frontend użyty do odbioru Etapu 9 pozostaje narzędziem testowym. Nie jest docelowym frontendem produkcyjnym.
 
-## Etap 10 — W TOKU
+## Etap 10 — GOTOWY DO ODBIORU
 
-Etap 10 buduje docelowy frontend na zaakceptowanym backendzie Stage 9. Użytkownik 2026-09-07 zaakceptował kierunek wizualny dla aplikacji mobilnej oraz panelu WWW.
+Etap 10 zbudował docelowy frontend na zaakceptowanym backendzie Stage 9. Użytkownik 2026-09-07 zaakceptował kierunek wizualny dla aplikacji mobilnej oraz panelu WWW.
 
 Model dostępu docelowego:
 
@@ -68,7 +68,15 @@ Model dostępu docelowego:
 3. LEADER i ADMIN mają dodatkowo dostęp do rozbudowanego panelu WWW.
 4. WORKER nie ma dostępu do panelu WWW ani do menedżerskich danych przez bezpośrednie API.
 
-Mobile i WWW korzystają ze wspólnego design systemu, aby zachować jeden produkt wizualny i te same znaczenia statusów.
+Finalny frontend odwzorowuje 10 kanonicznych procesów backendu. WORKER ma 9 procesów bez BIURO; LEADER/ADMIN wszystkie 10. Demonstracyjne SORTOWANIE zostało usunięte.
+
+Podgląd zespołu pokazuje bieżący status, proces, obecność, PICK dzisiaj, PAK dzisiaj, procent normy i alerty. Raporty pozwalają zaznaczyć dowolną grupę pracowników, zaznaczyć wszystkich, wyczyścić wybór oraz przygotować raport/CSV/XLSX dokładnie dla wybranych osób i zakresu dat.
+
+Mobile i WWW korzystają ze wspólnego design systemu i wspólnych stanów loading/offline/retry/expired/forbidden/empty.
+
+Techniczny closeout: [stage-10-closeout-20260907.md](stage-10-closeout-20260907.md).
+
+Etap pozostaje `GOTOWY DO ODBIORU`, a nie `ODEBRANY`, dopóki użytkownik nie obejrzy odświeżonego finalnego preview i nie potwierdzi odbioru. Etapu 11 nie rozpoczynać przed tym potwierdzeniem.
 
 ## Historyczny test odbiorowy etapu 1
 
