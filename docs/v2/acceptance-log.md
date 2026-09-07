@@ -10,10 +10,14 @@
 | 6 | Procesy pracownika i uprawnienia BIURO | Zakres testów i ograniczenia: stage-6-closeout-20260905.md | Jawnie odebrany przez użytkownika 2026-09-05 | ODEBRANY |
 | 7 | ES, normy i spójny status | PASS techniczny na żywych danych 2026-09-07: realny baseline, dodatni PAK, `MATCH_PROCESS`, norma, publiczne worker-status, Google Sheet, Drive mirror, czyste lock/recovery. Dowód: stage7-stage8b-live-evidence-20260907.md | Jawnie odebrany przez użytkownika 2026-09-07 | ODEBRANY |
 | 8 | Alerty i komunikacja | PASS: MANUAL, RECIPIENTS, LIST history/changes, SHOWN, ACK, Drive mirror, worker-status, realny START/STOP Moniti i recovery; realny Context ES sprawdzony dla `NO_APP` i `MATCH_PROCESS`, bez uruchamiania automatów | Jawnie odebrany przez użytkownika 2026-09-07 | ODEBRANY |
-| 9 | Panel lidera i raporty | — | — | NIE ROZPOCZĘTO |
-| 10 | Spójny frontend V2 | — | — | NIE ROZPOCZĘTO |
-| 11 | Test równoległy V1 kontra V2 | — | — | NIE ROZPOCZĘTO |
-| 12 | Przełączenie produkcji | — | — | NIE ROZPOCZĘTO |
+| 9 | Panel lidera, raporty, użytkownicy i kolejka korekt | PASS: aktywne i poprawne serwisy, publiczne bramki 401 bez sesji, wcześniejsze pełne E2E user-admin/status/corrections; protokół `stage-9-closeout-20260907.md` | Panel testowy obejrzany i zaakceptowany przez użytkownika 2026-09-07 | ODEBRANY |
+| 10 | Docelowy frontend V2: mobile WORKER + WWW LEADER/ADMIN | Design zatwierdzony; implementacja rozpoczęta od wspólnego design systemu | Wizualizacje zaakceptowane 2026-09-07 | W TOKU |
+| 11 | Integracja docelowych frontendów z zaakceptowanym backendem | — | — | NIE ROZPOCZĘTO |
+| 12 | Pełny regres V2 / Release Candidate | — | — | NIE ROZPOCZĘTO |
+| 13 | Android APK/AAB | — | — | NIE ROZPOCZĘTO |
+| 14 | Powiadomienia Android w tle | — | — | NIE ROZPOCZĘTO |
+| 15 | Pilot magazynowy | — | — | NIE ROZPOCZĘTO |
+| 16 | Produkcja i monitoring | — | — | NIE ROZPOCZĘTO |
 
 ## Domknięcie etapu 6 i brama etapu 7
 
@@ -37,17 +41,30 @@ Automatyczne reguły alertów pozostają świadomie wyłączone: `COMMUNICATIONS
 
 Użytkownik 2026-09-07 jawnie uznał etap 8 za zamknięty. Nie wracać do odbioru Stage 8 ani nie aktywować auto-alertów bez nowej dyspozycji.
 
-## Następna brama — Etap 9
+## Etap 9 — ODEBRANY 2026-09-07
 
-Etapy 1–8 są odebrane. Następny planowany etap to **Etap 9 — Panel lidera i raporty**. Rozpoczynając nową rozmowę, najpierw wykonać krótki read-only sanity check bieżącego HEAD working branch, live health i acceptance-log, a następnie przejść bezpośrednio do wdrażania Stage 9. Nie zaczynać ponownie etapów 7/8.
+Panel lidera został wdrożony i pokazany na środowisku testowym. Użytkownik potwierdził, że wygląda poprawnie i zlecił domknięcie Etapu 9 oraz przejście do Etapu 10.
 
-Zakres roli LEADER przyjęty wcześniej przez użytkownika:
-1. Konto `asorokopud` otwiera panel lidera i widzi wszystkich pracowników, także bez przypisanego `leader_id`.
-2. Lider widzi czas pracy, procesy, normy, wyniki, historię i raporty pracowników.
-3. Lider wysyła komunikat do wybranej osoby i do wszystkich; część komunikacyjna została odebrana w Stage 8.
-4. Konto WORKER nie uzyskuje panelu lidera ani cudzych danych, również przez bezpośrednie wywołanie API.
-5. Lider nie uzyskuje administracji konfiguracją, nadawania ról, haseł ani tokenów. Podgląd nie nadaje dodatkowych praw edycji poza zatwierdzonymi korektami czasu pracy.
-6. Stage 9 obejmuje także raporty/eksport oraz docelowy przycisk zatwierdzania korekty bezpośrednio w odpowiednim arkuszu Google Sheets.
+Zakres końcowy Etapu 9 jest szerszy od pierwotnej koncepcji read-only. Obejmuje kontrolowane operacje administracyjne i korekty przy zachowaniu rozdziału ról:
+
+- WORKER nie ma panelu lidera ani cudzych danych,
+- LEADER widzi cały zespół i może zarządzać kontami WORKER w zatwierdzonym zakresie,
+- ADMIN ma rozszerzone zarządzanie użytkownikami,
+- kolejka korekt obsługuje akceptację i odrzucenie,
+- odrzucona niezmieniona korekta nie może ominąć decyzji przez starszą ścieżkę zatwierdzania.
+
+Pełny protokół: [stage-9-closeout-20260907.md](stage-9-closeout-20260907.md). Kontrakt live: `backend/v2/stage9-live-contract.json`.
+
+Frontend użyty do odbioru Etapu 9 pozostaje narzędziem testowym. Nie jest docelowym frontendem produkcyjnym.
+
+## Etap 10 — W TOKU
+
+Etap 10 buduje docelowy frontend na zaakceptowanym backendzie Stage 9. Użytkownik 2026-09-07 zaakceptował kierunek wizualny dla:
+
+1. aplikacji mobilnej WORKER,
+2. panelu WWW LEADER/ADMIN.
+
+WORKER docelowo korzysta z telefonu. Panel WWW jest dostępny wyłącznie dla LEADER/ADMIN. Oba interfejsy korzystają ze wspólnego design systemu, aby zachować jeden produkt wizualny i te same znaczenia statusów.
 
 ## Historyczny test odbiorowy etapu 1
 
