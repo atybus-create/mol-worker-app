@@ -1,6 +1,6 @@
 # MOL App V2 — Etap 10: docelowy frontend
 
-Status: W TOKU — rozszerzenie rozliczenia norm PICK/PAK
+Status: GOTOWY TECHNICZNIE DO ODBIORU — po rozszerzeniu norm PICK/PAK
 Start: 2026-09-07
 
 ## Zasada
@@ -128,7 +128,9 @@ Zbudowano:
 11. responsywne warianty mobile / tablet / desktop,
 12. dedykowane CI Stage 10.
 
-Podłączenie do zaakceptowanych endpointów backendu zaczyna się dopiero w Etapie 11. Etap 10 nie może zostać odebrany przed ponownym przejściem CI i obejrzeniem odświeżonego preview po rozszerzeniu norm.
+Rozszerzony zakres przeszedł dedykowane CI Stage 10 (`34124229858`) oraz pełny regres frontendu/V2 (`34124229836`) z wynikiem PASS.
+
+Podłączenie do zaakceptowanych endpointów backendu zaczyna się dopiero w Etapie 11. Etap 10 pozostaje nieodebrany do czasu obejrzenia odświeżonego preview przez użytkownika.
 
 ## Ograniczenia
 
