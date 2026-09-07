@@ -51,7 +51,7 @@
     </section>
 
     <section class="mol-card active-process">
-      <div><p class="mol-kicker">Aktywny proces</p><h2>PAKOWANIE</h2><small>Kod procesu: PAK</small></div>
+      <div><p class="mol-kicker">Aktywny proces</p><h2>PAKOWANIE</h2><small>Kod procesu: PAKOWANIE</small></div>
       <button class="mol-button" data-action="change-process">Zmień proces</button>
     </section>
 
@@ -61,7 +61,7 @@
       <article class="mol-card notice"><b>●</b><div><strong>Nowy komunikat od lidera</strong><small>Proszę o sprawdzenie strefy odkładczej A3.</small></div><time>28 min</time></article>
     </section>
 
-    <section class="screen-placeholder" data-panel="process" hidden><h2>Proces</h2><p>Docelowy ekran wyboru i zmiany procesu. API zostanie podłączone po zamrożeniu komponentów Etapu 10.</p></section>
+    <section class="screen-placeholder" data-panel="process" hidden><h2>Proces</h2><p>Docelowy ekran wyboru i zmiany procesu. API zostanie podłączone w Etapie 11.</p></section>
     <section class="screen-placeholder" data-panel="messages" hidden><h2>Komunikaty</h2><p>Lista wiadomości, SHOWN/ACK i stany nieprzeczytane.</p></section>
     <section class="screen-placeholder" data-panel="profile" hidden><h2>Profil</h2><p>Sesja, historia, korekta własnego czasu i wylogowanie.</p></section>
     <section class="screen-placeholder manager-mobile" data-panel="team" hidden>
@@ -73,8 +73,12 @@
         <article class="mol-card"><small>Alerty</small><strong>3</strong></article>
         <article class="mol-card"><small>Śr. norma</small><strong>91%</strong></article>
       </div>
-      <div class="mol-card manager-list"><b>Aneta Nowak</b><span>W PRACY · KOMPLETACJA · 88%</span><b>Tomasz Wójcik</b><span>PRZERWA · brak procesu · 72%</span><b>Magda Zielińska</b><span>BRAK STARTU · 0%</span></div>
-      <p class="mol-muted">Mobilny punkt wejścia do raportów, korekt i administracji zgodnie z uprawnieniami roli.</p>
+      <div class="mol-card manager-list" aria-label="Bieżące wyniki pracowników">
+        <div class="manager-person"><div><b>Aneta Nowak</b><small>W PRACY · KOMPLETACJA</small></div><div class="manager-person-metrics"><span>PICK <strong>318</strong></span><span>PAK <strong>124</strong></span><span>Norma <strong>88%</strong></span></div></div>
+        <div class="manager-person"><div><b>Tomasz Wójcik</b><small>PRZERWA · brak procesu</small></div><div class="manager-person-metrics"><span>PICK <strong>204</strong></span><span>PAK <strong>86</strong></span><span>Norma <strong>72%</strong></span></div></div>
+        <div class="manager-person"><div><b>Magda Zielińska</b><small>BRAK STARTU</small></div><div class="manager-person-metrics"><span>PICK <strong>0</strong></span><span>PAK <strong>0</strong></span><span>Norma <strong>0%</strong></span></div></div>
+      </div>
+      <p class="mol-muted">Bieżące PICK/PAK oznaczają wykonanie od początku bieżącego dnia. Mobilny panel prowadzi też do raportów, korekt i administracji zgodnie z rolą.</p>
     </section>
 
     <nav class="bottom-nav" aria-label="Nawigacja aplikacji">
@@ -85,6 +89,7 @@
       <button id="managerMobileNav" data-nav="team" hidden><span>◉</span>Zespół</button>
     </nav>
   </main>
+  <script src="../shared/processes.js"></script>
   <script src="../shared/roles.js"></script>
   <script src="./app.js"></script>
   <script src="./manager.js"></script>
