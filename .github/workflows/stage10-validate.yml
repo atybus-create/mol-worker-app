@@ -56,15 +56,20 @@ jobs:
           grep -q 'Korekty' stage10/mobile/manager.js
           grep -q 'Eksport XLSX' stage10/web/details.js
           grep -q 'Historia operacji' stage10/web/details.js
-      - name: Check worker daily and monthly norm quantities
+      - name: Check worker collapsible daily and monthly norms
         run: |
           grep -q 'Moja norma' stage10/mobile/index.html
-          grep -q 'Bieżący miesiąc' stage10/mobile/index.html
+          grep -q 'data-norm-period="today"' stage10/mobile/index.html
+          grep -q 'data-norm-period="month"' stage10/mobile/index.html
+          grep -q '>Norma dziś<' stage10/mobile/index.html
+          grep -q '>Norma miesięczna<' stage10/mobile/index.html
+          grep -q 'normDrawers' stage10/mobile/app.js
           grep -q 'Ilość łącznie' stage10/mobile/index.html
           grep -q 'Ilość do normy' stage10/mobile/index.html
           grep -q 'Ilość poza normą' stage10/mobile/index.html
           grep -q 'Procent normy' stage10/mobile/index.html
-          grep -q 'PICK/PAK' stage10/mobile/index.html
+          grep -q 'Jednostki do normy' stage10/mobile/index.html
+          grep -q '1 PAK = 1 j.n. · 3 PICK = 1 j.n.' stage10/mobile/index.html
           grep -q 'Norma dzienna' stage10/mobile/index.html
           grep -q 'Norma od początku miesiąca' stage10/mobile/index.html
       - name: Check leader team and period reporting quantities
@@ -89,7 +94,7 @@ jobs:
           grep -q 'employeeIds: checkedIds()' stage10/web/details.js
           grep -q 'data-mobile-report-from' stage10/mobile/manager.js
           grep -q 'data-mobile-report-to' stage10/mobile/manager.js
-          grep -q 'Poza normą' stage10/mobile/manager.js
+          grep -q '1 PAK = 1 j.n., 3 PICK = 1 j.n.' stage10/mobile/manager.js
           grep -q 'employeeIds: checkedIds()' stage10/mobile/manager.js
       - name: Check no secrets in Stage 10
         run: |
