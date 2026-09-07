@@ -15,6 +15,14 @@
     return;
   }
 
+  const loadScript = (src) => new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`Nie udało się załadować ${src}`));
+    document.head.append(script);
+  });
+
   const stateScript = document.createElement('script');
   stateScript.src = '../shared/states.js';
   document.body.append(stateScript);
@@ -161,17 +169,21 @@
   const initialRow = rows.find((row) => row.classList.contains('is-selected')) || rows[0];
   if (initialRow) selectEmployee(initialRow);
 
-  const detailsScript = document.createElement('script');
-  detailsScript.src = './details.js';
-  document.body.append(detailsScript);
+  const bootstrap = async () => {
+    await loadScript('./details.js');
+    await loadScript('./worktime.js');
+    await loadScript('./leader-messages.js');
+    await loadScript('../shared/api.js');
+    await loadScript('./live.js');
+  };
 
-  const worktimeScript = document.createElement('script');
-  worktimeScript.src = './worktime.js';
-  document.body.append(worktimeScript);
-
-  const leaderMessagesScript = document.createElement('script');
-  leaderMessagesScript.src = './leader-messages.js';
-  document.body.append(leaderMessagesScript);
+  bootstrap().catch((error) => {
+    console.error(error);
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;inset:24px;display:grid;place-items:center;z-index:9999;color:#fff;background:#050b12;font-family:system-ui';
+    box.innerHTML = `<div><h2>Nie udało się uruchomić panelu WWW</h2><p>${error.message}</p><p>Odśwież stronę.</p></div>`;
+    document.body.append(box);
+  });
 
   showSection('team');
 })();
