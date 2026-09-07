@@ -1,33 +1,23 @@
-(async () => {
+(() => {
   const styles = document.createElement('link');
   styles.rel = 'stylesheet';
   styles.href = './worker-details.css';
   document.head.append(styles);
 
-  const loadWarehouseTools = async () => {
-    if (window.MOLWarehouseTools?.items) return window.MOLWarehouseTools.items;
-    await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = '../shared/warehouse-tools.js';
-      script.onload = resolve;
-      script.onerror = () => reject(new Error('Nie udało się wczytać konfiguracji narzędzi magazynowych.'));
-      document.head.append(script);
-    });
-    return window.MOLWarehouseTools?.items || [];
-  };
-
-  const warehouseTools = await loadWarehouseTools();
+  const warehouseTools = window.MOLWarehouseTools?.items || [];
   const shell = document.querySelector('.worker-shell');
   const role = window.MOLRoles.normalizeRole(new URLSearchParams(location.search).get('role') || shell?.dataset.demoRole || 'WORKER');
   const allowedProcesses = window.MOLProcesses.allowedFor(role);
   const process = document.querySelector('[data-panel="process"]');
   const currentProcess = window.MOLProcesses.byCode('PAKOWANIE');
-  const warehouseCards = warehouseTools.map((tool) => `
-    <a class="mol-card warehouse-tool-card" href="${tool.url}" target="_blank" rel="noopener noreferrer" data-warehouse-tool="${tool.id}">
-      <span class="warehouse-tool-icon${tool.id === 'batchReader' ? ' is-barcode' : ''}" aria-hidden="true">${tool.icon}</span>
-      <span class="warehouse-tool-copy"><strong>${tool.title}</strong><small>${tool.description}</small></span>
-      <span class="warehouse-tool-arrow" aria-hidden="true">→</span>
-    </a>`).join('');
+  const warehouseCards = warehouseTools.length
+    ? warehouseTools.map((tool) => `
+      <a class="mol-card warehouse-tool-card" href="${tool.url}" target="_blank" rel="noopener noreferrer" data-warehouse-tool="${tool.id}">
+        <span class="warehouse-tool-icon${tool.id === 'batchReader' ? ' is-barcode' : ''}" aria-hidden="true">${tool.icon}</span>
+        <span class="warehouse-tool-copy"><strong>${tool.title}</strong><small>${tool.description}</small></span>
+        <span class="warehouse-tool-arrow" aria-hidden="true">→</span>
+      </a>`).join('')
+    : '<article class="mol-card warehouse-tool-card"><span class="warehouse-tool-copy"><strong>Narzędzia chwilowo niedostępne</strong><small>Odśwież ekran. W finalnej aplikacji konfiguracja będzie ładowana razem z aplikacją.</small></span></article>';
 
   process.innerHTML = `
     <div class="worker-detail-head"><div><p class="mol-kicker">Praca operacyjna</p><h2>Proces</h2></div><span class="mol-chip mol-chip--success">W PRACY</span></div>
@@ -50,9 +40,11 @@
   const currentCode = process.querySelector('[data-current-process-code]');
   const warehouseSection = process.querySelector('[data-warehouse-tools]');
   const applyProcessSelection = (selected) => {
+    if (!selected) return;
     currentName.textContent = selected.name;
     currentCode.textContent = selected.code;
     warehouseSection.hidden = selected.code !== 'MAGAZYN';
+    process.dataset.selectedProcess = selected.code;
   };
 
   const messages = document.querySelector('[data-panel="messages"]');
@@ -84,11 +76,14 @@
   }));
 
   process.querySelectorAll('.process-option').forEach((button) => button.addEventListener('click', () => {
-    process.querySelectorAll('.process-option').forEach((candidate) => candidate.classList.toggle('is-active', candidate === button));
     const selected = window.MOLProcesses.byCode(button.dataset.processCode);
+    if (!selected) return;
+    process.querySelectorAll('.process-option').forEach((candidate) => candidate.classList.toggle('is-active', candidate === button));
     applyProcessSelection(selected);
-    if (selected.code === 'MAGAZYN') warehouseSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     window.dispatchEvent(new CustomEvent('mol:stage10-demo-process-select', { detail: { code: selected.code, name: selected.name, role } }));
+    if (selected.code === 'MAGAZYN') {
+      requestAnimationFrame(() => warehouseSection.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
   }));
 
   profile.querySelector('[data-demo-correction]')?.addEventListener('submit', (event) => {
