@@ -38,6 +38,56 @@
   sectionButtons.forEach((button) => button.addEventListener('click', () => showSection(button.dataset.section)));
 
   const rows = [...document.querySelectorAll('#teamRows tr')];
+  const toMinutes = (value) => {
+    const [hours, minutes] = String(value || '00:00').split(':').map(Number);
+    return (hours || 0) * 60 + (minutes || 0);
+  };
+  const fromMinutes = (value) => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+  const roundUnits = (value) => Math.round(value * 10) / 10;
+  const normPercent = (eligible, minutes, unitsPerHour) => minutes > 0 ? Math.round((eligible / ((minutes / 60) * unitsPerHour)) * 100) : null;
+  const keyFor = (prefix, field) => prefix ? `${prefix}${field.charAt(0).toUpperCase()}${field.slice(1)}` : field;
+
+  const normalizePeriod = (row, prefix = '') => {
+    const key = (field) => keyFor(prefix, field);
+    const pickTotal = Number(row.dataset[key('pickTotal')] || 0);
+    const pickEligible = Number(row.dataset[key('pickEligible')] || 0);
+    const pickOutside = Number(row.dataset[key('pickOutside')] || 0);
+    const packTotal = Number(row.dataset[key('packTotal')] || 0);
+    const packEligible = Number(row.dataset[key('packEligible')] || 0);
+    const packOutside = Number(row.dataset[key('packOutside')] || 0);
+    const pickMinutes = toMinutes(row.dataset[key('pickTime')]);
+    const packMinutes = toMinutes(row.dataset[key('packTime')]);
+    const totalMinutes = pickMinutes + packMinutes;
+    const total = roundUnits(packTotal + pickTotal / 3);
+    const totalEligible = roundUnits(packEligible + pickEligible / 3);
+    const totalOutside = roundUnits(packOutside + pickOutside / 3);
+    const pickNorm = normPercent(pickEligible, pickMinutes, 210);
+    const packNorm = normPercent(packEligible, packMinutes, 70);
+    const totalNorm = normPercent(totalEligible, totalMinutes, 70);
+
+    row.dataset[key('pickNorm')] = pickNorm === null ? '' : String(pickNorm);
+    row.dataset[key('packNorm')] = packNorm === null ? '' : String(packNorm);
+    row.dataset[key('total')] = String(total);
+    row.dataset[key('totalEligible')] = String(totalEligible);
+    row.dataset[key('totalOutside')] = String(totalOutside);
+    row.dataset[key('totalTime')] = fromMinutes(totalMinutes);
+    row.dataset[key('totalNorm')] = totalNorm === null ? '' : String(totalNorm);
+  };
+
+  rows.forEach((row) => {
+    normalizePeriod(row);
+    normalizePeriod(row, 'month');
+    if (row.cells.length >= 8) {
+      const total = row.dataset.total;
+      const eligible = row.dataset.totalEligible;
+      const outside = row.dataset.totalOutside;
+      const norm = row.dataset.totalNorm;
+      row.cells[6].innerHTML = `<strong>Łącznie ${total} j.n.</strong><small>Do normy ${eligible} j.n.</small><small>Poza normą ${outside} j.n.</small>`;
+      row.cells[7].textContent = norm ? `${norm}%` : '—';
+      row.cells[7].className = !norm ? 'muted' : Number(norm) >= 90 ? 'good' : 'warn';
+    }
+  });
+
   const employeeName = document.getElementById('employeeName');
   const employeeId = document.getElementById('employeeId');
   const employeeStatus = document.getElementById('employeeStatus');
@@ -46,7 +96,12 @@
   const employeeProcess = document.getElementById('employeeProcess');
 
   const performanceFields = [...document.querySelectorAll('[data-performance-field]')];
-  const formatPerformance = (field, value) => field.toLowerCase().endsWith('norm') ? `${value}%` : value;
+  const unitFields = new Set(['total', 'totalEligible', 'totalOutside', 'monthTotal', 'monthTotalEligible', 'monthTotalOutside']);
+  const formatPerformance = (field, value) => {
+    if (field.toLowerCase().endsWith('norm')) return value === '' || value == null ? '—' : `${value}%`;
+    if (unitFields.has(field)) return `${value} j.n.`;
+    return value ?? '—';
+  };
 
   const selectEmployee = (row) => {
     rows.forEach((candidate) => candidate.classList.toggle('is-selected', candidate === row));
@@ -64,6 +119,8 @@
   };
 
   rows.forEach((row) => row.addEventListener('click', () => selectEmployee(row)));
+  const initialRow = rows.find((row) => row.classList.contains('is-selected')) || rows[0];
+  if (initialRow) selectEmployee(initialRow);
 
   const detailsScript = document.createElement('script');
   detailsScript.src = './details.js';
