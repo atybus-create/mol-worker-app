@@ -1,5 +1,5 @@
 {
-  "revision": "stage8b-es-orchestration-gated-20260906",
+  "revision": "stage8b-real-es-context-verified-20260907",
   "tables": {
     "MOL_V2_COMM_RECORDS": "42jIxvSmSVGdlxB8",
     "MOL_V2_COMM_COMMANDS": "7JVuBY9l6ISR2YBz"
@@ -60,13 +60,13 @@
     "comm_es_alert_record_reader": "b7da1214-9b8b-42bf-82e1-63ccec90299d",
     "comm_es_alert_bundle_persistence": "845432d1-30fc-4f24-ab26-cf0ea755e687",
     "comm_es_alert_coordinator": "b831e7ed-e799-413f-98ad-80a8653145e9",
-    "attendance_service": "1275f1a8-a361-4184-8420-9804fd5568cb",
-    "attendance_moniti": "7c2bb56d-9f5c-4fe7-b74e-9f480e814840",
+    "attendance_service": "aedab6e1-8d9c-4717-b4e7-3f8ffe76a521",
+    "attendance_moniti": "9037e45d-1e0d-46d4-99d2-e01bc887934a",
     "worker_status": "8837d66d-7a39-4131-9768-9472860e2ac2"
   },
   "communication": {
-    "revision": "stage8b-es-orchestration-gated-20260906",
-    "status": "STAGE8_LIVE_E2E_VERIFIED_STAGE8B_WIRED_FAIL_CLOSED",
+    "revision": "stage8b-real-es-context-verified-20260907",
+    "status": "STAGE8_LIVE_E2E_VERIFIED_STAGE8B_REAL_CONTEXT_VERIFIED_FAIL_CLOSED",
     "config_key": "COMMUNICATIONS_CONFIG",
     "manual_enabled": true,
     "automatic_rules_enabled": false,
@@ -85,7 +85,7 @@
       "loop_batch_size": 1,
       "max_candidates_per_tick": 10,
       "auto_alert_consumer_enabled": false,
-      "es_verified": false,
+      "es_verified_live": false,
       "alert_cutover_outbox_id": 7689,
       "legacy_policy": "HOLD",
       "stable_request_from_sha256": true,
@@ -93,7 +93,13 @@
       "writer_lock_readback": true,
       "source_claim_ack": true,
       "recipient_policy_approved": false,
-      "real_positive_es_test_complete": false
+      "real_positive_es_test_complete": true,
+      "real_source_context_verified": true,
+      "positive_batch_id": "ES-681193",
+      "positive_source_outbox_id": "ES-681193:MOL004:2026-09-07:derived",
+      "positive_source_row_id": 10788,
+      "positive_classification": "MATCH_PROCESS",
+      "no_activity_coverage_ready": false
     },
     "worker_status": {
       "communication_counters_live": true,
@@ -132,15 +138,24 @@
       "attendance_stop_local": "10:56",
       "moniti_synced": true,
       "temporary_sessions_removed": true,
-      "temporary_harnesses_removed": true,
-      "moniti_test_window_restored": "2026-09-05"
+      "temporary_harnesses_removed": true
+    },
+    "live_es_20260907": {
+      "employee_id": "MOL004",
+      "es_operator": "dtatarska",
+      "process_code": "PAKOWANIE",
+      "eligible_pak_verified": true,
+      "public_worker_status_verified": true,
+      "google_norm_mirror_verified": true,
+      "context_no_app_verified": true,
+      "context_match_process_verified": true,
+      "communication_write_performed": false
     },
     "no_process": {"rules_workflow_id":"EsCycMxoypbudrE7","active":true,"rule_enabled":false,"threshold_seconds":null,"ack_required":null},
     "attendance_correction": {"rules_workflow_id":"jv7WUWyuwngD7FFe","active":true,"rule_enabled":false,"ack_required":null,"recipients":"all active LEADER/ADMIN","episode_resolution":"resolved on committed correction/reopen; ACK remains independent"},
     "forgotten_stop": {"rules_workflow_id":"NHPqesBIjOwZHth4","active":true,"rule_enabled":false,"at_local":null,"escalate_after_seconds":null,"ack_required":null,"automatic_stop":false},
     "wrong_process": {"rules_workflow_id":"XYQziIf4NkjcNKhP","active":true,"rule_enabled":false,"requires_es_verified":true},
     "work_outside_app": {"rules_workflow_id":"wnkjKWWLBGefGytg","active":true,"rule_enabled":false,"requires_es_verified":true},
-    "no_activity": {"rules_workflow_id":"UjpB45UX6384rTMW","active":true,"rule_enabled":false,"threshold_seconds":null,"ack_required":null,"requires_es_verified":true,"source_unavailable_is_not_inactivity":true},
-    "probe": {"workflow_id":"5zOHDQDFXoG7O4QK","active":false,"execution_id":"588980"}
+    "no_activity": {"rules_workflow_id":"UjpB45UX6384rTMW","active":true,"rule_enabled":false,"threshold_seconds":null,"ack_required":null,"requires_es_verified":true,"source_unavailable_is_not_inactivity":true}
   }
 }
