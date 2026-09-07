@@ -7,6 +7,14 @@
   const roleChip = document.getElementById('mobileRoleChip');
   const panelLabel = document.getElementById('mobilePanelLabel');
 
+  const loadScript = (src) => new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = resolve;
+    document.head.append(script);
+  });
+
   const stateScript = document.createElement('script');
   stateScript.src = '../shared/states.js';
   document.body.append(stateScript);
@@ -49,29 +57,25 @@
     });
   }));
 
-  const loadWarehouseConfig = () => new Promise((resolve) => {
-    if (window.MOLWarehouseTools?.items) {
-      resolve();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = '../shared/warehouse-tools.js';
-    script.onload = resolve;
-    script.onerror = resolve;
-    document.head.append(script);
-  });
+  const loadBrand = async () => {
+    if (!window.ESTYL_LOGO) await loadScript('../../logo.js');
+    await loadScript('../shared/brand.js');
+  };
+
+  const loadWarehouseConfig = async () => {
+    if (!window.MOLWarehouseTools?.items) await loadScript('../shared/warehouse-tools.js');
+  };
 
   const loadWorkerDetails = async () => {
-    await loadWarehouseConfig();
-    const detailsScript = document.createElement('script');
-    detailsScript.src = './worker-details.js';
-    document.body.append(detailsScript);
+    await Promise.all([loadBrand(), loadWarehouseConfig()]);
+    await loadScript('./worker-details.js');
+    await loadScript('./spec-completion.js');
   };
 
   const renderActiveProcess = (selected) => {
     const activeCard = document.querySelector('.active-process');
     const activeName = activeCard?.querySelector('h2');
-    const activeCode = activeCard?.querySelector('small');
+    const activeCode = activeCard?.querySelector('div > small:last-of-type');
     const statusChip = document.querySelector('.work-status .status-head .mol-chip');
     if (activeName) activeName.textContent = selected?.name ? selected.name.toUpperCase() : 'BRAK PROCESU';
     if (activeCode) activeCode.textContent = selected?.code ? `Kod procesu: ${selected.code}` : 'Brak aktywnego procesu';
