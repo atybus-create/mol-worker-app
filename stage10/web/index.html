@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#050b12">
+  <title>MOL App V2 — Panel lidera WWW</title>
+  <link rel="stylesheet" href="../shared/tokens.css">
+  <link rel="stylesheet" href="./app.css">
+</head>
+<body>
+  <div class="web-shell" data-required-roles="LEADER,ADMIN">
+    <aside class="sidebar">
+      <a class="web-brand" href="#team" aria-label="MOL App V2"><span class="brand-mark">◆</span><span><strong>MOL App <b>V2</b></strong><small>Panel lidera WWW</small></span></a>
+      <nav aria-label="Panel lidera">
+        <button class="is-active" data-section="team">◉ <span>Zespół</span></button>
+        <button data-section="reports">▥ <span>Raporty</span></button>
+        <button data-section="corrections">✓ <span>Korekty</span></button>
+        <button data-section="users">◎ <span>Użytkownicy</span></button>
+        <button data-section="audit">↶ <span>Historia operacji</span></button>
+      </nav>
+      <div class="sidebar-foot"><p class="mol-kicker">Dostęp WWW</p><strong>LEADER / ADMIN</strong><small>WORKER korzysta wyłącznie z aplikacji mobilnej.</small></div>
+    </aside>
+
+    <header class="topbar">
+      <label class="search">⌕ <input type="search" placeholder="Szukaj pracownika, procesu, ID…"></label>
+      <div class="role-badges"><span class="mol-chip mol-chip--warning">LEADER</span><span class="mol-chip mol-chip--info">ADMIN</span></div>
+      <div class="profile"><div class="profile-avatar">B</div><span><strong>Bożena</strong><small>Lider zespołu</small></span><button aria-label="Menu profilu">⌄</button></div>
+    </header>
+
+    <main class="content">
+      <section class="view is-active" data-view="team">
+        <div class="page-title"><div><p class="mol-kicker">Bieżący stan</p><h1>Zespół</h1></div><label class="date-chip">Dzisiaj <input type="date" value="2026-09-07"></label></div>
+
+        <div class="kpis">
+          <article class="mol-card"><span>Pracownicy aktywni</span><strong>12</strong><small class="up">↗ +20% vs. wczoraj</small></article>
+          <article class="mol-card"><span>Bez procesu</span><strong>2</strong><small class="bad">↗ +1</small></article>
+          <article class="mol-card"><span>Alerty</span><strong>3</strong><small class="bad">↗ +2</small></article>
+          <article class="mol-card"><span>Średnia norma</span><strong>91%</strong><small class="up">↗ +6%</small></article>
+          <article class="mol-card"><span>Korekty oczekujące</span><strong>5</strong><small class="bad">↗ +2</small></article>
+        </div>
+
+        <div class="dashboard-grid">
+          <section class="mol-card team-card">
+            <div class="card-head"><div><h2>Lista pracowników</h2><span>12 osób</span></div><div class="filters"><input type="search" placeholder="Szukaj pracownika"><select><option>Wszyscy</option><option>W pracy</option><option>Bez procesu</option><option>Alert</option></select></div></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Pracownik / ID</th><th>Status pracy</th><th>Aktualny proces</th><th>Obecność</th><th>Norma</th><th>Alerty</th></tr></thead>
+                <tbody id="teamRows">
+                  <tr data-employee="Kamil Kaczmarek" data-id="MOL027" data-status="W PRACY" data-process="Pakowanie (PAK)" data-attendance="08:12" data-no-process="00:06" data-norm="96"><td><b>Kamil Kaczmarek</b><small>MOL027</small></td><td><span class="status success">● W PRACY</span></td><td>Pakowanie <small>PAK</small></td><td>08:12</td><td class="good">96%</td><td>—</td></tr>
+                  <tr class="is-selected" data-employee="Aneta Nowak" data-id="MOL031" data-status="W PRACY" data-process="Kompletacja (KOM)" data-attendance="07:45" data-no-process="00:12" data-norm="88"><td><b>Aneta Nowak</b><small>MOL031</small></td><td><span class="status success">● W PRACY</span></td><td>Kompletacja <small>KOM</small></td><td>07:45</td><td class="warn">88%</td><td><span class="alert">▲ 1</span></td></tr>
+                  <tr data-employee="Tomasz Wójcik" data-id="MOL029" data-status="PRZERWA" data-process="Brak procesu" data-attendance="06:30" data-no-process="00:24" data-norm="72"><td><b>Tomasz Wójcik</b><small>MOL029</small></td><td><span class="status warning">● PRZERWA</span></td><td>—</td><td>06:30</td><td class="warn">72%</td><td>—</td></tr>
+                  <tr data-employee="Magda Zielińska" data-id="MOL033" data-status="BRAK STARTU" data-process="Brak procesu" data-attendance="00:00" data-no-process="00:00" data-norm="0"><td><b>Magda Zielińska</b><small>MOL033</small></td><td><span class="status muted">■ BRAK STARTU</span></td><td>—</td><td>00:00</td><td class="danger">0%</td><td><span class="alert">▲ 1</span></td></tr>
+                  <tr data-employee="Piotr Wiśniewski" data-id="MOL011" data-status="W PRACY" data-process="Sortowanie (SORT)" data-attendance="08:15" data-no-process="00:04" data-norm="103"><td><b>Piotr Wiśniewski</b><small>MOL011</small></td><td><span class="status success">● W PRACY</span></td><td>Sortowanie <small>SORT</small></td><td>08:15</td><td class="good">103%</td><td>—</td></tr>
+                  <tr data-employee="Joanna Mazur" data-id="MOL018" data-status="W PRACY" data-process="Pakowanie (PAK)" data-attendance="08:01" data-no-process="00:08" data-norm="92"><td><b>Joanna Mazur</b><small>MOL018</small></td><td><span class="status success">● W PRACY</span></td><td>Pakowanie <small>PAK</small></td><td>08:01</td><td class="good">92%</td><td>—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <aside class="mol-card employee-card">
+            <div class="card-head"><div><p class="mol-kicker">Szybki podgląd</p><h2 id="employeeName">Aneta Nowak</h2><small id="employeeId">MOL031</small></div><span id="employeeStatus" class="mol-chip mol-chip--success">W PRACY</span></div>
+            <div class="employee-kpis"><article><small>Obecność dzisiaj</small><strong id="employeeAttendance">07:45</strong></article><article><small>Czas bez procesu</small><strong id="employeeNoProcess">00:12</strong></article><article><small>Norma dzienna</small><strong id="employeeNorm">88%</strong></article></div>
+            <div class="process-summary"><small>Aktualny proces</small><strong id="employeeProcess">Kompletacja (KOM)</strong></div>
+            <div class="employee-actions"><button class="mol-button">Historia</button><button class="mol-button">Raport pracownika</button></div>
+          </aside>
+        </div>
+
+        <div class="lower-grid">
+          <section class="mol-card corrections-preview"><div class="card-head"><div><h2>Kolejka korekt czasu pracy</h2><span>5 oczekujących</span></div><button class="text-link" data-section="corrections">Zobacz wszystkie →</button></div>
+            <table><thead><tr><th>Pracownik</th><th>Data</th><th>Stary → nowy</th><th>Powód</th><th>Akcje</th></tr></thead><tbody>
+              <tr><td>Anna Kowalska</td><td>07.09.2026</td><td>06:12 → 08:00</td><td>Wizyta lekarska</td><td><button class="accept">Akceptuj</button><button class="reject">Odrzuć</button></td></tr>
+              <tr><td>Piotr Wiśniewski</td><td>06.09.2026</td><td>14:00 → 16:30</td><td>Nadgodziny</td><td><button class="accept">Akceptuj</button><button class="reject">Odrzuć</button></td></tr>
+            </tbody></table>
+          </section>
+          <section class="mol-card report-preview"><div class="card-head"><div><h2>Raporty — podsumowanie</h2><span>01.09–07.09.2026</span></div><button class="text-link" data-section="reports">Pełny raport →</button></div><div class="charts"><article><small>Obecność</small><strong>89%</strong><div class="bars"><i style="height:70%"></i><i style="height:84%"></i><i style="height:93%"></i><i style="height:88%"></i><i style="height:96%"></i></div></article><article><small>Realizacja norm</small><strong>91%</strong><svg viewBox="0 0 220 80" role="img" aria-label="Trend norm"><polyline points="5,55 45,43 85,44 125,30 165,36 215,16" fill="none" stroke="currentColor" stroke-width="4"/></svg></article></div></section>
+        </div>
+      </section>
+
+      <section class="view" data-view="reports" hidden><div class="page-title"><div><p class="mol-kicker">Analiza</p><h1>Raporty</h1></div></div><div class="mol-card placeholder"><h2>Raport obecności i norm</h2><p>Filtry dat, pracownik/cały zespół, obecność, normy, świeżość danych oraz eksport CSV/XLSX.</p></div></section>
+      <section class="view" data-view="corrections" hidden><div class="page-title"><div><p class="mol-kicker">Decyzje</p><h1>Korekty czasu pracy</h1></div></div><div class="mol-card placeholder"><h2>Kolejka korekt</h2><p>Akceptacja i odrzucenie z ochroną hash/version/conflict zgodną z backendem Stage 9.</p></div></section>
+      <section class="view" data-view="users" hidden><div class="page-title"><div><p class="mol-kicker">Administracja</p><h1>Użytkownicy</h1></div></div><div class="mol-card placeholder"><h2>Role i konta</h2><p>Tworzenie kont, reset haseł i aktywacja/dezaktywacja z zakresem zależnym od LEADER/ADMIN.</p></div></section>
+      <section class="view" data-view="audit" hidden><div class="page-title"><div><p class="mol-kicker">Audyt</p><h1>Historia operacji</h1></div></div><div class="mol-card placeholder"><h2>Bezpieczny log działań</h2><p>Historia operacji administracyjnych bez haseł, hashy i tokenów.</p></div></section>
+    </main>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>
