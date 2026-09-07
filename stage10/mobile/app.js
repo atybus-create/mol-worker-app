@@ -68,15 +68,37 @@
     document.body.append(detailsScript);
   };
 
-  window.addEventListener('mol:stage10-demo-process-select', (event) => {
-    const selected = event.detail || {};
+  const renderActiveProcess = (selected) => {
     const activeCard = document.querySelector('.active-process');
     const activeName = activeCard?.querySelector('h2');
     const activeCode = activeCard?.querySelector('small');
     const statusChip = document.querySelector('.work-status .status-head .mol-chip');
-    if (activeName && selected.name) activeName.textContent = selected.name.toUpperCase();
-    if (activeCode && selected.code) activeCode.textContent = `Kod procesu: ${selected.code}`;
-    if (statusChip && selected.code) statusChip.textContent = selected.code;
+    if (activeName) activeName.textContent = selected?.name ? selected.name.toUpperCase() : 'BRAK PROCESU';
+    if (activeCode) activeCode.textContent = selected?.code ? `Kod procesu: ${selected.code}` : 'Brak aktywnego procesu';
+    if (statusChip) {
+      statusChip.textContent = selected?.code || 'BRAK PROCESU';
+      statusChip.className = `mol-chip ${selected?.code ? 'mol-chip--success' : 'mol-chip--warning'}`;
+    }
+  };
+
+  window.addEventListener('mol:stage10-demo-process-activate', (event) => {
+    const selected = event.detail || {};
+    renderActiveProcess(selected);
+    window.dispatchEvent(new CustomEvent('mol:stage10-demo-action', {
+      detail: {
+        action: selected.action,
+        processCode: selected.code,
+        previousProcessCode: selected.previousCode,
+        role
+      }
+    }));
+  });
+
+  window.addEventListener('mol:stage10-demo-process-logout', (event) => {
+    renderActiveProcess(null);
+    window.dispatchEvent(new CustomEvent('mol:stage10-demo-action', {
+      detail: { action: 'process-logout', previousProcessCode: event.detail?.previousCode || null, role }
+    }));
   });
 
   loadWorkerDetails();
