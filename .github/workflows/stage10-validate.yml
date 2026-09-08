@@ -36,10 +36,11 @@ jobs:
           grep -q 'mol.v2.stage11.read-e2e' stage10/web/live.js
       - name: Check live write integration
         run: |
-          for ep in mol-app-v2-attendance-start mol-app-v2-attendance-finish mol-app-v2-attendance-reopen mol-app-v2-attendance-correct mol-app-v2-process-start mol-app-v2-process-change mol-app-v2-process-logout mol-app-v2-message-shown mol-app-v2-message-ack mol-app-v2-message-send mol-app-v2-correction-reject mol-app-v2-user-create mol-app-v2-user-active mol-app-v2-user-password-reset; do grep -Rq "$ep" stage10/mobile/live-actions.js stage10/web/live-actions.js; done
+          for ep in mol-app-v2-attendance-start mol-app-v2-attendance-finish mol-app-v2-attendance-reopen mol-app-v2-attendance-correct mol-app-v2-process-start mol-app-v2-process-change mol-app-v2-process-logout mol-app-v2-message-shown mol-app-v2-message-ack mol-app-v2-leader-message mol-app-v2-correction-preview mol-app-v2-correction-approve mol-app-v2-correction-reject mol-app-v2-user-create mol-app-v2-user-active mol-app-v2-user-password-reset; do grep -Rq "$ep" stage10/mobile/live-actions.js stage10/web/live-actions.js; done
           grep -Rq 'request_id' stage10/mobile/live-actions.js stage10/web/live-actions.js
           grep -q 'expected_version' stage10/mobile/live-actions.js
-          grep -q 'expected_version' stage10/web/live-actions.js
+          grep -Rq 'approved_hash' stage10/mobile/live-actions.js stage10/web/live-actions.js
+          grep -Rq 'can_reset_password' stage10/mobile/live-actions.js stage10/web/live-actions.js
       - name: Check backend authority and no demo runtime
         run: |
           ! grep -R -E 'Kamil Kaczmarek|Aneta Nowak|Tomasz Wójcik|Piotr Wiśniewski|Magda Zielińska|Joanna Mazur' stage10/mobile stage10/web
