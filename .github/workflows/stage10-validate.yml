@@ -16,7 +16,7 @@ jobs:
           node-version: 24
       - name: Check integrated JavaScript syntax
         run: |
-          for f in stage10/shared/roles.js stage10/shared/processes.js stage10/shared/auth-demo.js stage10/shared/api.js stage10/mobile/app.js stage10/mobile/worker-details.js stage10/mobile/spec-completion.js stage10/mobile/report-integrity.js stage10/mobile/manager.js stage10/mobile/live.js stage10/mobile/live-actions.js stage10/web/app.js stage10/web/details.js stage10/web/worktime.js stage10/web/leader-messages.js stage10/web/live.js stage10/web/live-actions.js; do node --check "$f"; done
+          for f in stage10/shared/roles.js stage10/shared/processes.js stage10/shared/auth-demo.js stage10/shared/api.js stage10/shared/regression-guards.js stage10/mobile/app.js stage10/mobile/worker-details.js stage10/mobile/spec-completion.js stage10/mobile/report-integrity.js stage10/mobile/manager.js stage10/mobile/live.js stage10/mobile/live-actions.js stage10/web/app.js stage10/web/details.js stage10/web/worktime.js stage10/web/leader-messages.js stage10/web/live.js stage10/web/live-actions.js; do node --check "$f"; done
       - name: Check role and process boundaries
         run: |
           grep -q 'WORKER: Object.freeze({ mobile: true, web: false' stage10/shared/roles.js
@@ -41,6 +41,18 @@ jobs:
           grep -q 'expected_version' stage10/mobile/live-actions.js
           grep -Rq 'approved_hash' stage10/mobile/live-actions.js stage10/web/live-actions.js
           grep -Rq 'can_reset_password' stage10/mobile/live-actions.js stage10/web/live-actions.js
+      - name: Check regression guards
+        run: |
+          grep -q "readRetry: 'GET_ONCE'" stage10/shared/regression-guards.js
+          grep -q "writeRetry: 'MANUAL_ONLY'" stage10/shared/regression-guards.js
+          grep -q 'inflightReadDeduplication: true' stage10/shared/regression-guards.js
+          grep -q 'session401Redirect: true' stage10/shared/regression-guards.js
+          grep -q "staleWriteProtection: 'EXPECTED_VERSION_BACKEND_AUTHORITY'" stage10/shared/regression-guards.js
+          grep -q '../shared/regression-guards.js' stage10/mobile/app.js
+          grep -q '../shared/regression-guards.js' stage10/web/app.js
+          grep -q 'dataset.busy' stage10/mobile/live-actions.js
+          grep -q 'dataset.busy' stage10/web/live-actions.js
+          grep -q 'expected_version' stage10/mobile/live-actions.js
       - name: Check backend authority and no demo runtime
         run: |
           ! grep -R -E 'Kamil Kaczmarek|Aneta Nowak|Tomasz Wójcik|Piotr Wiśniewski|Magda Zielińska|Joanna Mazur' stage10/mobile stage10/web
