@@ -29,7 +29,8 @@ jobs:
           ! grep -R -q 'SORTOWANIE\|Sortowanie\|SORT</small>' stage10/mobile stage10/web stage10/shared/*.js
       - name: Check live read integration
         run: |
-          for ep in mol-app-v2-auth-session mol-app-v2-worker-status mol-app-v2-norms-daily mol-app-v2-norms-monthly mol-app-v2-messages; do grep -q "$ep" stage10/mobile/live.js; done
+          grep -q 'mol-app-v2-auth-session' stage10/shared/api.js
+          for ep in mol-app-v2-worker-status mol-app-v2-norms-daily mol-app-v2-norms-monthly mol-app-v2-messages; do grep -q "$ep" stage10/mobile/live.js; done
           for ep in mol-app-v2-leader-team mol-app-v2-employee-history mol-app-v2-report-attendance mol-app-v2-report-performance mol-app-v2-audit-history mol-app-v2-user-list mol-app-v2-corrections-queue mol-app-v2-leader-message-recipients; do grep -q "$ep" stage10/web/live.js; done
           grep -q 'mol.v2.stage11.read-e2e' stage10/mobile/live.js
           grep -q 'mol.v2.stage11.read-e2e' stage10/web/live.js
