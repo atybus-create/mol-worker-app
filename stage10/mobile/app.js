@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD = '20260908.3';
+  const BUILD = '20260908.4';
   const shell = document.querySelector('.worker-shell');
   if (!shell) return;
   const params = new URLSearchParams(location.search);
