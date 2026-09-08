@@ -3,7 +3,7 @@
 
   const BASE = 'https://n8n.estyl.team/webhook/';
   const SESSION_KEY = 'mol.v2.session';
-  const BUILD = '20260908.3';
+  const BUILD = '20260908.4';
   const state = { token: '' };
 
   try { state.token = sessionStorage.getItem(SESSION_KEY) || ''; } catch { /* storage is optional */ }
