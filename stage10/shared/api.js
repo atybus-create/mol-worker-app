@@ -3,6 +3,7 @@
 
   const BASE = 'https://n8n.estyl.team/webhook/';
   const SESSION_KEY = 'mol.v2.session';
+  const BUILD = '20260908.3';
   const state = { token: '' };
 
   try { state.token = sessionStorage.getItem(SESSION_KEY) || ''; } catch { /* storage is optional */ }
@@ -26,6 +27,14 @@
     });
   };
 
+  const todayISO = () => {
+    const parts = new Intl.DateTimeFormat('en', {
+      timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date());
+    const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return `${map.year}-${map.month}-${map.day}`;
+  };
+
   const setToken = (token) => {
     state.token = String(token || '');
     try {
@@ -37,6 +46,33 @@
   const clearToken = () => setToken('');
   const getToken = () => state.token;
 
+  const endpoint = (path) => {
+    const normalized = String(path || '').replace(/^\/+/, '');
+    if (normalized === 'mol-app-v2-message-send') return 'mol-app-v2-leader-message';
+    return normalized;
+  };
+
+  const readQuery = (path, query) => {
+    const normalized = endpoint(path);
+    const q = query && typeof query === 'object' && !Array.isArray(query) ? { ...query } : {};
+    const date = todayISO();
+    if (normalized === 'mol-app-v2-worker-status' && !q.work_date) q.work_date = date;
+    if (normalized === 'mol-app-v2-leader-team' && !q.work_date) q.work_date = date;
+    if (normalized === 'mol-app-v2-norms-daily' && !q.date && !q.work_date) q.date = date;
+    if (normalized === 'mol-app-v2-norms-monthly' && !q.month) q.month = date.slice(0, 7);
+    return q;
+  };
+
+  const unwrapEnvelope = (value) => {
+    let envelope = value;
+    if (typeof envelope === 'string') {
+      try { envelope = JSON.parse(envelope); } catch { /* handled by caller */ }
+    }
+    if (Array.isArray(envelope) && envelope.length === 1 && envelope[0] && typeof envelope[0] === 'object') envelope = envelope[0];
+    if (envelope && typeof envelope === 'object' && envelope.ok === undefined && envelope.body && typeof envelope.body === 'object') envelope = envelope.body;
+    return envelope;
+  };
+
   async function request(path, {
     method = 'GET',
     query = null,
@@ -45,19 +81,18 @@
     binary = false,
     timeoutMs = 45000,
   } = {}) {
-    const normalized = String(path || '').replace(/^\/+/, '');
+    const normalized = endpoint(path);
     const url = new URL(BASE + normalized);
-    if (query) {
-      for (const [key, value] of Object.entries(query)) {
-        if (value === undefined || value === null || value === '') continue;
-        if (Array.isArray(value)) url.searchParams.set(key, value.join(','));
-        else url.searchParams.set(key, String(value));
-      }
+    const effectiveQuery = String(method).toUpperCase() === 'GET' ? readQuery(normalized, query) : (query || {});
+    for (const [key, value] of Object.entries(effectiveQuery)) {
+      if (value === undefined || value === null || value === '') continue;
+      if (Array.isArray(value)) url.searchParams.set(key, value.join(','));
+      else url.searchParams.set(key, String(value));
     }
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
-    const headers = {};
+    const headers = { Accept: 'application/json' };
     if (auth) {
       if (!state.token) throw new MOLApiError('Brak aktywnej sesji.', { status: 401, code: 'UNAUTHENTICATED' });
       headers.Authorization = `Bearer ${state.token}`;
@@ -77,7 +112,7 @@
       if (binary) {
         if (!response.ok) {
           let payload = null;
-          try { payload = await response.json(); } catch { /* binary/non-json error */ }
+          try { payload = unwrapEnvelope(JSON.parse((await response.text()).replace(/^\uFEFF/, ''))); } catch { /* binary/non-json error */ }
           throw new MOLApiError(payload?.error?.message || `HTTP ${response.status}`, {
             status: response.status,
             code: payload?.error?.code || '',
@@ -92,12 +127,26 @@
         };
       }
 
-      let envelope;
-      try { envelope = await response.json(); }
+      const raw = (await response.text()).replace(/^\uFEFF/, '');
+      if (!raw.trim()) {
+        throw new MOLApiError(`Backend V2 ${normalized} zwrócił pustą odpowiedź (HTTP ${response.status}).`, {
+          status: response.status,
+          code: 'EMPTY_RESPONSE',
+          retryable: response.status >= 500,
+        });
+      }
+
+      let parsed;
+      try { parsed = JSON.parse(raw); }
       catch {
         const contentType = response.headers.get('content-type') || 'brak Content-Type';
-        throw new MOLApiError(`Backend V2 ${normalized} zwrócił odpowiedź inną niż JSON (HTTP ${response.status}, ${contentType}).`, { status: response.status });
+        throw new MOLApiError(`Backend V2 ${normalized} zwrócił niepoprawny JSON (HTTP ${response.status}, ${contentType}).`, {
+          status: response.status,
+          code: 'INVALID_JSON',
+          retryable: response.status >= 500,
+        });
       }
+      const envelope = unwrapEnvelope(parsed);
 
       if (!response.ok || envelope?.ok !== true) {
         throw new MOLApiError(envelope?.error?.message || 'Operacja nie została potwierdzona.', {
@@ -170,7 +219,7 @@
   }
 
   const read = (path, query = null) => request(path, { query });
-  const write = (path, body) => request(path, { method: 'POST', body });
+  const write = (path, body) => request(endpoint(path), { method: 'POST', body });
 
   async function download(path, query, fallbackName) {
     const result = await request(path, { query, binary: true });
@@ -188,15 +237,18 @@
   }
 
   function redirectLogin(reason = '') {
-    const suffix = reason ? `?reason=${encodeURIComponent(reason)}` : '';
-    location.replace(`./login.html${suffix}`);
+    const params = new URLSearchParams();
+    if (reason) params.set('reason', reason);
+    params.set('v', BUILD);
+    location.replace(`./login.html?${params.toString()}`);
   }
 
   function canonicalizeRole(role) {
     const expected = String(role || '').toUpperCase();
     const params = new URLSearchParams(location.search);
     const current = String(params.get('role') || '').toUpperCase();
-    if (current === expected) return false;
+    params.set('v', BUILD);
+    if (current === expected && new URLSearchParams(location.search).get('v') === BUILD) return false;
     params.set('role', expected);
     location.replace(`${location.pathname}?${params.toString()}${location.hash || ''}`);
     return true;
@@ -210,9 +262,11 @@
 
   window.MOLApi = Object.freeze({
     BASE,
+    BUILD,
     SESSION_KEY,
     MOLApiError,
     requestId,
+    todayISO,
     getToken,
     setToken,
     clearToken,
