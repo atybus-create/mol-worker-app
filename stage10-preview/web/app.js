@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD='20260908.3';
+  const BUILD='20260908.4';
   const shell=document.querySelector('.web-shell'); if(!shell)return;
   const hintedRole=window.MOLRoles.normalizeRole(new URLSearchParams(location.search).get('role')||'LEADER');
   const capabilities=window.MOLRoles.get(hintedRole);
