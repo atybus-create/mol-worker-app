@@ -8,7 +8,7 @@
   const sidebar=document.querySelector('.sidebar nav');
   const reportsButton=sidebar?.querySelector('[data-section="reports"]');
   const addNav=(name,label,icon,after)=>{let b=sidebar?.querySelector(`[data-section="${name}"]`);if(!b&&sidebar){b=document.createElement('button');b.dataset.section=name;b.innerHTML=`${icon} <span>${label}</span>`;after?.after(b);}return b;};
-  const worktimeButton=addNav('worktime','Czas pracy','◷',reportsButton); const messageButton=addNav('leader-messages','Komunikaty','✉',worktimeButton);
+  const worktimeButton=addNav('worktime','Czas pracy','◷',reportsButton); addNav('leader-messages','Komunikaty','✉',worktimeButton);
   const content=document.querySelector('.content');
   const ensureView=(name,afterName)=>{let v=document.querySelector(`[data-view="${name}"]`);if(!v){v=document.createElement('section');v.className='view';v.dataset.view=name;v.hidden=true;document.querySelector(`[data-view="${afterName}"]`)?.after(v)||content?.append(v);}return v;};
   ensureView('worktime','reports'); ensureView('leader-messages','worktime');
