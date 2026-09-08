@@ -7,11 +7,11 @@
   const roleChip = document.getElementById('mobileRoleChip');
   const panelLabel = document.getElementById('mobilePanelLabel');
 
-  const loadScript = (src) => new Promise((resolve) => {
+  const loadScript = (src) => new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = src;
     script.onload = resolve;
-    script.onerror = resolve;
+    script.onerror = () => reject(new Error(`Nie udało się załadować ${src}`));
     document.head.append(script);
   });
 
@@ -58,7 +58,6 @@
   }));
 
   const loadBrand = async () => {
-    if (!window.ESTYL_LOGO) await loadScript('../../logo.js');
     await loadScript('../shared/brand.js');
   };
 
@@ -106,6 +105,20 @@
     }));
   });
 
-  loadWorkerDetails();
+  const bootstrapLive = async () => {
+    await loadWorkerDetails();
+    await loadScript('../shared/api.js');
+    await loadScript('./live.js');
+  };
+
+  bootstrapLive().catch((error) => {
+    console.error(error);
+    const banner = document.createElement('div');
+    banner.setAttribute('role', 'alert');
+    banner.style.cssText = 'position:fixed;z-index:99999;left:12px;right:12px;top:12px;padding:12px 16px;border-radius:10px;background:#45151a;color:#fff;font:600 14px system-ui';
+    banner.textContent = `Błąd uruchomienia integracji V2: ${error.message}`;
+    document.body.prepend(banner);
+  });
+
   show('home');
 })();
