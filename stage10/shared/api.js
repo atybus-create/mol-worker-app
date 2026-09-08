@@ -94,7 +94,10 @@
 
       let envelope;
       try { envelope = await response.json(); }
-      catch { throw new MOLApiError('Backend nie zwrócił poprawnej odpowiedzi JSON.', { status: response.status }); }
+      catch {
+        const contentType = response.headers.get('content-type') || 'brak Content-Type';
+        throw new MOLApiError(`Backend V2 ${normalized} zwrócił odpowiedź inną niż JSON (HTTP ${response.status}, ${contentType}).`, { status: response.status });
+      }
 
       if (!response.ok || envelope?.ok !== true) {
         throw new MOLApiError(envelope?.error?.message || 'Operacja nie została potwierdzona.', {
