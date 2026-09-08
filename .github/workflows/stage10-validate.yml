@@ -17,6 +17,8 @@ jobs:
       - name: Check integrated JavaScript syntax
         run: |
           for f in stage10/shared/roles.js stage10/shared/processes.js stage10/shared/auth-demo.js stage10/shared/api.js stage10/shared/regression-guards.js stage10/mobile/app.js stage10/mobile/worker-details.js stage10/mobile/spec-completion.js stage10/mobile/report-integrity.js stage10/mobile/manager.js stage10/mobile/live.js stage10/mobile/live-actions.js stage10/web/app.js stage10/web/details.js stage10/web/worktime.js stage10/web/leader-messages.js stage10/web/live.js stage10/web/live-actions.js; do node --check "$f"; done
+      - name: Run regression guard tests
+        run: node stage10/tests/regression-guards.test.mjs
       - name: Check role and process boundaries
         run: |
           grep -q 'WORKER: Object.freeze({ mobile: true, web: false' stage10/shared/roles.js
