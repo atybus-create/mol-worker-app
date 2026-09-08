@@ -169,10 +169,25 @@
   const initialRow = rows.find((row) => row.classList.contains('is-selected')) || rows[0];
   if (initialRow) selectEmployee(initialRow);
 
+  const prepareLiveView = () => {
+    const body = document.getElementById('teamRows');
+    if (body) body.innerHTML = '<tr><td colspan="14" class="report-empty">Ładowanie danych z backendu V2…</td></tr>';
+    document.querySelectorAll('[data-view="team"] .kpis article strong').forEach((node) => { node.textContent = '—'; });
+    if (employeeName) employeeName.textContent = 'Ładowanie…';
+    if (employeeId) employeeId.textContent = '—';
+    if (employeeStatus) { employeeStatus.textContent = 'ŁADOWANIE'; employeeStatus.className = 'mol-chip mol-chip--info'; }
+    if (employeeAttendance) employeeAttendance.textContent = '—';
+    if (employeeNoProcess) employeeNoProcess.textContent = '—';
+    if (employeeProcess) employeeProcess.textContent = '—';
+    performanceFields.forEach((node) => { node.textContent = '—'; });
+    document.querySelectorAll('[data-view="reports"] .web-stat-grid article strong,[data-view="worktime"] .web-stat-grid article strong').forEach((node) => { node.textContent = '—'; });
+  };
+
   const bootstrap = async () => {
     await loadScript('./details.js');
     await loadScript('./worktime.js');
     await loadScript('./leader-messages.js');
+    prepareLiveView();
     await loadScript('../shared/api.js');
     await loadScript('./live.js');
   };
