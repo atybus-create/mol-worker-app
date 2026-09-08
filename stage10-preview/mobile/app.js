@@ -105,7 +105,33 @@
     }));
   });
 
+  const prepareLiveView = () => {
+    const workTitle = document.querySelector('.work-status h2');
+    if (workTitle) workTitle.textContent = 'ŁADOWANIE…';
+    const processChip = document.querySelector('.work-status .status-head .mol-chip');
+    if (processChip) { processChip.textContent = '—'; processChip.className = 'mol-chip mol-chip--info'; }
+    document.querySelectorAll('.work-status .status-stats strong,.kpi-grid article strong,.performance-metrics b,.performance-drawer summary > b').forEach((node) => { node.textContent = '—'; });
+    const progress = document.querySelector('.kpi-grid .progress i');
+    if (progress) progress.style.width = '0%';
+    const activeName = document.querySelector('.active-process h2');
+    if (activeName) activeName.textContent = 'ŁADOWANIE…';
+    const activeCode = document.querySelector('.active-process small:last-of-type');
+    if (activeCode) activeCode.textContent = 'Dane z backendu V2';
+    const notices = document.querySelector('.notices');
+    if (notices) {
+      notices.querySelectorAll('article.notice').forEach((node) => node.remove());
+      const info = document.createElement('article');
+      info.className = 'mol-card notice';
+      info.innerHTML = '<b>●</b><div><strong>Komunikaty z backendu V2</strong><small>Aktualne wiadomości są w zakładce Komunikaty.</small></div>';
+      notices.append(info);
+    }
+    const managerList = document.querySelector('.manager-list');
+    if (managerList) managerList.innerHTML = '<div class="manager-person"><div><b>Ładowanie zespołu…</b><small>Dane z backendu V2</small></div></div>';
+    document.querySelectorAll('.manager-mobile-grid article strong').forEach((node) => { node.textContent = '—'; });
+  };
+
   const bootstrapLive = async () => {
+    prepareLiveView();
     await loadWorkerDetails();
     await loadScript('../shared/api.js');
     await loadScript('./live.js');
