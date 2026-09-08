@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  const BUILD = '20260908.3';
   const shell = document.querySelector('.worker-shell');
   if (!shell) return;
   const params = new URLSearchParams(location.search);
@@ -34,8 +35,9 @@
     document.querySelectorAll('[data-norm-period]').forEach((other) => { if (other !== drawer) other.open = false; });
   }));
 
+  const versioned = (src) => `${src}${src.includes('?') ? '&' : '?'}v=${BUILD}`;
   const loadScript = (src) => new Promise((resolve, reject) => {
-    const script = document.createElement('script'); script.src = src; script.onload = resolve;
+    const script = document.createElement('script'); script.src = versioned(src); script.onload = resolve;
     script.onerror = () => reject(new Error(`Nie udało się załadować ${src}`)); document.head.append(script);
   });
   const loadSupport = async () => {
