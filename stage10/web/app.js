@@ -17,7 +17,7 @@
   window.MOLWebShow=show;
   const versioned=(src)=>`${src}${src.includes('?')?'&':'?'}v=${BUILD}`;
   const load=(src)=>new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=versioned(src);s.onload=resolve;s.onerror=()=>reject(new Error(`Nie udało się załadować ${src}`));document.head.append(s);});
-  const bootstrap=async()=>{const css=document.createElement('link');css.rel='stylesheet';css.href=versioned('./details.css');document.head.append(css);await load('../shared/states.js');await load('./details.js');await load('./worktime.js');await load('./leader-messages.js');await load('../shared/api.js');await load('./live.js');await load('./live-actions.js');};
+  const bootstrap=async()=>{const css=document.createElement('link');css.rel='stylesheet';css.href=versioned('./details.css');document.head.append(css);await load('../shared/states.js');await load('./details.js');await load('./worktime.js');await load('./leader-messages.js');await load('../shared/api.js');await load('../shared/regression-guards.js');await load('./live.js');await load('./live-actions.js');};
   bootstrap().catch(error=>{console.error(error);const box=document.createElement('div');box.style.cssText='position:fixed;inset:24px;display:grid;place-items:center;z-index:9999;color:#fff;background:#050b12;font-family:system-ui';box.innerHTML=`<div><h2>Nie udało się uruchomić panelu WWW</h2><p>${error.message}</p></div>`;document.body.append(box);});
   show('team');
 })();
