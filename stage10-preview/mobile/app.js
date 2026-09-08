@@ -48,6 +48,7 @@
     await loadScript('./spec-completion.js');
     await loadScript('./report-integrity.js');
     await loadScript('../shared/api.js');
+    await loadScript('../shared/regression-guards.js');
     await loadScript('./live.js');
     await loadScript('./live-actions.js');
   };
