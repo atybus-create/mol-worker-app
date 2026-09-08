@@ -1,4 +1,4 @@
-name: Validate Stage 10 frontend
+name: Validate Stage 11 frontend integration
 on:
   push:
     branches: [codex/stage9-closeout-stage10-foundation]
@@ -7,187 +7,66 @@ on:
       - '.github/workflows/stage10-validate.yml'
   workflow_dispatch:
 jobs:
-  stage10:
+  stage11:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Check Stage 10 JavaScript
+      - name: Check integrated JavaScript syntax
         run: |
-          node --check stage10/shared/roles.js
-          node --check stage10/shared/processes.js
-          node --check stage10/shared/warehouse-tools.js
-          node --check stage10/shared/brand.js
-          node --check stage10/shared/auth-demo.js
-          node --check stage10/shared/states.js
-          node --check stage10/mobile/app.js
-          node --check stage10/mobile/worker-details.js
-          node --check stage10/mobile/spec-completion.js
-          node --check stage10/mobile/report-integrity.js
-          node --check stage10/mobile/manager.js
-          node --check stage10/web/app.js
-          node --check stage10/web/details.js
-          node --check stage10/web/weighted-report.js
-          node --check stage10/web/worktime.js
-          node --check stage10/web/worktime-completion.js
-          node --check stage10/web/leader-messages.js
-          node --check stage10/web/leader-message-history.js
-          node --check stage10/web/spec-completion.js
-      - name: Check approved role model
+          for f in stage10/shared/roles.js stage10/shared/processes.js stage10/shared/auth-demo.js stage10/shared/api.js stage10/mobile/app.js stage10/mobile/worker-details.js stage10/mobile/spec-completion.js stage10/mobile/report-integrity.js stage10/mobile/manager.js stage10/mobile/live.js stage10/mobile/live-actions.js stage10/web/app.js stage10/web/details.js stage10/web/worktime.js stage10/web/leader-messages.js stage10/web/live.js stage10/web/live-actions.js; do node --check "$f"; done
+      - name: Check role and process boundaries
         run: |
           grep -q 'WORKER: Object.freeze({ mobile: true, web: false' stage10/shared/roles.js
-          grep -q 'LEADER: Object.freeze({ mobile: true, web: true, managerMobile: true' stage10/shared/roles.js
-          grep -q 'ADMIN: Object.freeze({ mobile: true, web: true, managerMobile: true' stage10/shared/roles.js
-          grep -q 'WORKER nie otrzymuje panelu WWW' stage10/README.md
-          grep -q 'Panel WWW niedostępny dla WORKER' stage10/web/app.js
-          grep -q 'managerMobileNav' stage10/mobile/index.html
-      - name: Check canonical process catalog and BIURO scope
-        run: |
+          grep -q 'LEADER: Object.freeze({ mobile: true, web: true' stage10/shared/roles.js
+          grep -q 'ADMIN: Object.freeze({ mobile: true, web: true' stage10/shared/roles.js
+          grep -q 'data-required-roles="LEADER,ADMIN"' stage10/web/index.html
+          grep -q 'data-role-hint="WORKER"' stage10/mobile/index.html
           for code in PAKOWANIE KOMPLETACJA DYZUR ZWROTY BIURO PORZADKI_KARTONY PRZYGOTOWANIE_STANOWISKA MAGAZYN PRZERWA INNE; do grep -q "$code" stage10/shared/processes.js; done
           grep -q "filter((code) => code !== 'BIURO')" stage10/shared/processes.js
-          grep -q 'allowedProcesses = window.MOLProcesses.allowedFor(role)' stage10/mobile/worker-details.js
           ! grep -R -q 'SORTOWANIE\|Sortowanie\|SORT</small>' stage10/mobile stage10/web stage10/shared/*.js
-      - name: Check auth and frozen ESTYL brand
+      - name: Check live read integration
         run: |
-          test -f stage10/shared/brand.js
-          grep -q '../../logo.js' stage10/mobile/login.html
-          grep -q '../../logo.js' stage10/web/login.html
-          grep -q 'window.ESTYL_LOGO' stage10/shared/brand.js
-          grep -q '>Hasło<' stage10/mobile/login.html
-          grep -q '>Hasło<' stage10/web/login.html
-          grep -q 'Wersja aplikacji: V2' stage10/mobile/login.html
-          grep -q 'Wersja aplikacji: V2' stage10/web/login.html
-          ! grep -q 'Przypomnij PIN' stage10/mobile/login.html
-          ! grep -q 'Hasło / PIN' stage10/mobile/login.html
-          ! grep -q 'Hasło / PIN' stage10/web/login.html
-      - name: Check final UI surfaces
+          for ep in mol-app-v2-auth-session mol-app-v2-worker-status mol-app-v2-norms-daily mol-app-v2-norms-monthly mol-app-v2-messages; do grep -q "$ep" stage10/mobile/live.js; done
+          for ep in mol-app-v2-leader-team mol-app-v2-employee-history mol-app-v2-report-attendance mol-app-v2-report-performance mol-app-v2-audit-history mol-app-v2-user-list mol-app-v2-corrections-queue mol-app-v2-leader-message-recipients; do grep -q "$ep" stage10/web/live.js; done
+          grep -q 'mol.v2.stage11.read-e2e' stage10/mobile/live.js
+          grep -q 'mol.v2.stage11.read-e2e' stage10/web/live.js
+      - name: Check live write integration
         run: |
-          test -f stage10/mobile/login.html
-          test -f stage10/web/login.html
-          test -f stage10/shared/states.css
-          test -f stage10/mobile/worker-details.css
-          test -f stage10/mobile/spec-completion.css
-          test -f stage10/mobile/manager.css
-          test -f stage10/web/details.css
-          test -f stage10/web/worktime.js
-          test -f stage10/web/worktime-completion.js
-          test -f stage10/web/leader-messages.js
-          test -f stage10/web/leader-messages.css
-          test -f stage10/web/spec-completion.css
-          grep -q 'Sesja wygasła' stage10/shared/states.js
-          grep -q 'Brak połączenia' stage10/shared/states.js
-          grep -q 'Korekta czasu pracy' stage10/mobile/worker-details.js
-          grep -q 'Potwierdzam odbiór' stage10/mobile/worker-details.js
-          grep -q 'Korekty' stage10/mobile/manager.js
-          grep -q 'Eksport XLSX' stage10/web/details.js
-          grep -q 'Historia operacji' stage10/web/details.js
-      - name: Check worker attendance states and exact actions
+          for ep in mol-app-v2-attendance-start mol-app-v2-attendance-finish mol-app-v2-attendance-reopen mol-app-v2-attendance-correct mol-app-v2-process-start mol-app-v2-process-change mol-app-v2-process-logout mol-app-v2-message-shown mol-app-v2-message-ack mol-app-v2-message-send mol-app-v2-correction-reject mol-app-v2-user-create mol-app-v2-user-active mol-app-v2-user-password-reset; do grep -Rq "$ep" stage10/mobile/live-actions.js stage10/web/live-actions.js; done
+          grep -Rq 'request_id' stage10/mobile/live-actions.js stage10/web/live-actions.js
+          grep -q 'expected_version' stage10/mobile/live-actions.js
+          grep -q 'expected_version' stage10/web/live-actions.js
+      - name: Check backend authority and no demo runtime
         run: |
-          grep -q 'MONITI Rozpocznij pracę' stage10/mobile/spec-completion.js
-          grep -q 'MONITI Zakończ pracę' stage10/mobile/spec-completion.js
-          grep -q 'Cofnij zakończenie dnia' stage10/mobile/spec-completion.js
-          grep -q 'Zmień godziny pracy' stage10/mobile/spec-completion.js
-          grep -q '31 dni wstecz' stage10/mobile/spec-completion.js
-          grep -q 'closesProcessAtSameInstant: true' stage10/mobile/spec-completion.js
-          grep -q "nextScreen: 'process'" stage10/mobile/spec-completion.js
-          grep -q 'processAutoStart: false' stage10/mobile/spec-completion.js
-      - name: Check worker collapsible daily and monthly norms
+          ! grep -R -E 'Kamil Kaczmarek|Aneta Nowak|Tomasz Wójcik|Piotr Wiśniewski|Magda Zielińska|Joanna Mazur' stage10/mobile stage10/web
+          ! grep -R -q 'mol:stage10-demo' stage10/mobile stage10/web
+          ! grep -R -q 'demoAttendance' stage10/mobile stage10/web
+          ! grep -R -q 'data-demo-role' stage10/mobile stage10/web
+          grep -q "aggregateSource='backend-v2'" stage10/mobile/report-integrity.js
+          grep -q "aggregateMethod='backend-weighted'" stage10/web/weighted-report.js
+          grep -q 'Agregacja grupowa liczona wyłącznie przez backend V2' stage10/web/details.js
+      - name: Check UI surfaces and actions
         run: |
           grep -q 'Moja norma' stage10/mobile/index.html
           grep -q 'data-norm-period="today"' stage10/mobile/index.html
           grep -q 'data-norm-period="month"' stage10/mobile/index.html
-          grep -q '>Norma dziś<' stage10/mobile/index.html
-          grep -q '>Norma miesięczna<' stage10/mobile/index.html
-          grep -q 'normDrawers' stage10/mobile/app.js
-          grep -q 'Ilość łącznie' stage10/mobile/index.html
-          grep -q 'Ilość do normy' stage10/mobile/index.html
-          grep -q 'Ilość poza normą' stage10/mobile/index.html
-          grep -q 'Procent normy' stage10/mobile/index.html
-          grep -q '1 PAK = 1 j.n. · 3 PICK = 1 j.n.' stage10/mobile/index.html
-          grep -q 'Czasy wszystkich procesów' stage10/mobile/spec-completion.js
-          grep -q 'Czas międzyprocesowy' stage10/mobile/spec-completion.js
-          grep -q 'Świeżość danych' stage10/mobile/spec-completion.js
-      - name: Check immediate MAGAZYN activation and optional tools
-        run: |
-          test -f stage10/shared/warehouse-tools.js
-          grep -q 'Terminy – aplikacja magazynowa' stage10/shared/warehouse-tools.js
-          grep -q 'https://atybus-create.github.io/mol-magazyn-terminy-pwa/' stage10/shared/warehouse-tools.js
-          grep -q 'Batch reader' stage10/shared/warehouse-tools.js
-          grep -q 'https://atybus-create.github.io/mol-magazyn-terminy-pwa/batch-reader/' stage10/shared/warehouse-tools.js
-          grep -q 'Kliknięcie od razu aktywuje proces' stage10/mobile/worker-details.js
-          grep -q 'Proces MAGAZYN jest aktywny' stage10/mobile/worker-details.js
+          grep -q 'Korekta czasu pracy' stage10/mobile/worker-details.js
           grep -q 'Opcjonalne narzędzia magazynowe' stage10/mobile/worker-details.js
-          grep -q 'MAGAZYN został aktywowany już przez kliknięcie kafla procesu' stage10/mobile/worker-details.js
-          grep -q "const action = previousCode ? 'process-change' : 'process-start'" stage10/mobile/worker-details.js
-          grep -q 'mol:stage10-demo-process-activate' stage10/mobile/worker-details.js
-          grep -q 'processCode: selected.code' stage10/mobile/app.js
-          grep -q 'target="_blank" rel="noopener noreferrer"' stage10/mobile/worker-details.js
-      - name: Check active process and worker messages
-        run: |
-          grep -q 'ZMIEŃ PROCES' stage10/mobile/spec-completion.js
-          grep -q 'WYLOGUJ Z PROCESU' stage10/mobile/spec-completion.js
-          grep -q 'PODGLĄD NORMY' stage10/mobile/spec-completion.js
-          grep -q 'Timer procesu' stage10/mobile/spec-completion.js
-          grep -q 'Wykonanie właściwe' stage10/mobile/spec-completion.js
-          grep -q '>Nowe<' stage10/mobile/spec-completion.js
-          grep -q '>Archiwum<' stage10/mobile/spec-completion.js
-          grep -q 'mol:stage10-demo-message-shown' stage10/mobile/worker-details.js
-          grep -q 'mol:stage10-demo-message-ack' stage10/mobile/worker-details.js
-      - name: Check leader monitoring completeness
-        run: |
-          grep -q 'START' stage10/web/spec-completion.js
-          grep -q 'Aktywność aplikacji' stage10/web/spec-completion.js
-          grep -q 'Czas bieżącego procesu' stage10/web/spec-completion.js
-          grep -q 'Czas międzyprocesowy' stage10/web/spec-completion.js
-          grep -q 'Mapowanie ES' stage10/web/spec-completion.js
-          grep -q 'Aktywne alerty' stage10/web/spec-completion.js
-          grep -q 'Historia zdarzeń osoby' stage10/web/spec-completion.js
-      - name: Check leader performance reporting quantities and weighted aggregate
-        run: |
-          grep -q 'PICK dziś' stage10/web/index.html
-          grep -q 'PAK dziś' stage10/web/index.html
-          grep -q 'PICK/PAK dziś' stage10/web/index.html
-          grep -q 'PICK do normy' stage10/web/details.js
-          grep -q 'PICK poza normą' stage10/web/details.js
-          grep -q 'PAK do normy' stage10/web/details.js
-          grep -q 'PAK poza normą' stage10/web/details.js
-          grep -q 'PICK/PAK do normy' stage10/web/details.js
-          grep -q 'PICK/PAK poza normą' stage10/web/details.js
-          grep -q 'Zaznacz wszystkich' stage10/web/details.js
-          grep -q 'Generuj raport dla zaznaczonych' stage10/web/details.js
-          grep -q 'weighted-numerator-denominator' stage10/web/weighted-report.js
-          grep -q 'combinedEligible = packEligible + pickEligible / 3' stage10/web/weighted-report.js
-          grep -q 'weighted-numerator-denominator' stage10/mobile/report-integrity.js
-          grep -q 'PICK/PAK grupy · ważone' stage10/mobile/report-integrity.js
-      - name: Check separate complete work time reporting
-        run: |
-          grep -q "label.textContent = 'Wydajność'" stage10/web/app.js
-          grep -q "worktimeButton.dataset.section = 'worktime'" stage10/web/app.js
+          grep -q 'Raport wydajności' stage10/mobile/manager.js
+          grep -q 'Wyślij komunikat' stage10/mobile/manager.js
+          grep -q 'Kolejka korekt' stage10/web/details.js
           grep -q 'Raport czasu pracy' stage10/web/worktime.js
-          grep -q 'Zaznacz wszystkich' stage10/web/worktime.js
-          grep -q '<th>START</th><th>STOP</th><th>Czas pracy</th>' stage10/web/worktime.js
-          grep -q 'data-worktime-status' stage10/web/worktime-completion.js
-          grep -q 'Czasy procesów' stage10/web/worktime-completion.js
-          grep -q 'Czas międzyprocesowy' stage10/web/worktime-completion.js
-          grep -q 'Korekty' stage10/web/worktime-completion.js
-          grep -q 'Synchronizacja' stage10/web/worktime-completion.js
-          grep -q 'Bieżący miesiąc' stage10/web/worktime-completion.js
-      - name: Check leader manual communication and history
-        run: |
-          grep -q "leaderMessagesButton.dataset.section = 'leader-messages'" stage10/web/app.js
+          grep -q 'Raport PICK / PAK' stage10/web/details.js
           grep -q 'Wyślij komunikat' stage10/web/leader-messages.js
-          grep -q 'Wszyscy aktualnie w pracy' stage10/web/leader-messages.js
-          grep -q 'maxlength="2000"' stage10/web/leader-messages.js
-          grep -q 'Wymagaj potwierdzenia odbioru' stage10/web/leader-messages.js
-          grep -q "requestType: 'leader-message'" stage10/web/leader-messages.js
-          grep -q 'aplikacja aktywna' stage10/web/leader-message-history.js
-          grep -q 'Komunikaty i status odbioru' stage10/web/leader-message-history.js
-          grep -q 'data-message-history-next' stage10/web/leader-message-history.js
-          grep -q 'manager-messages' stage10/mobile/manager.js
-          grep -q 'data-mobile-message-all-open' stage10/mobile/manager.js
-          grep -q 'data-mobile-message-ack' stage10/mobile/manager.js
-      - name: Check no secrets in Stage 10
+          grep -q 'Historia operacji' stage10/web/details.js
+      - name: Check auth, no ESTYL logo load and no secrets
         run: |
+          grep -q '>Hasło<' stage10/mobile/login.html
+          grep -q '>Hasło<' stage10/web/login.html
+          grep -q 'Wersja aplikacji: V2' stage10/mobile/login.html
+          grep -q 'Wersja aplikacji: V2' stage10/web/login.html
+          ! grep -R -q '<script src="../../logo.js"' stage10/mobile stage10/web
           ! grep -R -E 'Bearer [A-Za-z0-9._-]{20,}|pbkdf2-sha256\$600000\$|PHPSESSID=|CHAT_ALERT_WEBHOOK|password_hash' stage10

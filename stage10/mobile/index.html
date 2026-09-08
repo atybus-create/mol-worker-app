@@ -10,104 +10,24 @@
   <link rel="stylesheet" href="./app.css">
 </head>
 <body>
-  <main class="worker-shell" data-screen="home">
+  <main class="worker-shell" data-screen="home" data-role-hint="WORKER">
     <header class="worker-hero">
-      <div class="brand-row">
-        <div class="brand-mark" aria-hidden="true">◆</div>
-        <div><strong>MOL App <span>V2</span></strong><small id="mobilePanelLabel">Ładowanie sesji…</small></div>
-        <span id="mobileRoleChip" class="mol-chip mol-chip--info role-chip">—</span>
-      </div>
-      <div class="worker-identity">
-        <div class="avatar">…</div>
-        <div><p class="mol-kicker">Dzień dobry</p><h1>Ładowanie…</h1></div>
-        <span class="online"><i></i> V2</span>
-      </div>
+      <div class="brand-row"><div class="brand-mark" aria-hidden="true">◆</div><div><strong>MOL App <span>V2</span></strong><small id="mobilePanelLabel">Ładowanie sesji…</small></div><span id="mobileRoleChip" class="mol-chip mol-chip--info role-chip">—</span></div>
+      <div class="worker-identity"><div class="avatar">…</div><div><p class="mol-kicker">Dzień dobry</p><h1>Ładowanie…</h1></div><span class="online"><i></i> V2</span></div>
     </header>
-
-    <section class="mol-card work-status">
-      <p class="mol-kicker">Status pracy</p>
-      <div class="status-head"><h2>ŁADOWANIE…</h2><span class="mol-chip mol-chip--info">—</span></div>
-      <div class="status-stats">
-        <div><small>Start pracy</small><strong>—</strong></div>
-        <div><small>Czas pracy</small><strong>—</strong></div>
-        <div><small>Proces od</small><strong>—</strong></div>
-      </div>
-    </section>
-
-    <section class="kpi-grid" aria-label="Wyniki dnia">
-      <article class="mol-card"><small>Obecność</small><strong>—</strong></article>
-      <article class="mol-card"><small>Bez procesu</small><strong>—</strong></article>
-      <article class="mol-card"><small>Norma łączna dziś</small><strong class="accent">—</strong><div class="progress"><i style="width:0%"></i></div></article>
-    </section>
-
-    <section class="section-block performance-block" aria-label="Moja norma">
-      <div class="section-title"><h2>Moja norma</h2><span>Dane z backendu V2</span></div>
-      <div class="performance-drawer-grid">
-        <details class="performance-drawer" data-norm-period="today">
-          <summary><span><strong>Norma dziś</strong><small>—</small></span><b>—</b><i aria-hidden="true">⌄</i></summary>
-          <article class="mol-card performance-period">
-            <div class="performance-period-head"><div><p class="mol-kicker">Dzisiaj</p><h3>—</h3></div><span class="mol-chip mol-chip--info">LIVE</span></div>
-            <div class="performance-breakdowns">
-              <section class="performance-breakdown"><h4>PAK</h4><div class="performance-metrics"><span><small>Ilość łącznie</small><b>—</b></span><span><small>Ilość do normy</small><b>—</b></span><span><small>Ilość poza normą</small><b>—</b></span><span><small>Czas</small><b>—</b></span><span><small>Procent normy</small><b>—</b></span></div></section>
-              <section class="performance-breakdown"><h4>PICK</h4><div class="performance-metrics"><span><small>Ilość łącznie</small><b>—</b></span><span><small>Ilość do normy</small><b>—</b></span><span><small>Ilość poza normą</small><b>—</b></span><span><small>Czas</small><b>—</b></span><span><small>Procent normy</small><b>—</b></span></div></section>
-              <section class="performance-breakdown performance-breakdown--total"><div class="performance-total-head"><h4>PICK/PAK</h4><small>1 PAK = 1 j.n. · 3 PICK = 1 j.n.</small></div><div class="performance-metrics"><span><small>Jednostki łącznie</small><b>—</b></span><span><small>Jednostki do normy</small><b>—</b></span><span><small>Jednostki poza normą</small><b>—</b></span><span><small>Czas</small><b>—</b></span><span><small>Procent normy</small><b>—</b></span></div></section>
-            </div>
-          </article>
-        </details>
-        <details class="performance-drawer" data-norm-period="month">
-          <summary><span><strong>Norma miesięczna</strong><small>—</small></span><b>—</b><i aria-hidden="true">⌄</i></summary>
-          <article class="mol-card performance-period">
-            <div class="performance-period-head"><div><p class="mol-kicker">Bieżący miesiąc</p><h3>—</h3></div><span class="mol-chip mol-chip--success">MTD</span></div>
-            <div class="performance-breakdowns">
-              <section class="performance-breakdown"><h4>PAK</h4><div class="performance-metrics"><span><small>Ilość łącznie</small><b>—</b></span><span><small>Ilość do normy</small><b>—</b></span><span><small>Ilość poza normą</small><b>—</b></span><span><small>Czas</small><b>—</b></span><span><small>Procent normy</small><b>—</b></span></div></section>
-              <section class="performance-breakdown"><h4>PICK</h4><div class="performance-metrics"><span><small>Ilość łącznie</small><b>—</b></span><span><small>Ilość do normy</small><b>—</b></span><span><small>Ilość poza normą</small><b>—</b></span><span><small>Czas</small><b>—</b></span><span><small>Procent normy</small><b>—</b></span></div></section>
-              <section class="performance-breakdown performance-breakdown--total"><div class="performance-total-head"><h4>PICK/PAK</h4><small>1 PAK = 1 j.n. · 3 PICK = 1 j.n.</small></div><div class="performance-metrics"><span><small>Jednostki łącznie</small><b>—</b></span><span><small>Jednostki do normy</small><b>—</b></span><span><small>Jednostki poza normą</small><b>—</b></span><span><small>Czas</small><b>—</b></span><span><small>Procent normy</small><b>—</b></span></div></section>
-            </div>
-          </article>
-        </details>
-      </div>
-    </section>
-
-    <section class="section-block">
-      <div class="section-title"><h2>Szybkie akcje</h2><span>Stan kontroluje backend V2</span></div>
-      <div class="action-grid">
-        <button class="mol-button mol-button--primary" data-action="start" disabled>▶ <span><strong>Start pracy</strong><small>Rozpocznij zmianę</small></span></button>
-        <button class="mol-button mol-button--danger" data-action="stop" disabled>■ <span><strong>Stop pracy</strong><small>Zakończ zmianę</small></span></button>
-        <button class="mol-button" data-action="process">◆ <span><strong>Proces</strong><small>Wybierz lub zmień proces</small></span></button>
-        <button class="mol-button" data-action="process-stop" disabled>✓ <span><strong>Zakończ proces</strong><small>Bez kończenia dnia</small></span></button>
-      </div>
-    </section>
-
-    <section class="mol-card active-process">
-      <div><p class="mol-kicker">Aktywny proces</p><h2>ŁADOWANIE…</h2><small>Dane z backendu V2</small></div>
-      <button class="mol-button" data-action="change-process">Zmień proces</button>
-    </section>
-
-    <section class="section-block notices">
-      <div class="section-title"><h2>Powiadomienia</h2><button class="text-button" data-nav="messages">Zobacz wszystkie</button></div>
-      <article class="mol-card notice"><b>●</b><div><strong>Ładowanie komunikatów…</strong><small>Źródło: backend V2</small></div></article>
-    </section>
-
-    <section class="screen-placeholder" data-panel="process" hidden></section>
-    <section class="screen-placeholder" data-panel="messages" hidden></section>
-    <section class="screen-placeholder" data-panel="profile" hidden></section>
-    <section class="screen-placeholder manager-mobile" data-panel="team" hidden>
-      <p class="mol-kicker">LEADER / ADMIN</p><h2>Zespół</h2>
-      <div class="manager-mobile-grid"><article class="mol-card"><small>Aktywni</small><strong>—</strong></article><article class="mol-card"><small>Bez procesu</small><strong>—</strong></article><article class="mol-card"><small>Alerty</small><strong>—</strong></article><article class="mol-card"><small>Śr. norma</small><strong>—</strong></article></div>
-      <div class="mol-card manager-list"><div class="manager-person"><div><b>Ładowanie zespołu…</b><small>Źródło: backend V2</small></div></div></div>
-    </section>
-
-    <nav class="bottom-nav" aria-label="Nawigacja aplikacji">
-      <button class="is-active" data-nav="home"><span>⌂</span>Start</button>
-      <button data-nav="process"><span>◆</span>Proces</button>
-      <button data-nav="messages"><span>●</span>Komunikaty<i class="badge" hidden>0</i></button>
-      <button data-nav="profile"><span>○</span>Profil</button>
-      <button id="managerMobileNav" data-nav="team" hidden><span>◉</span>Zespół</button>
-    </nav>
+    <section class="mol-card work-status"><p class="mol-kicker">Status pracy</p><div class="status-head"><h2>ŁADOWANIE…</h2><span class="mol-chip mol-chip--info">—</span></div><div class="status-stats"><div><small>Start pracy</small><strong>—</strong></div><div><small>Czas pracy</small><strong>—</strong></div><div><small>Proces od</small><strong>—</strong></div></div></section>
+    <section class="kpi-grid" aria-label="Wyniki dnia"><article class="mol-card"><small>Obecność</small><strong>—</strong></article><article class="mol-card"><small>Bez procesu</small><strong>—</strong></article><article class="mol-card"><small>Norma łączna dziś</small><strong class="accent">—</strong><div class="progress"><i style="width:0%"></i></div></article></section>
+    <section class="section-block performance-block" aria-label="Moja norma"><div class="section-title"><h2>Moja norma</h2><span>Dane z backendu V2</span></div><div class="performance-drawer-grid">
+      <details class="performance-drawer" data-norm-period="today"><summary><span><strong>Norma dziś</strong><small>—</small></span><b>—</b><i aria-hidden="true">⌄</i></summary><article class="mol-card performance-period"><div class="performance-period-head"><div><p class="mol-kicker">Dzisiaj</p><h3>—</h3></div><span class="mol-chip mol-chip--info">LIVE</span></div><div class="performance-breakdowns"><section class="performance-breakdown"><h4>PAK</h4><div class="performance-metrics"><span><small>Ilość łącznie</small><b>—</b></span><span><small>Ilość do normy</small><b>—</b></span><span><small>Ilość poza normą</small><b>—</b></span><span><small>Czas</small><b>—</b></span><span><small>Procent normy</small><b>—</b></span></div></section><section class="performance-breakdown"><h4>PICK</h4><div class="performance-metrics"><span><small>Ilość łącznie</small><b>—</b></span><span><small>Ilość do normy</small><b>—</b></span><span><small>Ilość poza normą</small><b>—</b></span><span><small>Czas</small><b>—</b></span><span><small>Procent normy</small><b>—</b></span></div></section><section class="performance-breakdown performance-breakdown--total"><div class="performance-total-head"><h4>PICK/PAK</h4><small>1 PAK = 1 j.n. · 3 PICK = 1 j.n.</small></div><div class="performance-metrics"><span><small>Jednostki łącznie</small><b>—</b></span><span><small>Jednostki do normy</small><b>—</b></span><span><small>Jednostki poza normą</small><b>—</b></span><span><small>Czas</small><b>—</b></span><span><small>Procent normy</small><b>—</b></span></div></section></div></article></details>
+      <details class="performance-drawer" data-norm-period="month"><summary><span><strong>Norma miesięczna</strong><small>—</small></span><b>—</b><i aria-hidden="true">⌄</i></summary><article class="mol-card performance-period"><div class="performance-period-head"><div><p class="mol-kicker">Bieżący miesiąc</p><h3>—</h3></div><span class="mol-chip mol-chip--success">MTD</span></div><div class="performance-breakdowns"><section class="performance-breakdown"><h4>PAK</h4><div class="performance-metrics"><span><small>Ilość łącznie</small><b>—</b></span><span><small>Ilość do normy</small><b>—</b></span><span><small>Ilość poza normą</small><b>—</b></span><span><small>Czas</small><b>—</b></span><span><small>Procent normy</small><b>—</b></span></div></section><section class="performance-breakdown"><h4>PICK</h4><div class="performance-metrics"><span><small>Ilość łącznie</small><b>—</b></span><span><small>Ilość do normy</small><b>—</b></span><span><small>Ilość poza normą</small><b>—</b></span><span><small>Czas</small><b>—</b></span><span><small>Procent normy</small><b>—</b></span></div></section><section class="performance-breakdown performance-breakdown--total"><div class="performance-total-head"><h4>PICK/PAK</h4><small>1 PAK = 1 j.n. · 3 PICK = 1 j.n.</small></div><div class="performance-metrics"><span><small>Jednostki łącznie</small><b>—</b></span><span><small>Jednostki do normy</small><b>—</b></span><span><small>Jednostki poza normą</small><b>—</b></span><span><small>Czas</small><b>—</b></span><span><small>Procent normy</small><b>—</b></span></div></section></div></article></details>
+    </div></section>
+    <section class="section-block"><div class="section-title"><h2>Szybkie akcje</h2><span>Stan kontroluje backend V2</span></div><div class="action-grid"><button class="mol-button mol-button--primary" data-action="start" disabled>▶ <span><strong>Start pracy</strong><small>Rozpocznij zmianę</small></span></button><button class="mol-button mol-button--danger" data-action="stop" disabled>■ <span><strong>Stop pracy</strong><small>Zakończ zmianę</small></span></button><button class="mol-button" data-action="process">◆ <span><strong>Proces</strong><small>Wybierz lub zmień proces</small></span></button><button class="mol-button" data-action="process-stop" disabled>✓ <span><strong>Zakończ proces</strong><small>Bez kończenia dnia</small></span></button></div></section>
+    <section class="mol-card active-process"><div><p class="mol-kicker">Aktywny proces</p><h2>ŁADOWANIE…</h2><small>Dane z backendu V2</small></div><button class="mol-button" data-action="change-process">Zmień proces</button></section>
+    <section class="section-block notices"><div class="section-title"><h2>Powiadomienia</h2><button class="text-button" data-nav="messages">Zobacz wszystkie</button></div><article class="mol-card notice"><b>●</b><div><strong>Ładowanie komunikatów…</strong><small>Źródło: backend V2</small></div></article></section>
+    <section class="screen-placeholder" data-panel="process" hidden></section><section class="screen-placeholder" data-panel="messages" hidden></section><section class="screen-placeholder" data-panel="profile" hidden></section>
+    <section class="screen-placeholder manager-mobile" data-panel="team" hidden><p class="mol-kicker">LEADER / ADMIN</p><h2>Zespół</h2><div class="manager-mobile-grid"><article class="mol-card"><small>Aktywni</small><strong>—</strong></article><article class="mol-card"><small>Bez procesu</small><strong>—</strong></article><article class="mol-card"><small>Alerty</small><strong>—</strong></article><article class="mol-card"><small>Śr. norma</small><strong>—</strong></article></div><div class="mol-card manager-list"><div class="manager-person"><div><b>Ładowanie zespołu…</b><small>Źródło: backend V2</small></div></div></div></section>
+    <nav class="bottom-nav" aria-label="Nawigacja aplikacji"><button class="is-active" data-nav="home"><span>⌂</span>Start</button><button data-nav="process"><span>◆</span>Proces</button><button data-nav="messages"><span>●</span>Komunikaty<i class="badge" hidden>0</i></button><button data-nav="profile"><span>○</span>Profil</button><button id="managerMobileNav" data-nav="team" hidden><span>◉</span>Zespół</button></nav>
   </main>
-  <script src="../shared/processes.js"></script>
-  <script src="../shared/roles.js"></script>
-  <script src="./app.js"></script>
-  <script src="./manager.js"></script>
+  <script src="../shared/processes.js"></script><script src="../shared/roles.js"></script><script src="./app.js"></script><script src="./manager.js"></script>
 </body>
 </html>
