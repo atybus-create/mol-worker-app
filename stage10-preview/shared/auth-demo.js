@@ -1,6 +1,7 @@
 (() => {
   'use strict';
 
+  const BUILD = '20260908.3';
   const form = document.querySelector('[data-auth-form]');
   const password = document.querySelector('[data-auth-password]');
   const toggle = document.querySelector('[data-auth-toggle]');
@@ -23,9 +24,9 @@
   };
 
   const loadApi = () => new Promise((resolve, reject) => {
-    if (window.MOLApi) return resolve(window.MOLApi);
+    if (window.MOLApi?.BUILD === BUILD) return resolve(window.MOLApi);
     const script = document.createElement('script');
-    script.src = '../shared/api.js';
+    script.src = `../shared/api.js?v=${BUILD}`;
     script.onload = () => resolve(window.MOLApi);
     script.onerror = () => reject(new Error('Nie udało się załadować klienta API V2.'));
     document.head.append(script);
@@ -38,7 +39,7 @@
     toggle.setAttribute('aria-pressed', String(reveal));
   });
 
-  const redirectFor = (role) => location.replace(`./index.html?role=${encodeURIComponent(String(role || '').toUpperCase())}`);
+  const redirectFor = (role) => location.replace(`./index.html?role=${encodeURIComponent(String(role || '').toUpperCase())}&v=${BUILD}`);
   const reason = new URLSearchParams(location.search).get('reason');
   if (reason === 'session') setMessage('Sesja wygasła lub została zakończona. Zaloguj się ponownie.', 'is-error');
   if (reason === 'worker_web') setMessage('Konto WORKER nie ma dostępu do panelu WWW.', 'is-error');
