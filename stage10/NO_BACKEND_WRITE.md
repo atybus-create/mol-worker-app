@@ -1,1 +1,0 @@
-Stage 10 preview is UI-only. It must not perform Moniti writes, correction writes, user administration writes, communication writes, or automatic alert delivery before Stage 11 integration.
