@@ -439,7 +439,7 @@
     const view = await waitFor('[data-view="users"]');
     const list = view?.querySelector('.user-list-card');
     if (list) list.innerHTML = `<h2>Lista użytkowników</h2>${(data?.items || []).map((user) => `<div class="user-row"><div><b>${esc(user.display_name)}</b><small>${esc(user.employee_id)} · ${esc(user.login || '')}</small></div><span>${esc(user.role)}</span><span class="${user.active ? 'good' : 'danger'}">${user.active ? 'Aktywna' : 'Nieaktywna'}</span><div class="user-row-actions"><button class="mol-button" disabled>Ładowanie akcji…</button></div></div>`).join('') || '<p class="mol-muted">Brak kont.</p>'}`;
-    const form = view?.querySelector('[data-demo-user-form]');
+    const form = view?.querySelector('[data-live-user-form]');
     form?.querySelectorAll('input,select,button').forEach((node) => { node.disabled = true; });
     return data;
   }
