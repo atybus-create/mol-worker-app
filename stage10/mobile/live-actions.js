@@ -79,7 +79,7 @@
   }
 
   async function init(){
-    try{await window.MOLLiveReady;session=await api.requireSession({surface:'mobile'});if(!session)return api.redirectLogin('session');const state=await getState();applyState(state);bindAttendanceAndProcess();bindCorrection();await bindWorkerMessages();if(['LEADER','ADMIN'].includes(session.user.role)){await Promise.allSettled([bindManagerMessages(),bindCorrections(),bindUsers()]);}setStatus('Integracja LIVE gotowa. Odczyty i przyciski są podłączone do backendu V2.','ok');}
+    try{await window.MOLLiveReady;session=await api.requireSession({surface:'mobile'});if(!session)return api.redirectLogin('session');const state=await getState();applyState(state);bindAttendanceAndProcess();bindCorrection();const optionalActions=[bindWorkerMessages()];if(['LEADER','ADMIN'].includes(session.user.role))optionalActions.push(bindManagerMessages(),bindCorrections(),bindUsers());const results=await Promise.allSettled(optionalActions);const failures=results.filter(result=>result.status==='rejected');if(failures.length)setStatus(`Podstawowe akcje działają. Nie uruchomiono ${failures.length} opcjonalnych sekcji.`,'error');else setStatus('Integracja LIVE gotowa. Odczyty i przyciski są podłączone do backendu V2.','ok');}
     catch(error){setStatus(`Nie udało się uruchomić części akcji: ${error.message}`,'error');}
   }
   init();
