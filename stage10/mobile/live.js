@@ -123,7 +123,7 @@
     const correction = profile.querySelector('[data-demo-correction]');
     if (correction) {
       correction.querySelectorAll('input,textarea,button').forEach((node) => { node.disabled = true; });
-      correction.title = 'Korekta czasu zostanie odblokowana po zaliczeniu E2E odczytów.';
+      correction.title = 'Korekta czasu jest dostępna po wczytaniu bieżącego stanu.';
     }
     const logout = [...profile.querySelectorAll('button')].find((button) => /Wyloguj/i.test(button.textContent));
     if (logout && !logout.dataset.liveBound) {
@@ -206,7 +206,7 @@
         const ack = detail.querySelector('[data-message-ack]');
         if (ack) {
           ack.disabled = true;
-          ack.textContent = item.ack_at ? 'Odbiór potwierdzony' : item.ack_required ? 'ACK po teście E2E zapisów' : 'Potwierdzenie niewymagane';
+          ack.textContent = item.ack_at ? 'Odbiór potwierdzony' : item.ack_required ? 'Potwierdzam odbiór' : 'Potwierdzenie niewymagane';
         }
       }));
     }
@@ -283,7 +283,6 @@
     await renderManagerTeam(team);
     await Promise.allSettled([loadUsers(), loadCorrections()]);
     bindManagerReport();
-    lockManagerWrites();
     return team;
   }
 
@@ -292,7 +291,7 @@
     const panel = await waitFor('[data-panel="manager-users"]');
     const list = panel?.querySelector('.manager-user-list');
     if (list) {
-      list.innerHTML = (data?.items || []).map((user) => `<article class="mol-card"><div><b>${esc(user.display_name)}</b><small>${esc(user.role)} · ${esc(user.employee_id)} · ${esc(user.login || '')} · ${user.active ? 'aktywna' : 'nieaktywna'}</small></div><button class="mol-button" type="button" disabled>Zmiany po E2E</button></article>`).join('') || '<p class="mol-muted">Brak kont.</p>';
+      list.innerHTML = (data?.items || []).map((user) => `<article class="mol-card"><div><b>${esc(user.display_name)}</b><small>${esc(user.role)} · ${esc(user.employee_id)} · ${esc(user.login || '')} · ${user.active ? 'aktywna' : 'nieaktywna'}</small></div><button class="mol-button" type="button" disabled>Ładowanie akcji…</button></article>`).join('') || '<p class="mol-muted">Brak kont.</p>';
     }
     return data;
   }
@@ -302,7 +301,7 @@
     const panel = await waitFor('[data-panel="manager-corrections"]');
     const list = panel?.querySelector('.manager-correction-list');
     if (list) {
-      list.innerHTML = (data?.items || []).map((item) => `<article class="mol-card correction-item"><div><b>${esc(item.employee_id)}</b><small>${esc(item.work_date)} · ${esc(item.status)}</small><p>${esc(item.reason || '')}</p></div><div class="correction-actions"><button class="accept" disabled>Akceptuj po E2E</button><button class="reject" disabled>Odrzuć po E2E</button></div></article>`).join('') || '<p class="mol-muted">Brak korekt.</p>';
+      list.innerHTML = (data?.items || []).map((item) => `<article class="mol-card correction-item"><div><b>${esc(item.employee_id)}</b><small>${esc(item.work_date)} · ${esc(item.status)}</small><p>${esc(item.reason || '')}</p></div><div class="correction-actions"><button class="accept" disabled>Ładowanie…</button><button class="reject" disabled>Ładowanie…</button></div></article>`).join('') || '<p class="mol-muted">Brak korekt.</p>';
     }
     return data;
   }
@@ -349,58 +348,6 @@
     }, true));
   }
 
-  function lockManagerWrites() {
-    const messagePanel = document.querySelector('[data-panel="manager-messages"]');
-    const send = messagePanel?.querySelector('[data-mobile-message-send]');
-    if (send) { send.disabled = true; send.title = 'Wysyłka zostanie odblokowana po PASS authenticated E2E odczytów.'; }
-    const status = messagePanel?.querySelector('[data-mobile-message-status]');
-    if (status) status.textContent = 'Etap 11B: odbiorcy i historia są podłączane read-only. Wysyłka czeka na PASS E2E odczytów.';
-    document.querySelectorAll('[data-panel="manager-users"] .manager-create-user, [data-panel="manager-corrections"] .accept, [data-panel="manager-corrections"] .reject').forEach((button) => { button.disabled = true; });
-  }
-
-  function lockBusinessWrites() {
-    document.querySelectorAll('[data-action="start"],[data-action="stop"],[data-action="process-stop"],.process-option,[data-process-logout],[data-demo-correction] button').forEach((button) => {
-      button.disabled = true;
-      button.title = 'Zapis biznesowy zostanie odblokowany po PASS authenticated E2E odczytów.';
-    });
-  }
-
-  async function runReadE2E() {
-    const checks = [
-      ['worker-status', () => api.read('mol-app-v2-worker-status')],
-      ['norms-daily', () => api.read('mol-app-v2-norms-daily')],
-      ['norms-monthly', () => api.read('mol-app-v2-norms-monthly')],
-      ['messages', () => api.read('mol-app-v2-messages', { limit: 5 })],
-    ];
-    if (role !== 'WORKER') {
-      const team = teamData || await api.read('mol-app-v2-leader-team', { work_date: today() });
-      const first = team?.items?.[0]?.employee?.employee_id;
-      checks.push(
-        ['leader-team', () => api.read('mol-app-v2-leader-team', { work_date: today() })],
-        ['report-attendance', () => api.read('mol-app-v2-report-attendance', { date_from: today(), date_to: today() })],
-        ['report-performance', () => api.read('mol-app-v2-report-performance', { date_from: today(), date_to: today() })],
-        ['audit-history', () => api.read('mol-app-v2-audit-history', { date_from: today(), date_to: today(), limit: 10 })],
-        ['user-list', () => api.read('mol-app-v2-user-list')],
-        ['corrections-queue', () => api.read('mol-app-v2-corrections-queue')],
-        ['leader-message-recipients', () => api.read('mol-app-v2-leader-message-recipients')],
-      );
-      if (first) checks.push(['employee-history', () => api.read('mol-app-v2-employee-history', { employee_id: first, date_from: monthStart(), date_to: today(), limit: 10 })]);
-    }
-
-    setStatus(`Authenticated E2E odczytów: 0/${checks.length}…`);
-    const failures = [];
-    for (let index = 0; index < checks.length; index++) {
-      const [name, fn] = checks[index];
-      try { await fn(); }
-      catch (error) { failures.push(`${name}: ${error.code || error.status || ''} ${error.message}`.trim()); }
-      setStatus(`Authenticated E2E odczytów: ${index + 1}/${checks.length}${failures.length ? ` · błędy ${failures.length}` : ''}…`, failures.length ? 'error' : 'info');
-    }
-    const result = { at: new Date().toISOString(), role, passed: failures.length === 0, checks: checks.length, failures };
-    try { sessionStorage.setItem('mol.v2.stage11.read-e2e', JSON.stringify(result)); } catch { /* optional */ }
-    if (result.passed) setStatus(`Authenticated E2E ODCZYTÓW: PASS ${checks.length}/${checks.length}. Zapisy biznesowe pozostają jeszcze zablokowane do kolejnego kroku.`, 'ok');
-    else setStatus(`Authenticated E2E ODCZYTÓW: FAIL ${checks.length - failures.length}/${checks.length}. ${failures[0] || ''}`, 'error');
-    return result;
-  }
 
   async function init() {
     removeEstylLogo();
@@ -413,11 +360,13 @@
       api.reveal();
       initialised = true;
       await loadWorker();
-      await loadMessages();
-      if (role !== 'WORKER') await loadManagerReads();
-      lockBusinessWrites();
-      lockManagerWrites();
-      await runReadE2E();
+      const optionalReads = [loadMessages()];
+      if (role !== 'WORKER') optionalReads.push(loadManagerReads());
+      const optionalResults = await Promise.allSettled(optionalReads);
+      const optionalFailures = optionalResults.filter((result) => result.status === 'rejected');
+      document.documentElement.dataset.liveReadsReady = 'true';
+      if (optionalFailures.length) setStatus(`Podstawowe funkcje są gotowe. Nie wczytano ${optionalFailures.length} opcjonalnych sekcji.`, 'error');
+      else setStatus('Podstawowe funkcje i sekcje dodatkowe są gotowe.', 'ok');
     } catch (error) {
       if (error.status === 401) return api.redirectLogin('session');
       setStatus(error.message || 'Nie udało się uruchomić integracji.', 'error');
@@ -435,5 +384,5 @@
     if (!document.hidden && initialised) loadWorker(true).catch(() => {});
   });
 
-  init();
+  window.MOLLiveReady = init();
 })();
