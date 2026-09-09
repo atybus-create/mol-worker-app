@@ -414,7 +414,10 @@
       reports.querySelectorAll('[data-report-export]').forEach((button) => button.addEventListener('click', (event) => {
         event.preventDefault(); event.stopImmediatePropagation();
         const format = String(button.dataset.reportExport || '').toLowerCase();
-        api.download('mol-app-v2-report-export', { report_type: 'performance', format, date_from: from?.value, date_to: to?.value, employee_ids: selectedIds(reports) }, `mol_v2_performance.${format}`).catch((error) => setStatus(error.message, 'error'));
+        setStatus(`Przygotowuję plik ${format.toUpperCase()}…`);
+        api.download('mol-app-v2-report-export', { report_type: 'performance', format, date_from: from?.value, date_to: to?.value, employee_ids: selectedIds(reports) }, `mol_v2_performance.${format}`)
+          .then((filename) => setStatus(`Pobrano ${filename}.`, 'ok'))
+          .catch((error) => setStatus(error.message, 'error'));
       }, true));
     }
     if (worktime) {
@@ -429,7 +432,10 @@
         event.preventDefault(); event.stopImmediatePropagation();
         const format = String(button.dataset.worktimeExport || '').toLowerCase();
         const status = worktime.querySelector('[data-worktime-status]')?.value || 'ALL';
-        api.download('mol-app-v2-report-export', { report_type: 'attendance', format, date_from: from?.value, date_to: to?.value, employee_ids: selectedIds(worktime), status: status === 'ALL' ? null : status }, `mol_v2_attendance.${format}`).catch((error) => setStatus(error.message, 'error'));
+        setStatus(`Przygotowuję plik ${format.toUpperCase()}…`);
+        api.download('mol-app-v2-report-export', { report_type: 'attendance', format, date_from: from?.value, date_to: to?.value, employee_ids: selectedIds(worktime), status: status === 'ALL' ? null : status }, `mol_v2_attendance.${format}`)
+          .then((filename) => setStatus(`Pobrano ${filename}.`, 'ok'))
+          .catch((error) => setStatus(error.message, 'error'));
       }, true));
       worktime.querySelector('[data-worktime-status]')?.addEventListener('change', () => generateAttendance().catch(() => {}));
     }
