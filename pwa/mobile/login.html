@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#050b12">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="apple-touch-icon" href="../icons/icon-192.png">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>MOL App V2 — Logowanie mobilne</title>
+  <link rel="stylesheet" href="../shared/tokens.css?v=20260909.1">
+  <link rel="stylesheet" href="../shared/auth.css?v=20260909.1">
+</head>
+<body class="auth-page" data-surface="mobile">
+  <main class="auth-shell">
+    <div class="auth-brand"><div class="auth-logo" aria-hidden="true">◆</div><div><strong>MOL App <b>V2</b></strong><small>System pracy magazynu</small></div></div>
+    <section class="auth-heading"><p class="mol-kicker">Aplikacja mobilna</p><h1>Zaloguj się</h1><p>Telefon jest podstawowym miejscem pracy operacyjnej. Zakres funkcji po zalogowaniu wynika z roli konta.</p></section>
+    <form class="auth-form" data-auth-form novalidate>
+      <label class="auth-field"><span>Login</span><input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="Wpisz swój login"></label>
+      <label class="auth-field auth-password"><span>Hasło</span><input data-auth-password name="password" type="password" autocomplete="current-password" required placeholder="Wpisz hasło"><button data-auth-toggle type="button" aria-pressed="false">Pokaż</button></label>
+      <p class="auth-message" data-auth-message role="status" aria-live="polite"></p>
+      <button class="mol-button mol-button--primary auth-submit" type="submit">Zaloguj</button>
+    </form>
+    <div class="auth-policy"><strong>Dostęp według roli</strong><small>WORKER: praca operacyjna. LEADER / ADMIN: praca operacyjna oraz dodatkowe widoki menedżerskie w aplikacji.</small></div>
+    <p class="auth-secure">Bezpieczne logowanie · sesja V2 · brak danych logowania w pamięci UI</p>
+    <p class="auth-secure" data-app-version>MOL V2 · TEST · build 20260909.1</p>
+  </main>
+  <script src="../shared/auth.js?v=20260909.1"></script>
+  <script src="../pwa-register.js?v=20260909.2" defer></script>
+</body>
+</html>
