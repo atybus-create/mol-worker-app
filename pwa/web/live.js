@@ -280,9 +280,9 @@
 
   const selectedIds = (view) => [...view.querySelectorAll('.report-people-grid input:checked')].map((input) => input.value);
   function syncReportCounts() {
-    for (const [selector, countSelector, generateSelector] of [
-      ['[data-view="reports"]', '[data-report-count]', '[data-report-generate]'],
-      ['[data-view="worktime"]', '[data-worktime-count]', '[data-worktime-generate]'],
+    for (const [selector, countSelector, generateSelector, exportSelector] of [
+      ['[data-view="reports"]', '[data-report-count]', '[data-report-generate]', '[data-report-export]'],
+      ['[data-view="worktime"]', '[data-worktime-count]', '[data-worktime-generate]', '[data-worktime-export]'],
     ]) {
       const view = document.querySelector(selector);
       if (!view) continue;
@@ -291,6 +291,7 @@
       if (label) label.textContent = `Wybrano ${count}`;
       const generate = view.querySelector(generateSelector);
       if (generate) generate.disabled = count === 0;
+      view.querySelectorAll(exportSelector).forEach((button) => { button.disabled = count === 0; });
     }
   }
 
