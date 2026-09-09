@@ -28,7 +28,7 @@
     <div class="profile-grid">
       <section class="mol-card profile-card"><h3>Stan połączenia</h3><div class="connection-state"><span>Backend V2</span><b>ŁADOWANIE</b></div><div class="profile-row"><span>Ostatnia synchronizacja</span><strong>—</strong></div></section>
       <section class="mol-card profile-card"><h3>Dzisiejsza historia</h3><div class="profile-row"><span>Dane</span><strong>Ładowanie…</strong></div></section>
-      <section class="mol-card profile-card"><h3>Korekta czasu pracy</h3><form class="correction-form" data-demo-correction data-worker-correction><label>START<input name="start_at" type="datetime-local" disabled></label><label>STOP<input name="stop_at" type="datetime-local" disabled></label><label>Powód<textarea name="reason" rows="3" minlength="3" maxlength="500" placeholder="Opisz powód korekty" disabled></textarea></label><button class="mol-button" type="submit" disabled>Wyślij korektę</button></form></section>
+      <section class="mol-card profile-card"><h3>Korekta czasu pracy</h3><form class="correction-form" data-worker-correction><label>START<input name="start_at" type="datetime-local" disabled></label><label>STOP<input name="stop_at" type="datetime-local" disabled></label><label>Powód<textarea name="reason" rows="3" minlength="3" maxlength="500" placeholder="Opisz powód korekty" disabled></textarea></label><button class="mol-button" type="submit" disabled>Wyślij korektę</button></form></section>
       <button class="mol-button mol-button--danger" type="button" data-live-logout>Wyloguj</button>
     </div>`;
 })();
