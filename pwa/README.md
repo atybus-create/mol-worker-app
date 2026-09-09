@@ -2,9 +2,9 @@
 
 Status: **AKTYWNE ŹRÓDŁO RC1**
 
-Build: `20260909.1`
+Build: `20260909.2`
 
-Katalog `stage10/` zawiera bieżący frontend źródłowy. W kroku PWA jego zatwierdzona zawartość zostanie opublikowana w katalogu `/pwa/`.
+Katalog `/pwa/` zawiera zatwierdzone źródło publikacji PWA TEST RC1.
 
 ## Punkty wejścia
 
