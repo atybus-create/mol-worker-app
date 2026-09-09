@@ -274,6 +274,7 @@
 
     const reportPanel = document.querySelector('[data-panel="manager-reports"]');
     populatePeople(reportPanel?.querySelector('.mobile-report-people'), items);
+    syncManagerReport(reportPanel);
     const messagePanel = document.querySelector('[data-panel="manager-messages"]');
     populatePeople(messagePanel?.querySelector('[data-mobile-message-recipients]'), items.filter((row) => row.attendance?.state === 'OPEN'), 1);
   }
@@ -310,6 +311,18 @@
     return [...panel.querySelectorAll('.mobile-report-people input:checked')].map((input) => input.value);
   }
 
+  function syncManagerReport(panel) {
+    if (!panel) return;
+    const count = reportSelected(panel).length;
+    const countLabel = panel.querySelector('[data-mobile-report-count]');
+    if (countLabel) countLabel.textContent = `Wybrano ${count}`;
+    const selected = panel.querySelector('[data-mobile-report-selected]');
+    if (selected) selected.textContent = String(count);
+    const generate = panel.querySelector('[data-mobile-report-generate]');
+    if (generate) generate.disabled = count === 0;
+    panel.querySelectorAll('[data-mobile-export]').forEach((button) => { button.disabled = count === 0; });
+  }
+
   function renderMobilePerformance(panel, data) {
     const summary = data?.summary || {};
     const selected = panel.querySelector('[data-mobile-report-selected]');
@@ -335,6 +348,22 @@
     const panel = document.querySelector('[data-panel="manager-reports"]');
     if (!panel || panel.dataset.liveBound) return;
     panel.dataset.liveBound = 'true';
+    const from = panel.querySelector('[data-mobile-report-from]');
+    const to = panel.querySelector('[data-mobile-report-to]');
+    if (from && !from.value) from.value = monthStart();
+    if (to && !to.value) to.value = today();
+    const sync = () => syncManagerReport(panel);
+    panel.querySelector('.mobile-report-people')?.addEventListener('change', sync);
+    panel.querySelector('[data-mobile-report-all]')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      panel.querySelectorAll('.mobile-report-people input').forEach((input) => { input.checked = true; });
+      sync();
+    });
+    panel.querySelector('[data-mobile-report-clear]')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      panel.querySelectorAll('.mobile-report-people input').forEach((input) => { input.checked = false; });
+      sync();
+    });
     const generate = panel.querySelector('[data-mobile-report-generate]');
     generate?.addEventListener('click', (event) => {
       event.preventDefault(); event.stopImmediatePropagation();
@@ -344,8 +373,12 @@
       event.preventDefault(); event.stopImmediatePropagation();
       const ids = reportSelected(panel);
       const format = String(button.dataset.mobileExport || '').toLowerCase();
-      api.download('mol-app-v2-report-export', { report_type: 'performance', format, date_from: panel.querySelector('[data-mobile-report-from]')?.value, date_to: panel.querySelector('[data-mobile-report-to]')?.value, employee_ids: ids }, `mol_v2_performance.${format}`).catch((error) => setStatus(error.message, 'error'));
+      setStatus(`Przygotowuję plik ${format.toUpperCase()}…`);
+      api.download('mol-app-v2-report-export', { report_type: 'performance', format, date_from: from?.value, date_to: to?.value, employee_ids: ids }, `mol_v2_performance.${format}`)
+        .then((filename) => setStatus(`Pobrano ${filename}.`, 'ok'))
+        .catch((error) => setStatus(error.message, 'error'));
     }, true));
+    sync();
   }
 
 
