@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD = '20260909.3';
+  const BUILD = '20260909.4';
   const form = document.querySelector('[data-auth-form]');
   const password = document.querySelector('[data-auth-password]');
   const toggle = document.querySelector('[data-auth-toggle]');

@@ -1,4 +1,4 @@
-const VERSION = "mol-pwa-test-20260909.3";
+const VERSION = "mol-pwa-test-20260909.4";
 const SHELL = [
   "./",
   "./offline.html",

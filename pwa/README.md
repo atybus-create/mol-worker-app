@@ -2,7 +2,7 @@
 
 Status: **AKTYWNE ŹRÓDŁO RC1**
 
-Build: `20260909.3`
+Build: `20260909.4`
 
 Katalog `/pwa/` zawiera zatwierdzone źródło publikacji PWA TEST RC1.
 

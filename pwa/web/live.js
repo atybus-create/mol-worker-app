@@ -258,7 +258,7 @@
     const worktime = document.querySelector('[data-view="worktime"]');
     const html = (withOutput) => items.map((item, index) => {
       const m = item.monthly_norm || item.norm || {};
-      return `<label class="report-person"><input type="checkbox" value="${esc(item.employee.employee_id)}" ${index < 3 ? 'checked' : ''}><span><b>${esc(item.employee.display_name)}</b><small>${esc(item.employee.employee_id)}</small></span>${withOutput ? `<span class="report-person-output"><i>Łącznie <strong>${number(m.total_combined_units, 1)}</strong></i><i>Do normy <strong>${number(m.eligible_combined_units, 1)}</strong></i><i>Poza normą <strong>${number(m.outside_combined_units, 1)}</strong></i></span>` : ''}</label>`;
+      return `<label class="report-person"><input type="checkbox" value="${esc(item.employee.employee_id)}" ${index < 3 ? 'checked' : ''}><span><b>${esc(item.employee.display_name)}</b><small>${esc(item.employee.employee_id)}</small></span>${withOutput ? `<span class="report-person-output" title="Wynik ważony: PAK + PICK ÷ 3"><i>Ważone <strong>${number(m.total_combined_units, 1)}</strong></i><i>Do normy <strong>${number(m.eligible_combined_units, 1)}</strong></i><i>Poza normą <strong>${number(m.outside_combined_units, 1)}</strong></i></span>` : ''}</label>`;
     }).join('');
     const reportGrid = reports?.querySelector('.report-people-grid');
     const workGrid = worktime?.querySelector('.report-people-grid');
@@ -313,6 +313,32 @@
     }, true);
   }
 
+  function syncPerformancePeople(view, data) {
+    const totals = new Map();
+    for (const row of data?.rows || []) {
+      const current = totals.get(row.employee_id) || { pick: 0, pickEligible: 0, pickOutside: 0, pak: 0, pakEligible: 0, pakOutside: 0 };
+      current.pick += Number(row.pick_total || 0);
+      current.pickEligible += Number(row.pick_eligible || 0);
+      current.pickOutside += Number(row.pick_outside || 0);
+      current.pak += Number(row.pak_total || 0);
+      current.pakEligible += Number(row.pak_eligible || 0);
+      current.pakOutside += Number(row.pak_outside || 0);
+      totals.set(row.employee_id, current);
+    }
+    view.querySelectorAll('.report-person').forEach((label) => {
+      const id = label.querySelector('input')?.value;
+      const value = totals.get(id) || { pick: 0, pickEligible: 0, pickOutside: 0, pak: 0, pakEligible: 0, pakOutside: 0 };
+      const weighted = [
+        value.pak + value.pick / 3,
+        value.pakEligible + value.pickEligible / 3,
+        value.pakOutside + value.pickOutside / 3,
+      ];
+      label.querySelectorAll('.report-person-output strong').forEach((node, index) => {
+        node.textContent = number(weighted[index] || 0, 1);
+      });
+    });
+  }
+
   function renderPerformance(view, data) {
     const summary = data?.summary || {};
     const set = (selector, value) => { const node = view.querySelector(selector); if (node) node.textContent = value; };
@@ -331,10 +357,11 @@
     set('[data-report-total-outside]', number(summary.combined_outside_units, 1));
     set('[data-report-total-time]', duration(summary.combined_seconds));
     set('[data-report-total-norm]', percent(summary.combined_percent));
+    syncPerformancePeople(view, data);
     const body = view.querySelector('[data-report-body]');
     if (body) body.innerHTML = (data?.rows || []).map((row) => `<tr><td><b>${esc(row.display_name)}</b><small>${esc(row.employee_id)} · ${esc(row.work_date)}</small></td><td>${number(row.pick_total)}</td><td class="good">${number(row.pick_eligible)}</td><td class="warn">${number(row.pick_outside)}</td><td>${duration(row.pick_seconds)}</td><td>${percent(row.pick_percent)}</td><td>${number(row.pak_total)}</td><td class="good">${number(row.pak_eligible)}</td><td class="warn">${number(row.pak_outside)}</td><td>${duration(row.pak_seconds)}</td><td>${percent(row.pak_percent)}</td><td>${number(row.combined_total_units, 1)}</td><td class="good">${number(row.combined_eligible_units, 1)}</td><td class="warn">${number(row.combined_outside_units, 1)}</td><td>${duration(row.combined_seconds)}</td><td>${percent(row.combined_percent)}</td><td>${esc(row.freshness || 'UNAVAILABLE')}</td></tr>`).join('') || '<tr><td colspan="17" class="report-empty">Brak danych dla wybranego zakresu.</td></tr>';
     const generated = view.querySelector('[data-report-generated]');
-    if (generated) generated.textContent = `Backend V2 · ${day(data.date_from)} – ${day(data.date_to)} · ${summary.employees || 0} osób · wynik grupy ważony`;
+    if (generated) generated.textContent = `Backend V2 · ${day(data.date_from)} – ${day(data.date_to)} · ${summary.employees || 0} osób · wynik ważony: PAK + PICK ÷ 3`;
   }
 
   async function generatePerformance() {
