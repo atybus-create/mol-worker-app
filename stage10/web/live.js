@@ -274,8 +274,8 @@
     grid.innerHTML = items.map((item, index) => `<label class="message-recipient"><input type="checkbox" value="${esc(item.employee.employee_id)}" ${index === 0 ? 'checked' : ''} disabled><span><b>${esc(item.employee.display_name)}</b><small>${esc(item.employee.employee_id)} · OPEN · ${esc(item.process?.process_code || 'brak procesu')}</small></span></label>`).join('');
     const status = view.querySelector('[data-message-status]');
     const send = view.querySelector('[data-message-send]');
-    if (status) status.textContent = 'Odbiorcy są z live backendu. Wysyłka zostanie odblokowana po PASS E2E odczytów.';
-    if (send) { send.disabled = true; send.title = 'Write gate po authenticated E2E odczytów.'; }
+    if (status) status.textContent = 'Odbiorcy są pobierani z backendu. Wysyłka będzie dostępna po wczytaniu sekcji.';
+    if (send) { send.disabled = true; send.title = 'Akcja będzie dostępna po wczytaniu sekcji.'; }
   }
 
   const selectedIds = (view) => [...view.querySelectorAll('.report-people-grid input:checked')].map((input) => input.value);
@@ -438,7 +438,7 @@
     const data = await api.read('mol-app-v2-user-list');
     const view = await waitFor('[data-view="users"]');
     const list = view?.querySelector('.user-list-card');
-    if (list) list.innerHTML = `<h2>Lista użytkowników</h2>${(data?.items || []).map((user) => `<div class="user-row"><div><b>${esc(user.display_name)}</b><small>${esc(user.employee_id)} · ${esc(user.login || '')}</small></div><span>${esc(user.role)}</span><span class="${user.active ? 'good' : 'danger'}">${user.active ? 'Aktywna' : 'Nieaktywna'}</span><div class="user-row-actions"><button class="mol-button" disabled>Zmiany po E2E</button></div></div>`).join('') || '<p class="mol-muted">Brak kont.</p>'}`;
+    if (list) list.innerHTML = `<h2>Lista użytkowników</h2>${(data?.items || []).map((user) => `<div class="user-row"><div><b>${esc(user.display_name)}</b><small>${esc(user.employee_id)} · ${esc(user.login || '')}</small></div><span>${esc(user.role)}</span><span class="${user.active ? 'good' : 'danger'}">${user.active ? 'Aktywna' : 'Nieaktywna'}</span><div class="user-row-actions"><button class="mol-button" disabled>Ładowanie akcji…</button></div></div>`).join('') || '<p class="mol-muted">Brak kont.</p>'}`;
     const form = view?.querySelector('[data-demo-user-form]');
     form?.querySelectorAll('input,select,button').forEach((node) => { node.disabled = true; });
     return data;
@@ -452,7 +452,7 @@
     const data = await api.read('mol-app-v2-corrections-queue');
     const view = await waitFor('[data-view="corrections"]');
     const body = view?.querySelector('tbody');
-    if (body) body.innerHTML = (data?.items || []).map((item) => `<tr><td>${esc(item.employee_id)}</td><td>${esc(item.work_date)}</td><td>v${esc(item.expected_version)}</td><td>${clock(item.start_at)} → ${item.stop_at ? clock(item.stop_at) : 'bez zmiany'}</td><td>${esc(item.reason || '')}</td><td><span class="correction-status">${esc(correctionLabel(item.status))}</span></td><td class="web-action-pair"><button class="accept" disabled>Akceptuj po E2E</button><button class="reject" disabled>Odrzuć po E2E</button></td></tr>`).join('') || '<tr><td colspan="7">Brak korekt.</td></tr>';
+    if (body) body.innerHTML = (data?.items || []).map((item) => `<tr><td>${esc(item.employee_id)}</td><td>${esc(item.work_date)}</td><td>v${esc(item.expected_version)}</td><td>${clock(item.start_at)} → ${item.stop_at ? clock(item.stop_at) : 'bez zmiany'}</td><td>${esc(item.reason || '')}</td><td><span class="correction-status">${esc(correctionLabel(item.status))}</span></td><td class="web-action-pair"><button class="accept" disabled>Ładowanie…</button><button class="reject" disabled>Ładowanie…</button></td></tr>`).join('') || '<tr><td colspan="7">Brak korekt.</td></tr>';
     const stats = view?.querySelectorAll('.web-stat-grid article strong') || [];
     if (stats[0]) stats[0].textContent = String(data?.pending_count || 0);
     const oldMarker = document.querySelector('[data-live-correction-pending]');
@@ -481,7 +481,7 @@
     if (grid) grid.innerHTML = items.map((person, index) => `<label class="message-recipient"><input type="checkbox" value="${esc(person.employee_id)}" ${index === 0 ? 'checked' : ''} disabled><span><b>${esc(person.display_name)}</b><small>${esc(person.employee_id)} · OPEN</small></span></label>`).join('');
     view.querySelectorAll('textarea,input,button').forEach((node) => { if (!node.matches('[data-section]')) node.disabled = true; });
     const status = view.querySelector('[data-message-status]');
-    if (status) status.textContent = 'Odbiorcy są z backendu. Wysyłka czeka na PASS authenticated E2E odczytów.';
+    if (status) status.textContent = 'Odbiorcy są pobierani z backendu. Wysyłka będzie dostępna po wczytaniu sekcji.';
     return recipients;
   }
 
@@ -509,42 +509,6 @@
     }
   }
 
-  function lockBusinessWrites() {
-    document.querySelectorAll('[data-view="users"] form input,[data-view="users"] form select,[data-view="users"] form button,[data-view="corrections"] .accept,[data-view="corrections"] .reject,[data-view="leader-messages"] textarea,[data-view="leader-messages"] input,[data-view="leader-messages"] [data-message-send]').forEach((node) => {
-      node.disabled = true;
-      node.title = 'Zapis zostanie odblokowany po PASS authenticated E2E odczytów.';
-    });
-  }
-
-  async function runReadE2E() {
-    const team = teamData || await api.read('mol-app-v2-leader-team', { work_date: today() });
-    const first = team?.items?.[0]?.employee?.employee_id;
-    const checks = [
-      ['auth-session', () => api.session()],
-      ['leader-team', () => api.read('mol-app-v2-leader-team', { work_date: today() })],
-      ['report-attendance', () => api.read('mol-app-v2-report-attendance', { date_from: today(), date_to: today() })],
-      ['report-performance', () => api.read('mol-app-v2-report-performance', { date_from: today(), date_to: today() })],
-      ['report-export-csv', () => api.request('mol-app-v2-report-export', { query: { report_type: 'performance', format: 'csv', date_from: today(), date_to: today() }, binary: true })],
-      ['audit-history', () => api.read('mol-app-v2-audit-history', { date_from: today(), date_to: today(), limit: 10 })],
-      ['user-list', () => api.read('mol-app-v2-user-list')],
-      ['corrections-queue', () => api.read('mol-app-v2-corrections-queue')],
-      ['leader-message-recipients', () => api.read('mol-app-v2-leader-message-recipients')],
-    ];
-    if (first) checks.push(['employee-history', () => api.read('mol-app-v2-employee-history', { employee_id: first, date_from: monthStart(), date_to: today(), limit: 10 })]);
-
-    const failures = [];
-    for (let index = 0; index < checks.length; index++) {
-      const [name, fn] = checks[index];
-      setStatus(`Authenticated E2E odczytów: ${index}/${checks.length}${failures.length ? ` · błędy ${failures.length}` : ''}…`, failures.length ? 'error' : 'info');
-      try { await fn(); }
-      catch (error) { failures.push(`${name}: ${error.code || error.status || ''} ${error.message}`.trim()); }
-    }
-    const result = { at: new Date().toISOString(), role, passed: failures.length === 0, checks: checks.length, failures };
-    try { sessionStorage.setItem('mol.v2.stage11.read-e2e', JSON.stringify(result)); } catch { /* optional */ }
-    if (result.passed) setStatus(`Authenticated E2E ODCZYTÓW: PASS ${checks.length}/${checks.length}. Zapisy biznesowe pozostają zablokowane do kolejnego kroku.`, 'ok');
-    else setStatus(`Authenticated E2E ODCZYTÓW: FAIL ${checks.length - failures.length}/${checks.length}. ${failures[0] || ''}`, 'error');
-    return result;
-  }
 
   async function init() {
     removeEstylLogo();
@@ -565,9 +529,11 @@
       bindGlobal();
       bindReports();
       await loadTeam();
-      await Promise.allSettled([loadUsers(), loadCorrections(), loadAudit(), lockAndPopulateMessages()]);
-      lockBusinessWrites();
-      await runReadE2E();
+      const optionalResults = await Promise.allSettled([loadUsers(), loadCorrections(), loadAudit(), lockAndPopulateMessages()]);
+      const optionalFailures = optionalResults.filter((result) => result.status === 'rejected');
+      document.documentElement.dataset.liveReadsReady = 'true';
+      if (optionalFailures.length) setStatus(`Panel jest gotowy. Nie wczytano ${optionalFailures.length} opcjonalnych sekcji.`, 'error');
+      else setStatus('Panel i sekcje dodatkowe są gotowe.', 'ok');
     } catch (error) {
       if (error.status === 401) return api.redirectLogin('session');
       if (error.status === 403) return api.redirectLogin('worker_web');
@@ -585,5 +551,5 @@
     if (!document.hidden && initialised) loadTeam(true).catch(() => {});
   });
 
-  init();
+  window.MOLLiveReady = init();
 })();
