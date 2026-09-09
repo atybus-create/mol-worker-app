@@ -5,7 +5,7 @@
   const script = document.currentScript;
   const scriptUrl = new URL(script.src, location.href);
   const scopeUrl = new URL("./", scriptUrl);
-  const workerUrl = new URL("./sw.js?v=20260909.2", scriptUrl);
+  const workerUrl = new URL("./sw.js?v=20260909.3", scriptUrl);
   let reloadAfterUpdate = false;
 
   function showUpdate(registration) {
