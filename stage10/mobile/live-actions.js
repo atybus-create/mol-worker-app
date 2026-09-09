@@ -1,12 +1,9 @@
 (() => {
   'use strict';
   const api=window.MOLApi; if(!api) return;
-  const E2E_KEY='mol.v2.stage11.read-e2e';
-  const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
   const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Warsaw',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   const setStatus=(text,state='info')=>{let bar=document.querySelector('[data-live-integration-status]');if(!bar){bar=document.createElement('div');bar.dataset.liveIntegrationStatus='true';bar.style.cssText='position:sticky;top:0;z-index:90;margin:0 auto 10px;max-width:560px;padding:9px 12px;border:1px solid rgba(18,200,255,.28);border-radius:10px;background:rgba(3,20,31,.96);font:600 12px/1.35 system-ui';document.querySelector('.worker-shell')?.prepend(bar);}bar.textContent=text;bar.style.color=state==='error'?'#ff9aa4':state==='ok'?'#86f4c9':'#bfefff';bar.style.borderColor=state==='error'?'rgba(255,82,97,.65)':state==='ok'?'rgba(25,231,160,.55)':'rgba(18,200,255,.28)';};
   const localIso=(value)=>{if(!value)return null;const d=new Date(value);return Number.isNaN(d.getTime())?null:d.toISOString();};
-  const waitE2E=async()=>{for(let i=0;i<120;i++){try{const r=JSON.parse(sessionStorage.getItem(E2E_KEY)||'null');if(r?.passed===true)return r;if(r?.passed===false)throw new Error(r.failures?.[0]||'Authenticated E2E odczytów nie przeszedł.');}catch(e){if(i>5&&String(e.message).includes('E2E'))throw e;}await sleep(250);}throw new Error('Timeout authenticated E2E odczytów.');};
   const lock=async(button,fn)=>{if(button?.dataset.busy==='1')return;if(button){button.dataset.busy='1';button.disabled=true;}try{return await fn();}finally{if(button)button.dataset.busy='0';}};
   const correctionActionable=(item)=>['PENDING','CHANGED'].includes(String(item?.status||'').toUpperCase());
   let session=null;
@@ -82,8 +79,8 @@
   }
 
   async function init(){
-    try{await waitE2E();session=await api.requireSession({surface:'mobile'});if(!session)return api.redirectLogin('session');const state=await getState();applyState(state);bindAttendanceAndProcess();bindCorrection();await bindWorkerMessages();if(['LEADER','ADMIN'].includes(session.user.role)){await Promise.allSettled([bindManagerMessages(),bindCorrections(),bindUsers()]);}setStatus('Integracja LIVE gotowa. Odczyty i przyciski są podłączone do backendu V2.','ok');}
-    catch(error){setStatus(`Integracja zapisów pozostaje zablokowana: ${error.message}`,'error');}
+    try{await window.MOLLiveReady;session=await api.requireSession({surface:'mobile'});if(!session)return api.redirectLogin('session');const state=await getState();applyState(state);bindAttendanceAndProcess();bindCorrection();await bindWorkerMessages();if(['LEADER','ADMIN'].includes(session.user.role)){await Promise.allSettled([bindManagerMessages(),bindCorrections(),bindUsers()]);}setStatus('Integracja LIVE gotowa. Odczyty i przyciski są podłączone do backendu V2.','ok');}
+    catch(error){setStatus(`Nie udało się uruchomić części akcji: ${error.message}`,'error');}
   }
   init();
 })();
