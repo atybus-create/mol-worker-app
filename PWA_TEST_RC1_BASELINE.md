@@ -46,6 +46,15 @@ Katalogi `/stage9-preview/` i `/stage10-preview/` pozostają historycznymi podgl
 - automatyzacje biznesowe niezwiązane bezpośrednio z aplikacją pracowniczą,
 - ponowne wykonywanie zakończonych etapów bez przesłanki technicznej.
 
+## Status realizacji
+
+- Krok 1 — zamrożenie RC1: WYKONANY.
+- Krok 2 — usunięcie runtime E2E gate: WYKONANY.
+  - usunięto `runReadE2E()`, `waitE2E()` i klucz `mol.v2.stage11.read-e2e`,
+  - akcje czekają tylko na podstawową gotowość interfejsu,
+  - awaria opcjonalnej sekcji nie blokuje podstawowych zapisów,
+  - pełne testy E2E pozostają poza runtime aplikacji.
+
 ## Reguła odbioru
 
 Scenariusz, który przeszedł i którego kod nie został później zmieniony, nie jest powtarzany. Błąd zatrzymuje wyłącznie powiązaną ścieżkę, a nie cały program testów.
