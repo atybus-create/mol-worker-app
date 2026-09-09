@@ -120,7 +120,7 @@
       const sessions = Array.isArray(data?.process_sessions) ? data.process_sessions : [];
       cards[1].innerHTML = `<h3>Dzisiejsza historia</h3><div class="profile-row"><span>START pracy</span><strong>${clock(data?.attendance?.start_at)}</strong></div>${sessions.map((item) => `<div class="profile-row"><span>${esc(processName(item.process_code))}</span><strong>${clock(item.start_at)}–${item.stop_at ? clock(item.stop_at) : 'teraz'}</strong></div>`).join('') || '<div class="profile-row"><span>Procesy</span><strong>brak</strong></div>'}`;
     }
-    const correction = profile.querySelector('[data-demo-correction]');
+    const correction = profile.querySelector('[data-worker-correction]');
     if (correction) {
       correction.querySelectorAll('input,textarea,button').forEach((node) => { node.disabled = true; });
       correction.title = 'Korekta czasu jest dostępna po wczytaniu bieżącego stanu.';
