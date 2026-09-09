@@ -1,6 +1,7 @@
 (() => {
   'use strict';
-  const BUILD = '20260908.4';
+  const BUILD = '20260909.1';
+  window.MOL_BUILD = BUILD;
   const shell = document.querySelector('.worker-shell');
   if (!shell) return;
   const params = new URLSearchParams(location.search);
@@ -12,7 +13,7 @@
   const panelLabel = document.getElementById('mobilePanelLabel');
 
   if (roleChip) roleChip.textContent = hintedRole;
-  if (panelLabel) panelLabel.textContent = capabilities.managerMobile ? 'Panel mobilny · weryfikacja sesji' : 'Panel pracownika · weryfikacja sesji';
+  if (panelLabel) panelLabel.textContent = `${capabilities.managerMobile ? 'Panel mobilny' : 'Panel pracownika'} · TEST · build ${BUILD}`;
   if (managerNav) managerNav.hidden = !capabilities.managerMobile;
   bottomNav?.classList.toggle('has-manager', capabilities.managerMobile);
 
