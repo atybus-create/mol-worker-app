@@ -280,9 +280,9 @@
 
   const selectedIds = (view) => [...view.querySelectorAll('.report-people-grid input:checked')].map((input) => input.value);
   function syncReportCounts() {
-    for (const [selector, countSelector, generateSelector] of [
-      ['[data-view="reports"]', '[data-report-count]', '[data-report-generate]'],
-      ['[data-view="worktime"]', '[data-worktime-count]', '[data-worktime-generate]'],
+    for (const [selector, countSelector, generateSelector, exportSelector] of [
+      ['[data-view="reports"]', '[data-report-count]', '[data-report-generate]', '[data-report-export]'],
+      ['[data-view="worktime"]', '[data-worktime-count]', '[data-worktime-generate]', '[data-worktime-export]'],
     ]) {
       const view = document.querySelector(selector);
       if (!view) continue;
@@ -291,6 +291,7 @@
       if (label) label.textContent = `Wybrano ${count}`;
       const generate = view.querySelector(generateSelector);
       if (generate) generate.disabled = count === 0;
+      view.querySelectorAll(exportSelector).forEach((button) => { button.disabled = count === 0; });
     }
   }
 
@@ -413,7 +414,10 @@
       reports.querySelectorAll('[data-report-export]').forEach((button) => button.addEventListener('click', (event) => {
         event.preventDefault(); event.stopImmediatePropagation();
         const format = String(button.dataset.reportExport || '').toLowerCase();
-        api.download('mol-app-v2-report-export', { report_type: 'performance', format, date_from: from?.value, date_to: to?.value, employee_ids: selectedIds(reports) }, `mol_v2_performance.${format}`).catch((error) => setStatus(error.message, 'error'));
+        setStatus(`Przygotowuję plik ${format.toUpperCase()}…`);
+        api.download('mol-app-v2-report-export', { report_type: 'performance', format, date_from: from?.value, date_to: to?.value, employee_ids: selectedIds(reports) }, `mol_v2_performance.${format}`)
+          .then((filename) => setStatus(`Pobrano ${filename}.`, 'ok'))
+          .catch((error) => setStatus(error.message, 'error'));
       }, true));
     }
     if (worktime) {
@@ -428,7 +432,10 @@
         event.preventDefault(); event.stopImmediatePropagation();
         const format = String(button.dataset.worktimeExport || '').toLowerCase();
         const status = worktime.querySelector('[data-worktime-status]')?.value || 'ALL';
-        api.download('mol-app-v2-report-export', { report_type: 'attendance', format, date_from: from?.value, date_to: to?.value, employee_ids: selectedIds(worktime), status: status === 'ALL' ? null : status }, `mol_v2_attendance.${format}`).catch((error) => setStatus(error.message, 'error'));
+        setStatus(`Przygotowuję plik ${format.toUpperCase()}…`);
+        api.download('mol-app-v2-report-export', { report_type: 'attendance', format, date_from: from?.value, date_to: to?.value, employee_ids: selectedIds(worktime), status: status === 'ALL' ? null : status }, `mol_v2_attendance.${format}`)
+          .then((filename) => setStatus(`Pobrano ${filename}.`, 'ok'))
+          .catch((error) => setStatus(error.message, 'error'));
       }, true));
       worktime.querySelector('[data-worktime-status]')?.addEventListener('change', () => generateAttendance().catch(() => {}));
     }
