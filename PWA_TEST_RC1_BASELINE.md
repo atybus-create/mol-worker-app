@@ -49,6 +49,12 @@ Katalogi `/stage9-preview/` i `/stage10-preview/` pozostają historycznymi podgl
 ## Status realizacji
 
 - Krok 1 — zamrożenie RC1: WYKONANY.
+- Krok 3 — uporządkowanie frontendu: WYKONANY.
+  - jeden build `20260909.1`,
+  - wspólny klient `shared/auth.js`,
+  - launcher TEST i widoczne oznaczenia środowiska,
+  - usunięte historyczne pliki i komunikaty demo/preview,
+  - zachowane reguły dostępu WORKER/LEADER/ADMIN.
 - Krok 2 — usunięcie runtime E2E gate: WYKONANY.
   - usunięto `runReadE2E()`, `waitE2E()` i klucz `mol.v2.stage11.read-e2e`,
   - akcje czekają tylko na podstawową gotowość interfejsu,
