@@ -61,6 +61,13 @@ Katalogi `/stage9-preview/` i `/stage10-preview/` pozostają historycznymi podgl
   - awaria opcjonalnej sekcji nie blokuje podstawowych zapisów,
   - pełne testy E2E pozostają poza runtime aplikacji.
 
+- Krok 4 — warstwa PWA: WYKONANY.
+  - docelowy katalog /pwa/ zawiera pełną kopię testowego frontendu build 20260909.2,
+  - dodano manifest z właściwym scope GitHub Pages, ikonami 192/512/maskable i display standalone,
+  - dodano service worker cache’ujący wyłącznie shell aplikacji, bez odpowiedzi API i bez kolejki zapisów offline,
+  - dodano ekran offline oraz kontrolowaną aktualizację cache po decyzji użytkownika,
+  - brak zmian w main, publicznej publikacji, n8n i Moniti.
+
 ## Reguła odbioru
 
 Scenariusz, który przeszedł i którego kod nie został później zmieniony, nie jest powtarzany. Błąd zatrzymuje wyłącznie powiązaną ścieżkę, a nie cały program testów.
