@@ -1,1 +1,0 @@
-Preview source snapshot prepared for isolated GitHub Pages publication on 2026-09-07. The production V2 path remains unchanged.
