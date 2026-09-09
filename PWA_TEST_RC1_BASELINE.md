@@ -49,24 +49,41 @@ Katalogi `/stage9-preview/` i `/stage10-preview/` pozostają historycznymi podgl
 ## Status realizacji
 
 - Krok 1 — zamrożenie RC1: WYKONANY.
+- Krok 2 — usunięcie runtime E2E gate: WYKONANY.
+  - usunięto `runReadE2E()`, `waitE2E()` i klucz `mol.v2.stage11.read-e2e`,
+  - akcje czekają tylko na podstawową gotowość interfejsu,
+  - awaria opcjonalnej sekcji nie blokuje podstawowych zapisów,
+  - pełne testy E2E pozostają poza runtime aplikacji.
 - Krok 3 — uporządkowanie frontendu: WYKONANY.
   - jeden build `20260909.1`,
   - wspólny klient `shared/auth.js`,
   - launcher TEST i widoczne oznaczenia środowiska,
   - usunięte historyczne pliki i komunikaty demo/preview,
   - zachowane reguły dostępu WORKER/LEADER/ADMIN.
-- Krok 2 — usunięcie runtime E2E gate: WYKONANY.
-  - usunięto `runReadE2E()`, `waitE2E()` i klucz `mol.v2.stage11.read-e2e`,
-  - akcje czekają tylko na podstawową gotowość interfejsu,
-  - awaria opcjonalnej sekcji nie blokuje podstawowych zapisów,
-  - pełne testy E2E pozostają poza runtime aplikacji.
-
 - Krok 4 — warstwa PWA: WYKONANY.
-  - docelowy katalog /pwa/ zawiera pełną kopię testowego frontendu build 20260909.2,
-  - dodano manifest z właściwym scope GitHub Pages, ikonami 192/512/maskable i display standalone,
+  - docelowy katalog `/pwa/` zawiera pełną kopię testowego frontendu build `20260909.2`,
+  - dodano manifest z właściwym scope GitHub Pages, ikonami 192/512/maskable i `display: standalone`,
   - dodano service worker cache’ujący wyłącznie shell aplikacji, bez odpowiedzi API i bez kolejki zapisów offline,
   - dodano ekran offline oraz kontrolowaną aktualizację cache po decyzji użytkownika,
-  - brak zmian w main, publicznej publikacji, n8n i Moniti.
+  - brak zmian w `main` i publicznej publikacji.
+- Krok 5 — stabilizacja podstawowej ścieżki n8n: WYKONANY 2026-09-09.
+  - konto testowe: `atybus` / `MOL015` / Moniti `99191`,
+  - uzgodniono historyczny rekord 2026-09-08 z rzeczywistym stanem Moniti: `CLOSED`, STOP `13:33 UTC`, wersja V2 `14`,
+  - zamknięto nieaktualną komendę recovery, która próbowała ustawić inny czas STOP,
+  - adoptowano istniejący START Moniti 2026-09-09 do V2: `05:48 UTC`,
+  - prawdziwe logowanie, sesja, status, wylogowanie i unieważnienie sesji: PASS,
+  - `PROCESS_START INNE`: PASS, wersja obecności `1 → 2`,
+  - powtórzenie identycznego `request_id` i payloadu: PASS, brak zmiany wersji,
+  - ten sam `request_id` z innym payloadem: PASS — `409 REQUEST_ID_CONFLICT`, stan bez zmian,
+  - zapis ze starą wersją: PASS — `409 VERSION_CONFLICT`, stan bez zmian,
+  - `PROCESS_CHANGE INNE → MAGAZYN`: PASS, wersja `2 → 3`,
+  - `PROCESS_LOGOUT`: PASS, wersja `3 → 4`, brak aktywnego procesu,
+  - `ATTENDANCE_FINISH`: PASS, wersja `4 → 5`,
+  - stan końcowy V2 i Moniti: `CLOSED`, START `05:48 UTC`, STOP `13:52 UTC`,
+  - `moniti_sync=SYNCED`, `drive_sync=SYNCED`, `correction_required=false`,
+  - wszystkie skuteczne komendy są `COMMITTED`; brak oczekującej komendy dla `MOL015`,
+  - wszystkie locki, w tym `command-writer` i `metrics-writer`, są zwolnione,
+  - zakres zapisów testowych 2026-09-09 pozostaje ograniczony do loginu `atybus`.
 
 ## Reguła odbioru
 
