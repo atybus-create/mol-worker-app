@@ -1,7 +1,9 @@
 (() => {
   'use strict';
-  const BUILD='20260908.4';
+  const BUILD='20260909.1';
+  window.MOL_BUILD=BUILD;
   const shell=document.querySelector('.web-shell'); if(!shell)return;
+  const buildLabel=document.getElementById('webBuildLabel');if(buildLabel)buildLabel.textContent=`TEST · build ${BUILD}`;
   const hintedRole=window.MOLRoles.normalizeRole(new URLSearchParams(location.search).get('role')||'LEADER');
   const capabilities=window.MOLRoles.get(hintedRole);
   if(!capabilities?.web){document.body.innerHTML='<main style="min-height:100vh;display:grid;place-items:center;background:#050b12;color:#f4f8fb;font-family:system-ui"><section><h1>Panel WWW niedostępny dla WORKER</h1><p>Użyj aplikacji mobilnej.</p></section></main>';return;}
