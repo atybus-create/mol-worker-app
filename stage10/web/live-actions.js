@@ -1,10 +1,7 @@
 (() => {
   'use strict';
   const api=window.MOLApi;if(!api)return;
-  const E2E_KEY='mol.v2.stage11.read-e2e';
-  const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
   const setStatus=(text,state='info')=>{let bar=document.querySelector('[data-live-integration-status]');if(!bar){bar=document.createElement('div');bar.dataset.liveIntegrationStatus='true';bar.style.cssText='position:fixed;z-index:9999;left:270px;right:20px;bottom:16px;padding:10px 14px;border:1px solid rgba(18,200,255,.28);border-radius:10px;background:rgba(3,20,31,.97);font:600 12px/1.35 system-ui';document.body.append(bar);}bar.textContent=text;bar.style.color=state==='error'?'#ff9aa4':state==='ok'?'#86f4c9':'#bfefff';bar.style.borderColor=state==='error'?'rgba(255,82,97,.65)':state==='ok'?'rgba(25,231,160,.55)':'rgba(18,200,255,.28)';};
-  const waitE2E=async()=>{for(let i=0;i<120;i++){let r=null;try{r=JSON.parse(sessionStorage.getItem(E2E_KEY)||'null');}catch{}if(r?.passed===true)return r;if(r?.passed===false)throw new Error(r.failures?.[0]||'Authenticated E2E odczytów nie przeszedł.');await sleep(250);}throw new Error('Timeout authenticated E2E odczytów.');};
   const busy=async(button,fn)=>{if(button?.dataset.busy==='1')return;if(button){button.dataset.busy='1';button.disabled=true;}try{return await fn();}finally{if(button)button.dataset.busy='0';}};
   const checked=(root)=>root?[...root.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.value).filter(Boolean):[];
   const correctionActionable=(item)=>['PENDING','CHANGED'].includes(String(item?.status||'').toUpperCase());
@@ -51,8 +48,8 @@
   }
 
   async function init(){
-    try{await waitE2E();session=await api.requireSession({surface:'web'});if(!session)return api.redirectLogin('session');await Promise.all([bindMessages(),bindCorrections(),bindUsers()]);setStatus('Integracja LIVE gotowa. Dane i akcje menedżerskie są podłączone do backendu V2.','ok');}
-    catch(error){setStatus(`Integracja zapisów pozostaje zablokowana: ${error.message}`,'error');}
+    try{await window.MOLLiveReady;session=await api.requireSession({surface:'web'});if(!session)return api.redirectLogin('session');const results=await Promise.allSettled([bindMessages(),bindCorrections(),bindUsers()]);const failures=results.filter(result=>result.status==='rejected');if(failures.length)setStatus(`Podstawowy panel działa. Nie uruchomiono ${failures.length} opcjonalnych sekcji akcji.`,'error');else setStatus('Integracja LIVE gotowa. Dane i akcje menedżerskie są podłączone do backendu V2.','ok');}
+    catch(error){setStatus(`Nie udało się uruchomić akcji: ${error.message}`,'error');}
   }
   init();
 })();
