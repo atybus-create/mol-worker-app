@@ -32,6 +32,7 @@
   let workerStatus = null;
   let teamData = null;
   let initialised = false;
+  let workClockTimer = null;
 
   function ensureStatusBar() {
     let bar = document.querySelector('[data-live-integration-status]');
@@ -154,11 +155,25 @@
     }
     const stats = document.querySelectorAll('.work-status .status-stats strong');
     if (stats[0]) stats[0].textContent = clock(attendance?.start_at);
-    if (stats[1]) stats[1].textContent = duration(data?.presence_seconds);
-    if (stats[2]) stats[2].textContent = active?.start_at ? duration((Date.now() - Date.parse(active.start_at)) / 1000) : '00:00';
     const kpis = document.querySelectorAll('.kpi-grid article strong');
-    if (kpis[0]) kpis[0].textContent = duration(data?.presence_seconds);
-    if (kpis[1]) kpis[1].textContent = duration(data?.no_process_seconds);
+    const thirdLabel = document.querySelector('.work-status .status-stats div:nth-child(3) small');
+    const calculatedAt = Number.isFinite(Date.parse(data?.calculated_at)) ? Date.parse(data.calculated_at) : Date.now();
+    const basePresence = Math.max(0, Number(data?.presence_seconds) || 0);
+    const baseNoProcess = Math.max(0, Number(data?.no_process_seconds) || 0);
+    const tickWorkClock = () => {
+      const live = attendance?.state === 'OPEN';
+      const delta = live ? Math.max(0, (Date.now() - calculatedAt) / 1000) : 0;
+      const presence = basePresence + delta;
+      const noProcess = baseNoProcess + (active ? 0 : delta);
+      if (stats[1]) stats[1].textContent = duration(presence);
+      if (kpis[0]) kpis[0].textContent = duration(presence);
+      if (kpis[1]) kpis[1].textContent = duration(noProcess);
+      if (thirdLabel) thirdLabel.textContent = active ? 'Proces od' : 'Międzyprocesowy';
+      if (stats[2]) stats[2].textContent = active?.start_at ? duration((Date.now() - Date.parse(active.start_at)) / 1000) : duration(noProcess);
+    };
+    if (workClockTimer) clearInterval(workClockTimer);
+    tickWorkClock();
+    workClockTimer = attendance?.state === 'OPEN' ? setInterval(tickWorkClock, 1000) : null;
     if (kpis[2]) kpis[2].textContent = percent(data?.norm?.combined_percent);
     const progress = document.querySelector('.kpi-grid .progress i');
     if (progress) progress.style.width = `${Math.max(0, Math.min(100, Number(data?.norm?.combined_percent) || 0))}%`;
