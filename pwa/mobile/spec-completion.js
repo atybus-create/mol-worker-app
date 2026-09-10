@@ -9,7 +9,7 @@
   if(grid&&!grid.querySelector('[data-action="correct-hours"]')){
     const correct=document.createElement('button'); correct.className='mol-button'; correct.type='button'; correct.dataset.action='correct-hours'; correct.innerHTML='◷ <span><strong>Zmień godziny pracy</strong><small>START / STOP i powód</small></span>';
     correct.addEventListener('click',()=>{ window.MOLMobileShow?.('profile'); requestAnimationFrame(()=>document.querySelector('[data-worker-correction]')?.scrollIntoView({block:'start'})); }); grid.append(correct);
-    const reopen=document.createElement('button'); reopen.className='mol-button'; reopen.type='button'; reopen.dataset.action='reopen-day'; reopen.hidden=true; reopen.disabled=true; reopen.innerHTML='↶ <span><strong>Cofnij zakończenie dnia</strong><small>Przywróć dzień do OPEN</small></span>'; grid.append(reopen);
+    const reopen=document.createElement('button'); reopen.className='mol-button'; reopen.type='button'; reopen.dataset.action='reopen-day'; reopen.hidden=true; reopen.disabled=true; reopen.innerHTML='↶ <span><strong>Wznów pracę</strong><small>Otwórz ponownie dzisiejszy dzień</small></span>'; grid.append(reopen);
   }
   const active=document.querySelector('.active-process');
   if(active&&!active.querySelector('.active-process-meta')){

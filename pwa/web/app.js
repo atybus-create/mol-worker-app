@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD='20260909.4';
+  const BUILD='20260910.1';
   window.MOL_BUILD=BUILD;
   const shell=document.querySelector('.web-shell'); if(!shell)return;
   const buildLabel=document.getElementById('webBuildLabel');if(buildLabel)buildLabel.textContent=`TEST · build ${BUILD}`;
