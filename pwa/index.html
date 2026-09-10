@@ -16,18 +16,18 @@
 <body>
   <main>
     <h1>MOL App V2</h1>
-    <p>Środowisko TEST · build 20260909.3</p>
+    <p>Środowisko TEST · build 20260909.4</p>
     <p>Otwieram właściwy ekran logowania…</p>
-    <div class="choices"><a href="./mobile/login.html?v=20260909.3">Mobile</a><a href="./web/login.html?v=20260909.3">WWW</a></div>
+    <div class="choices"><a href="./mobile/login.html?v=20260909.4">Mobile</a><a href="./web/login.html?v=20260909.4">WWW</a></div>
   </main>
   <script>
     (() => {
       const requested = new URLSearchParams(location.search).get('surface');
       const mobileDevice = matchMedia('(max-width: 760px)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       const surface = requested === 'mobile' || requested === 'web' ? requested : (mobileDevice ? 'mobile' : 'web');
-      window.setTimeout(() => location.replace('./' + surface + '/login.html?v=20260909.3'), 180);
+      window.setTimeout(() => location.replace('./' + surface + '/login.html?v=20260909.4'), 180);
     })();
   </script>
-  <script src="./pwa-register.js?v=20260909.3"></script>
+  <script src="./pwa-register.js?v=20260909.4"></script>
 </body>
 </html>
