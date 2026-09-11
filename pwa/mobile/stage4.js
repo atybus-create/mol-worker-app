@@ -2,7 +2,7 @@
   'use strict';
   const api = window.MOLApi;
   if (!api) return;
-  const BUILD = '20260911.9';
+  const BUILD = '20260911.10';
   let timer = null;
   let lastDailyVersion = 0;
   let lastMonthlyVersion = 0;
