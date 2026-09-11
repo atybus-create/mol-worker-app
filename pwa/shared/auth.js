@@ -19,6 +19,8 @@
     message.className = `auth-message${state ? ` ${state}` : ''}`;
   };
 
+  // Fields are blocked only while an actual login/logout operation is running.
+  // Startup health/session checks must never make the form impossible to type into.
   const setBusy = (value) => {
     busy = value;
     if (submit) submit.disabled = value;
@@ -29,8 +31,8 @@
   const loadApi = () => new Promise((resolve, reject) => {
     if (window.MOLApi?.BUILD === BUILD) return resolve(window.MOLApi);
     const script = document.createElement('script');
-    script.src = `../shared/api.js?v=${BUILD}`;
-    script.onload = () => resolve(window.MOLApi);
+    script.src = `../shared/api.js?v=${BUILD}-authfix1`;
+    script.onload = () => window.MOLApi ? resolve(window.MOLApi) : reject(new Error('Klient API V3 nie został zainicjalizowany.'));
     script.onerror = () => reject(new Error('Nie udało się załadować klienta API V3.'));
     document.head.append(script);
   });
@@ -51,15 +53,17 @@
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (busy) return;
-    if (!authEnabled) return setMessage('Logowanie V3 nie zostało jeszcze uruchomione.', 'is-error');
     const data = new FormData(form);
     const username = String(data.get('username') || '').trim();
     const secret = String(data.get('password') || '');
     if (!username || !secret) return setMessage('Wpisz login i hasło.', 'is-error');
+
     setBusy(true);
     setMessage('Logowanie…');
     try {
       const api = await loadApi();
+      authEnabled = api.FEATURES?.auth === true;
+      if (!authEnabled) throw new api.MOLApiError('Logowanie V3 nie jest obecnie dostępne.', { code: 'AUTH_DISABLED' });
       const session = await api.login(username, secret, { surface });
       const role = String(session?.user?.role || '').toUpperCase();
       if (surface === 'web' && role === 'WORKER') {
@@ -77,17 +81,26 @@
     }
   });
 
+  // Do not disable form controls during bootstrap. A failed health check must not create a dead UI.
+  setBusy(false);
+
   (async () => {
     try {
-      setBusy(true);
       const api = await loadApi();
-      const health = await api.health();
-      if (health?.status !== 'READY') throw new Error('Backend V3 nie potwierdził gotowości.');
-      if (!api.FEATURES.auth) {
-        setMessage('Backend V3 online. Logowanie zostanie podłączone w następnym etapie.', 'is-success');
+      authEnabled = api.FEATURES?.auth === true;
+      if (!authEnabled) {
+        setMessage('Logowanie V3 nie jest obecnie dostępne.', 'is-error');
         return;
       }
-      authEnabled = true;
+
+      // Health is informative here; login remains interactive even if this check fails.
+      try {
+        const health = await api.health();
+        if (health?.status !== 'READY') setMessage('Backend V3 nie potwierdził gotowości. Możesz ponowić logowanie.', 'is-error');
+      } catch {
+        setMessage('Nie udało się potwierdzić statusu backendu. Formularz pozostaje aktywny.', 'is-error');
+      }
+
       if (!api.getToken()) return;
       setMessage('Sprawdzanie istniejącej sesji…');
       const session = await api.requireSession({ surface });
@@ -101,7 +114,7 @@
       else setMessage(error.message || 'Nie udało się sprawdzić sesji.', 'is-error');
       try { window.MOLApi?.clearToken(); } catch { /* no-op */ }
     } finally {
-      setBusy(!authEnabled);
+      setBusy(false);
     }
   })();
 })();
