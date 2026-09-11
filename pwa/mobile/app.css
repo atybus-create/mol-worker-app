@@ -4,6 +4,16 @@ body {
     linear-gradient(180deg, var(--mol-bg-1), var(--mol-bg-0));
 }
 
+body.is-action-busy { overflow:hidden; }
+.action-overlay[hidden] { display:none; }
+.action-overlay { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:24px; background:rgba(2,8,13,.82); backdrop-filter:blur(8px); }
+.action-overlay__card { width:min(100%,360px); padding:30px 24px; display:grid; justify-items:center; gap:10px; text-align:center; border:1px solid rgba(18,200,255,.42); border-radius:20px; background:linear-gradient(180deg,rgba(10,35,51,.98),rgba(4,18,29,.98)); box-shadow:0 24px 80px rgba(0,0,0,.48),0 0 36px rgba(18,200,255,.12); }
+.action-overlay__spinner { width:48px; height:48px; margin-bottom:8px; border:4px solid rgba(18,200,255,.18); border-top-color:var(--mol-cyan); border-radius:50%; animation:action-spin .8s linear infinite; }
+.action-overlay__card strong { font-size:21px; }
+.action-overlay__card small { max-width:270px; color:var(--mol-text-muted); line-height:1.45; }
+@keyframes action-spin { to { transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce){.action-overlay__spinner{animation:none}}
+
 .worker-shell {
   width: min(100%, 520px);
   margin: 0 auto;
