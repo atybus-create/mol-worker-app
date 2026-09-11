@@ -1,0 +1,1 @@
+Stage 10 preview refreshed after full requirement/frontend/backend audit on 2026-09-07. UI-only preview; automatic alerts OFF/HOLD; no new Moniti writes.

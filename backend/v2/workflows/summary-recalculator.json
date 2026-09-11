@@ -1,0 +1,1428 @@
+{
+  "name": "MOL // APP V2 // SUMMARY RECALCULATOR",
+  "nodes": [
+    {
+      "id": "input",
+      "name": "Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "context",
+      "name": "Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const i=$input.first().json;if(!/^MOL[0-9]+$/.test(i.employee_id||'')||!/^\\d{4}-\\d{2}-\\d{2}$/.test(i.work_date||'')||!DateTime.fromISO(i.work_date).isValid||i.work_date>DateTime.now().setZone('Europe/Warsaw').toISODate())throw Error('SUMMARY_SCOPE_INVALID');return [{json:{employee_id:i.employee_id,work_date:i.work_date,aggregate_id:i.employee_id+':'+i.work_date,month:i.work_date.slice(0,7),summary_id:i.employee_id+':'+i.work_date.slice(0,7)}}];"
+      }
+    },
+    {
+      "id": "acquire-writer",
+      "name": "Acquire Writer",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "command-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": ""
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "={{ String($execution.id) }}",
+            "lease_until": "={{ $now.plus({seconds:120}).toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "owns-writer",
+      "name": "Owns Writer",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Owns Writer",
+              "leftValue": "={{ $json.owner === String($execution.id) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "busy",
+      "name": "Busy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{ok:false,error_code:'COMMAND_BUSY'}}];"
+      }
+    },
+    {
+      "id": "read-attendance",
+      "name": "Read Attendance",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "HmJugmYliWT0ERn4"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "attendance_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.aggregate_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-processes",
+      "name": "Read Processes",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "4di5yA4jpe0ZEmPL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "attendance_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.aggregate_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-deltas",
+      "name": "Read Deltas",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "GT4Ritsrue5U57NA"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "attendance_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.aggregate_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "build-boundary-requests",
+      "name": "Build Boundary Requests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const ids=[...new Set($('Read Deltas').all().map(x=>x.json.delta_id).filter(x=>typeof x==='string'&&x.startsWith('ESB-')).map(x=>x.slice(4,40)))];return (ids.length?ids:['__NONE__']).map(source_request_id=>({json:{source_request_id}}));"
+      }
+    },
+    {
+      "id": "read-boundary-commands",
+      "name": "Read Boundary Commands",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "request_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.source_request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": false
+    },
+    {
+      "id": "read-commands",
+      "name": "Read Commands",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "aggregate_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.aggregate_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-pending-batch",
+      "name": "Read Pending Batch",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "fj3jJKgoY06BVtu5"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "PREPARED"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-checkpoint",
+      "name": "Read Checkpoint",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "XLDbRcZ62PLzCykY"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "checkpoint_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.aggregate_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-current-checkpoint",
+      "name": "Read Current Checkpoint",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "XLDbRcZ62PLzCykY"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "checkpoint_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.employee_id+':'+($('Read Attendance').first().json.stop_at?DateTime.fromISO($('Read Attendance').first().json.stop_at).setZone('Europe/Warsaw').toISODate():DateTime.now().setZone('Europe/Warsaw').toISODate()) }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-month",
+      "name": "Read Month",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "4pJlgFine6QhUQxX"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "summary_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.summary_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-employees",
+      "name": "Read Employees",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "npCr4h1LjhVL205w"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "active",
+              "condition": "eq",
+              "keyValue": true
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-config",
+      "name": "Read Config",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        440
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "x66LbXe5CSpdMIkv"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": []
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-jobs",
+      "name": "Read Jobs",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        440
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "aggregate_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.aggregate_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "build-input",
+      "name": "Build Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        440
+      ],
+      "parameters": {
+        "jsCode": "const c=$('Context').first().json,a=$('Read Attendance').all().map(x=>x.json).filter(x=>x.attendance_id),old=$('Read Month').all().map(x=>x.json).filter(x=>x.summary_id),commands=$('Read Commands').all().map(x=>x.json).filter(x=>x.request_id);if(a.length>1||old.length>1)throw Error('SUMMARY_DUPLICATE');if(commands.some(x=>!['COMMITTED','FAILED'].includes(x.status))||$('Read Pending Batch').all().map(x=>x.json).some(x=>x.batch_id))return [{json:{ok:false,blocked:true,error_code:'SOURCE_RECOVERY_REQUIRED'}}];const cfg={};for(const x of $('Read Config').all().map(x=>x.json))if(x.key&&!x.key.startsWith('ALLOWED_PROCESSES_')){if(Object.hasOwn(cfg,x.key))throw Error('CONFIG_DUPLICATE');cfg[x.key]=JSON.parse(x.value_json);}const effective=a[0]?.state==='OPEN'?DateTime.now().setZone('Europe/Warsaw').toISODate():a[0]?.stop_at?DateTime.fromISO(a[0].stop_at).setZone('Europe/Warsaw').toISODate():c.work_date;const current=c.work_date!==effective;const cps=(current?$('Read Current Checkpoint').all().map(x=>x.json):$('Read Checkpoint').all().map(x=>x.json)).filter(x=>x.checkpoint_id);if(cps.length>1)throw Error('ES_CHECKPOINT_DUPLICATE');const boundaries=$('Read Boundary Commands').all().map(x=>x.json).filter(x=>x.request_id);if(new Set(boundaries.map(x=>x.request_id)).size!==boundaries.length)throw Error('BOUNDARY_COMMAND_DUPLICATE');const sources=[...new Map([...commands,...boundaries].map(x=>[x.request_id,{request_id:x.request_id,status:x.status}])).values()];return [{json:{kind:'SUMMARY',previous_month:old[0]||null,employees:$('Read Employees').all().map(x=>x.json).filter(x=>x.employee_id).map(x=>({employee_id:x.employee_id,active:x.active,es_worker_id:x.es_worker_id})),input:{...c,attendance:a[0]||null,processes:$('Read Processes').all().map(x=>x.json).filter(x=>x.process_session_id),deltas:$('Read Deltas').all().map(x=>x.json).filter(x=>x.delta_id),commands:sources,checkpoint:cps[0]||null,now:new Date().toISOString(),stale_seconds:Number(cfg.ES_STALE_SECONDS)||180}}}];"
+      }
+    },
+    {
+      "id": "source-ready",
+      "name": "Source Ready",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        440
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Source Ready",
+              "leftValue": "={{ $json.blocked !== true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "calculate",
+      "name": "Calculate",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1040,
+        440
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "CUxveOxMVj1RhxHa"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "calculated",
+      "name": "Calculated",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1300,
+        440
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Calculated",
+              "leftValue": "={{ $json.ok === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "failure-tasks",
+      "name": "Failure Tasks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        440
+      ],
+      "parameters": {
+        "jsCode": "const c=$('Context').first().json,error=$('Calculate').first().json.error_code;const jobs=$('Read Jobs').all().map(x=>x.json).filter(j=>j.outbox_id&&['ATTENDANCE_DERIVED','ES_DERIVED'].includes(j.type)&&['PENDING','RETRY_PENDING'].includes(j.status)&&Date.parse(j.next_attempt_at)<=Date.now()).slice(0,8);return jobs.length?jobs.map(j=>({json:{lock_owner:String($execution.id),job_id:j.outbox_id,aggregate_id:c.aggregate_id,summary_id:c.summary_id,result:'failure',error_code:error}})):[{json:{noop:true}}];"
+      }
+    },
+    {
+      "id": "daily-item",
+      "name": "Daily Item",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        440
+      ],
+      "parameters": {
+        "jsCode": "const d=$('Calculate').first().json.daily,p=$('Calculate').first().json.publication,keys=[\"summary_id\",\"employee_id\",\"work_date\",\"presence_seconds\",\"process_seconds\",\"between_process_seconds\",\"pak_seconds\",\"pick_seconds\",\"eligible_pak\",\"eligible_pick\",\"pak_percent\",\"pick_percent\",\"combined_percent\",\"freshness\",\"calculated_at\",\"version\"];return [{json:{lock_owner:String($execution.id),table:'DAILY_SUMMARY',mode:'replace',row:Object.fromEntries(keys.map(k=>[k,k==='version'?p.version:d[k]??null]))}}];"
+      }
+    },
+    {
+      "id": "save-daily",
+      "name": "Save Daily",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        660
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OXqGTTwbgscoNm5P"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "monthly-item",
+      "name": "Monthly Item",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        660
+      ],
+      "parameters": {
+        "jsCode": "const d=$('Calculate').first().json.monthly,p=$('Calculate').first().json.publication,keys=[\"summary_id\",\"employee_id\",\"month\",\"pak_seconds\",\"pick_seconds\",\"eligible_pak\",\"eligible_pick\",\"combined_percent\",\"freshness\",\"calculated_at\",\"version\"];return [{json:{lock_owner:String($execution.id),table:'MONTHLY_SUMMARY',mode:'replace',row:Object.fromEntries(keys.map(k=>[k,k==='version'?p.version:d[k]??null]))}}];"
+      }
+    },
+    {
+      "id": "save-monthly",
+      "name": "Save Monthly",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        520,
+        660
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OXqGTTwbgscoNm5P"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "publication",
+      "name": "Publication",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        660
+      ],
+      "parameters": {
+        "jsCode": "const x=$('Calculate').first().json.publication;return [{json:{lock_owner:String($execution.id),table:'NORM_SNAPSHOTS',mode:'replace',row:x}}];"
+      }
+    },
+    {
+      "id": "save-publication",
+      "name": "Save Publication",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1040,
+        660
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OXqGTTwbgscoNm5P"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "mirror-task",
+      "name": "Mirror Task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        660
+      ],
+      "parameters": {
+        "jsCode": "const p=$('Calculate').first().json.publication,request='NORM:'+p.summary_id+':'+p.version;return [{json:{lock_owner:String($execution.id),table:'OUTBOX',mode:'insert_only',row:{outbox_id:request+':drive',request_id:request,aggregate_id:p.summary_id,type:'NORM_DRIVE',payload_json:JSON.stringify({summary_id:p.summary_id,version:p.version}),status:'PENDING',attempts:0,next_attempt_at:p.calculated_at,lease_owner:'',lease_until:'1970-01-01T00:00:00.000Z',last_error:''}}}];"
+      }
+    },
+    {
+      "id": "save-mirror-task",
+      "name": "Save Mirror Task",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1560,
+        660
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OXqGTTwbgscoNm5P"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "success-tasks",
+      "name": "Success Tasks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        660
+      ],
+      "parameters": {
+        "jsCode": "const c=$('Context').first().json,p=$('Calculate').first().json.publication;const jobs=$('Read Jobs').all().map(x=>x.json).filter(j=>j.outbox_id&&['ATTENDANCE_DERIVED','ES_DERIVED'].includes(j.type)&&['PENDING','RETRY_PENDING'].includes(j.status)&&Date.parse(j.next_attempt_at)<=Date.now()).slice(0,8);return jobs.length?jobs.map(j=>({json:{lock_owner:String($execution.id),job_id:j.outbox_id,aggregate_id:c.aggregate_id,summary_id:c.summary_id,summary_version:p.version,result:'success'}})):[{json:{noop:true}}];"
+      }
+    },
+    {
+      "id": "has-tasks",
+      "name": "Has Tasks",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        880
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Has Tasks",
+              "leftValue": "={{ $json.noop !== true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "complete-tasks",
+      "name": "Complete Tasks",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        260,
+        880
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "r0pQp59VKwIt4i0h"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "each"
+      }
+    },
+    {
+      "id": "result",
+      "name": "Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        880
+      ],
+      "parameters": {
+        "jsCode": "const d=$('Calculate').first().json;return [{json:d.ok===true?{ok:true,summary_id:d.publication.summary_id,work_date:$('Context').first().json.work_date,version:d.publication.version,freshness:d.daily.freshness,combined_percent:d.daily.combined_percent}:{ok:false,error_code:d.error_code}}];"
+      }
+    },
+    {
+      "id": "finish",
+      "name": "Finish",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        880
+      ],
+      "parameters": {
+        "jsCode": "return $input.all();"
+      }
+    },
+    {
+      "id": "release-writer",
+      "name": "Release Writer",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        880
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "command-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": "={{ String($execution.id) }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "return",
+      "name": "Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        880
+      ],
+      "parameters": {
+        "jsCode": "return [{json:$('Finish').first().json}];"
+      }
+    }
+  ],
+  "connections": {
+    "Input": {
+      "main": [
+        [
+          {
+            "node": "Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context": {
+      "main": [
+        [
+          {
+            "node": "Acquire Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acquire Writer": {
+      "main": [
+        [
+          {
+            "node": "Owns Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owns Writer": {
+      "main": [
+        [
+          {
+            "node": "Read Attendance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Attendance": {
+      "main": [
+        [
+          {
+            "node": "Read Processes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Processes": {
+      "main": [
+        [
+          {
+            "node": "Read Deltas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Deltas": {
+      "main": [
+        [
+          {
+            "node": "Build Boundary Requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Boundary Requests": {
+      "main": [
+        [
+          {
+            "node": "Read Boundary Commands",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Boundary Commands": {
+      "main": [
+        [
+          {
+            "node": "Read Commands",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Commands": {
+      "main": [
+        [
+          {
+            "node": "Read Pending Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Pending Batch": {
+      "main": [
+        [
+          {
+            "node": "Read Checkpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Checkpoint": {
+      "main": [
+        [
+          {
+            "node": "Read Current Checkpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Current Checkpoint": {
+      "main": [
+        [
+          {
+            "node": "Read Month",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Month": {
+      "main": [
+        [
+          {
+            "node": "Read Employees",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Employees": {
+      "main": [
+        [
+          {
+            "node": "Read Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Config": {
+      "main": [
+        [
+          {
+            "node": "Read Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Jobs": {
+      "main": [
+        [
+          {
+            "node": "Build Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Input": {
+      "main": [
+        [
+          {
+            "node": "Source Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Source Ready": {
+      "main": [
+        [
+          {
+            "node": "Calculate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate": {
+      "main": [
+        [
+          {
+            "node": "Calculated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculated": {
+      "main": [
+        [
+          {
+            "node": "Daily Item",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failure Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failure Tasks": {
+      "main": [
+        [
+          {
+            "node": "Has Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Item": {
+      "main": [
+        [
+          {
+            "node": "Save Daily",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Daily": {
+      "main": [
+        [
+          {
+            "node": "Monthly Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monthly Item": {
+      "main": [
+        [
+          {
+            "node": "Save Monthly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Monthly": {
+      "main": [
+        [
+          {
+            "node": "Publication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publication": {
+      "main": [
+        [
+          {
+            "node": "Save Publication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Publication": {
+      "main": [
+        [
+          {
+            "node": "Mirror Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mirror Task": {
+      "main": [
+        [
+          {
+            "node": "Save Mirror Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Mirror Task": {
+      "main": [
+        [
+          {
+            "node": "Success Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success Tasks": {
+      "main": [
+        [
+          {
+            "node": "Has Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Tasks": {
+      "main": [
+        [
+          {
+            "node": "Complete Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Complete Tasks": {
+      "main": [
+        [
+          {
+            "node": "Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result": {
+      "main": [
+        [
+          {
+            "node": "Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finish": {
+      "main": [
+        [
+          {
+            "node": "Release Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Release Writer": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "executionTimeout": 120,
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "errorWorkflow": "rnELTCKClbzY8lxZ"
+  }
+}

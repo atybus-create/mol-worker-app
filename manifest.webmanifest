@@ -1,0 +1,10 @@
+{
+  "name": "ESTYL.PL — MOL System Pracy",
+  "short_name": "MOL Praca",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#071b3d",
+  "theme_color": "#071b3d",
+  "lang": "pl",
+  "description": "System monitorowania czasu pracy, procesów i realizacji norm MOL."
+}

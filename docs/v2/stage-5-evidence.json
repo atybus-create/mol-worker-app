@@ -1,0 +1,87 @@
+{
+  "stage": 5,
+  "date": "2026-09-05",
+  "status": "READY_FOR_USER_ACCEPTANCE",
+  "frontend": "0.5.0",
+  "implementation_commit": "af040c1",
+  "unit_cases": 39,
+  "automated": [
+    "attendance domain",
+    "attendance UI",
+    "auth regression",
+    "password vectors",
+    "OpenAPI 23 endpoints",
+    "backend 19 workflows / 19 tables"
+  ],
+  "live": {
+    "roles": [
+      "WORKER",
+      "LEADER",
+      "ADMIN"
+    ],
+    "operations": [
+      "START",
+      "STOP",
+      "REOPEN",
+      "CORRECT",
+      "DRIVE_SHEET_APPROVE"
+    ],
+    "parallel_requests": 4,
+    "parallel_commits": 1,
+    "parallel_busy": 3,
+    "moniti_failure_local_unchanged": true,
+    "moniti_retry": "PASS",
+    "drive_failure_retry": "PASS",
+    "recovery_final_marker": "PASS",
+    "sheet_worker_denied": 403,
+    "sheet_stale_hash_denied": 409,
+    "public_recovery_injection_denied": 400,
+    "approved_replay_did_not_regress_newer_version": true,
+    "drive_jobs_done": 15,
+    "drive_jobs_not_done": 0,
+    "all_test_days_closed": true,
+    "moniti_readback_matches": true,
+    "sheet_status": "SYNCED"
+  },
+  "browser": {
+    "worker": [
+      "login",
+      "own confirmed attendance",
+      "no approval panel",
+      "REOPEN",
+      "reload",
+      "STOP",
+      "no-change correction rejected",
+      "changed correction",
+      "logout retry"
+    ],
+    "leader": [
+      "login",
+      "role",
+      "manager notifications",
+      "sheet preview",
+      "same approval replay",
+      "logout"
+    ],
+    "admin": [
+      "login",
+      "role",
+      "confirmed attendance",
+      "sheet controls",
+      "reload",
+      "logout"
+    ]
+  },
+  "limits": {
+    "moniti_live_date": "2026-09-05",
+    "moniti_live_test_accounts": 3,
+    "moniti_off_and_31_day_edges": "domain tests only; no historical live writes",
+    "process_closure": "domain tests; live process module is stage 6",
+    "manual_report_edits": "protection implemented; not exercised live",
+    "spreadsheet_visual": "cell values, formulas and formats verified by API; native Google browser logged out",
+    "leader_panel_and_messaging": "stages 8-9",
+    "derived_events": "queued for stages 6-8; not counted as failed Drive sync"
+  },
+  "harness_active": false,
+  "agent_api_sessions_revoked": 3
+}

@@ -149,7 +149,7 @@
     const processChip = document.querySelector('.work-status .status-head .mol-chip');
     if (workTitle) workTitle.textContent = workState;
     if (processChip) {
-      processChip.textContent = active?.process_code || (attendance?.moniti_source === 'LIVE' && attendance.state === 'OPEN' ? 'MONITI · BEZ PROCESU' : 'BRAK PROCESU');
+      processChip.textContent = active?.process_code || 'BRAK PROCESU';
       processChip.className = `mol-chip ${active ? 'mol-chip--success' : 'mol-chip--warning'}`;
     }
     const stats = document.querySelectorAll('.work-status .status-stats strong');
@@ -183,18 +183,7 @@
     if (!silent) setStatus('Odczytuję bieżący stan pracownika…');
     const data = await api.read('mol-app-v2-worker-status');
     renderWorker(data);
-    if (!silent) {
-      const attendance = data?.attendance;
-      if (attendance?.moniti_source === 'LIVE' && attendance.state === 'OPEN') {
-        setStatus(`Aktywna praca w Moniti od ${clock(attendance.start_at)}. Wybierz proces — wcześniejszy czas liczymy jako międzyprocesowy.`, 'ok');
-      } else if (attendance?.moniti_source === 'LIVE' && attendance.state === 'CLOSED') {
-        setStatus(`Dzień w Moniti zakończony o ${clock(attendance.stop_at)}. Możesz wznowić pracę.`, 'ok');
-      } else if (data?.moniti_read_error) {
-        setStatus('Stan lokalny jest dostępny, ale odczyt Moniti chwilowo się nie powiódł.', 'error');
-      } else {
-        setStatus('Stan pracownika potwierdzony przez backend V2.', 'ok');
-      }
-    }
+    if (!silent) setStatus('Stan pracownika potwierdzony przez backend V2.', 'ok');
     return data;
   }
 

@@ -1,0 +1,159 @@
+{
+  "name": "MOL // APP V2 // API NORMS DAILY",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "mol-app-v2-norms-daily",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://atybus-create.github.io"
+        }
+      },
+      "webhookId": "eefa7c76-d95e-4c3f-9601-66fe5571c09f"
+    },
+    {
+      "id": "request",
+      "name": "Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const q=$input.first().json.query||{},i=$input.first().json;const fields=['date','employee_id'];const body=Object.keys(q).some(k=>!fields.includes(k))||Object.values(q).some(v=>typeof v!=='string')?{invalid_query:true}:{work_date:q.date||'invalid',...(q.employee_id?{employee_id:q.employee_id}:{})};return [{json:{operation:'WORKER_STATUS',authorization:i.headers?.authorization||'',body}}];"
+      }
+    },
+    {
+      "id": "service",
+      "name": "Service",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "qPVmcfp6pUg3GbzH"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "select",
+      "name": "Select",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "jsCode": "let result=$input.first().json;if(result.body?.ok===true)result={...result,body:{...result.body,data:result.body.data.norm}};return [{json:result}];"
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request": {
+      "main": [
+        [
+          {
+            "node": "Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Service": {
+      "main": [
+        [
+          {
+            "node": "Select",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "executionTimeout": 60,
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "errorWorkflow": "rnELTCKClbzY8lxZ"
+  }
+}

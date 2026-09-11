@@ -1,0 +1,72 @@
+[
+  {
+    "process_code": "PAKOWANIE",
+    "display_name": "Pakowanie",
+    "norm_units_per_hour": 70,
+    "active": true,
+    "version": 1
+  },
+  {
+    "process_code": "KOMPLETACJA",
+    "display_name": "Kompletacja",
+    "norm_units_per_hour": 210,
+    "active": true,
+    "version": 1
+  },
+  {
+    "process_code": "DYZUR",
+    "display_name": "Dyżur",
+    "norm_units_per_hour": null,
+    "active": true,
+    "version": 1
+  },
+  {
+    "process_code": "ZWROTY",
+    "display_name": "Zwroty",
+    "norm_units_per_hour": null,
+    "active": true,
+    "version": 1
+  },
+  {
+    "process_code": "BIURO",
+    "display_name": "Biuro",
+    "norm_units_per_hour": null,
+    "active": true,
+    "version": 1
+  },
+  {
+    "process_code": "PORZADKI_KARTONY",
+    "display_name": "Porządki – kartony",
+    "norm_units_per_hour": null,
+    "active": true,
+    "version": 1
+  },
+  {
+    "process_code": "PRZYGOTOWANIE_STANOWISKA",
+    "display_name": "Przygotowanie stanowiska",
+    "norm_units_per_hour": null,
+    "active": true,
+    "version": 1
+  },
+  {
+    "process_code": "MAGAZYN",
+    "display_name": "Magazyn",
+    "norm_units_per_hour": null,
+    "active": true,
+    "version": 1
+  },
+  {
+    "process_code": "PRZERWA",
+    "display_name": "Przerwa",
+    "norm_units_per_hour": null,
+    "active": true,
+    "version": 1
+  },
+  {
+    "process_code": "INNE",
+    "display_name": "Inne",
+    "norm_units_per_hour": null,
+    "active": true,
+    "version": 1
+  }
+]

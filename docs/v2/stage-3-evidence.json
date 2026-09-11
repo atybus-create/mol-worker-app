@@ -1,0 +1,290 @@
+{
+  "date": "2026-09-05",
+  "schema": [
+    {
+      "name": "MOL_V2_EMPLOYEES",
+      "id": "npCr4h1LjhVL205w",
+      "columns": 10,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_SESSIONS",
+      "id": "JXNEIdijeKfhuwYD",
+      "columns": 6,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_ATTENDANCE",
+      "id": "HmJugmYliWT0ERn4",
+      "columns": 11,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_PROCESSES",
+      "id": "ex0nanHboSqhceIB",
+      "columns": 5,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_PROCESS_SESSIONS",
+      "id": "4di5yA4jpe0ZEmPL",
+      "columns": 8,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_COMMANDS",
+      "id": "Oz0NtvJ9SRaVFMc8",
+      "columns": 15,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_WORK_EVENTS",
+      "id": "SsKw8JJaizeIRoS5",
+      "columns": 11,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_PRODUCTION_DELTAS",
+      "id": "GT4Ritsrue5U57NA",
+      "columns": 9,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_MESSAGES",
+      "id": "oVEulwPQCL9NOMjV",
+      "columns": 7,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_ALERTS",
+      "id": "W5wg5lF0BwjbQQ4g",
+      "columns": 8,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_DAILY_SUMMARY",
+      "id": "GSpPhENUjWor7bqE",
+      "columns": 16,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_MONTHLY_SUMMARY",
+      "id": "mbmyKatUZSKd4HgX",
+      "columns": 11,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_OUTBOX",
+      "id": "gYdo04L9BIuWc40C",
+      "columns": 12,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_CONFIG",
+      "id": "x66LbXe5CSpdMIkv",
+      "columns": 4,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_SHEET_CORRECTIONS",
+      "id": "89iFEkyiyUaThLjU",
+      "columns": 13,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_LOCKS",
+      "id": "uKfyrOkB2zoSEuBH",
+      "columns": 4,
+      "match": true
+    },
+    {
+      "name": "MOL_V2_ERRORS",
+      "id": "QMyDe52h9QiRlsOp",
+      "columns": 7,
+      "match": true
+    }
+  ],
+  "validation": [
+    {
+      "id": "sfoWeuiJBN2qvCRF",
+      "totalNodes": 4,
+      "enabledNodes": 4,
+      "triggerNodes": 1,
+      "validConnections": 3,
+      "invalidConnections": 0,
+      "expressionsValidated": 2,
+      "errorCount": 0,
+      "warningCount": 0
+    },
+    {
+      "id": "tsyGl8RnqKipKDx1",
+      "totalNodes": 21,
+      "enabledNodes": 21,
+      "triggerNodes": 1,
+      "validConnections": 24,
+      "invalidConnections": 0,
+      "expressionsValidated": 33,
+      "errorCount": 0,
+      "warningCount": 0
+    },
+    {
+      "id": "rnELTCKClbzY8lxZ",
+      "totalNodes": 5,
+      "enabledNodes": 5,
+      "triggerNodes": 1,
+      "validConnections": 4,
+      "invalidConnections": 0,
+      "expressionsValidated": 11,
+      "errorCount": 0,
+      "warningCount": 0
+    },
+    {
+      "id": "BC5qZVnvzpMaXfp4",
+      "totalNodes": 12,
+      "enabledNodes": 12,
+      "triggerNodes": 1,
+      "validConnections": 12,
+      "invalidConnections": 0,
+      "expressionsValidated": 16,
+      "errorCount": 0,
+      "warningCount": 0
+    },
+    {
+      "id": "XgHKTS7EmpMi0xz1",
+      "totalNodes": 4,
+      "enabledNodes": 4,
+      "triggerNodes": 1,
+      "validConnections": 3,
+      "invalidConnections": 0,
+      "expressionsValidated": 3,
+      "errorCount": 0,
+      "warningCount": 0
+    }
+  ],
+  "health": {
+    "ok": true,
+    "service": "MOL_APP_V2",
+    "version": "0.3.0",
+    "environment": "test",
+    "writes_enabled": false,
+    "stage": 3,
+    "core_status": "READY",
+    "database": "ONLINE"
+  },
+  "race": [
+    {
+      "status": 409,
+      "body": {
+        "ok": false,
+        "request_id": "e169f5ce-8c12-4b48-b6f1-313cf8133004",
+        "error": {
+          "code": "COMMAND_BUSY",
+          "message": "Trwa inny zapis. Ponów z tym samym request_id.",
+          "retryable": true,
+          "details": {}
+        },
+        "meta": {
+          "api_version": "2.0",
+          "server_time": "2026-09-05T05:48:54.757Z"
+        }
+      }
+    },
+    {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "request_id": "e169f5ce-8c12-4b48-b6f1-313cf8133004",
+        "data": {
+          "probe_value": "stage3",
+          "accepted": true
+        },
+        "meta": {
+          "api_version": "2.0",
+          "server_time": "2026-09-05T05:48:54.755Z"
+        }
+      }
+    },
+    {
+      "status": 409,
+      "body": {
+        "ok": false,
+        "request_id": "e169f5ce-8c12-4b48-b6f1-313cf8133004",
+        "error": {
+          "code": "COMMAND_BUSY",
+          "message": "Trwa inny zapis. Ponów z tym samym request_id.",
+          "retryable": true,
+          "details": {}
+        },
+        "meta": {
+          "api_version": "2.0",
+          "server_time": "2026-09-05T05:48:54.748Z"
+        }
+      }
+    },
+    {
+      "status": 409,
+      "body": {
+        "ok": false,
+        "request_id": "e169f5ce-8c12-4b48-b6f1-313cf8133004",
+        "error": {
+          "code": "COMMAND_BUSY",
+          "message": "Trwa inny zapis. Ponów z tym samym request_id.",
+          "retryable": true,
+          "details": {}
+        },
+        "meta": {
+          "api_version": "2.0",
+          "server_time": "2026-09-05T05:48:54.797Z"
+        }
+      }
+    }
+  ],
+  "crash_recovery": {
+    "ok": true,
+    "request_id": "e169f5ce-8c12-4b48-b6f1-313cf8133005",
+    "data": {
+      "probe_value": "stage3",
+      "accepted": true
+    },
+    "meta": {
+      "api_version": "2.0",
+      "server_time": "2026-09-05T05:49:39.658Z"
+    }
+  },
+  "outbox": {
+    "outbox-failure": {
+      "ok": true,
+      "status": "RETRY_PENDING",
+      "attempts": 1,
+      "outbox_id": "probe:e169f5ce-8c12-4b48-b6f1-313cf8133001"
+    },
+    "outbox-not-due": {
+      "ok": false,
+      "status": "SKIPPED",
+      "reason": "NOT_DUE"
+    },
+    "outbox-retry": {
+      "ok": true,
+      "status": "COMPLETED",
+      "attempts": 2,
+      "outbox_id": "probe:e169f5ce-8c12-4b48-b6f1-313cf8133001"
+    },
+    "outbox-replay": {
+      "ok": false,
+      "status": "SKIPPED",
+      "reason": "ALREADY_COMPLETED"
+    },
+    "deadletter": {
+      "ok": true,
+      "status": "DEAD_LETTER",
+      "attempts": 8,
+      "outbox_id": "probe:e169f5ce-8c12-4b48-b6f1-313cf8133003"
+    },
+    "deadletter-stop": {
+      "ok": false,
+      "status": "SKIPPED",
+      "reason": "NOT_READY"
+    }
+  },
+  "harness_active": false
+}

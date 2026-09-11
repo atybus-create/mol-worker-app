@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#071b3d">
+  <title>MOL // Aplikacja V2 — środowisko testowe</title>
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://n8n.estyl.team; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <link rel="stylesheet" href="./styles.css?v=0.6.0">
+  <link rel="stylesheet" href="./norms.css?v=0.7.0">
+  <link rel="stylesheet" href="./messages.css?v=0.8.0-stage8">
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">MOL // SYSTEM PRACY</p>
+      <span class="environment">ŚRODOWISKO TESTOWE V2</span>
+      <h1>Twoje konto.<br>Nowy początek.</h1>
+      <p class="lead">Etap 8: alerty i komunikacja. Automatyczne reguły pozostają wyłączone do zatwierdzenia parametrów i potwierdzenia źródeł ES. Realne testy Moniti są ograniczone do wcześniej uzgodnionych kont i aktualnie zatwierdzonego okna testowego.</p>
+    </section>
+    <section class="auth-card" aria-labelledby="authTitle">
+      <p class="eyebrow">Dostęp do V2</p>
+      <h2 id="authTitle">Sprawdzanie sesji…</h2>
+      <p id="authMessage" role="status" aria-live="polite"></p>
+      <form id="loginForm" hidden>
+        <label for="login">Login</label>
+        <input id="login" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="100" required>
+        <label for="password">Hasło</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" maxlength="200" required>
+        <button id="loginButton" type="submit">Zaloguj się</button>
+      </form>
+      <div id="sessionPanel" hidden>
+        <dl><dt>Pracownik</dt><dd id="userName"></dd><dt>Rola</dt><dd id="userRole"></dd><dt>Sesja ważna do</dt><dd id="sessionExpiry"></dd></dl>
+        <p class="scope-note">Czas pracy, procesy, normy i komunikacja V2 są dostępne poniżej. Pełny panel lidera pozostaje zakresem etapu 9.</p>
+        <button id="logoutButton" type="button">Wyloguj się</button>
+      </div>
+      <button id="sessionRetry" type="button" hidden>Sprawdź sesję ponownie</button>
+    </section>
+    <section id="attendancePanel" class="auth-card" aria-labelledby="attendanceTitle" hidden>
+      <p class="eyebrow">Czas pracy · Europe/Warsaw</p>
+      <h2 id="attendanceTitle">Twój dzień pracy</h2>
+      <p class="scope-note">Przy włączonym Moniti godziny zapisywane są z dokładnością do minuty. START i STOP korzystają z czasu serwera.</p>
+      <label for="workDate">Dzień</label><input id="workDate" type="date" required>
+      <h3 id="workState">Odczyt…</h3>
+      <p id="workTimes"></p><p id="workSync"></p><p id="openDayNote"></p>
+      <p id="attendanceMessage" role="status" aria-live="polite"></p><p id="managerNotices" class="scope-note"></p>
+      <div class="work-actions">
+        <button id="workStart" type="button" disabled>START pracy</button>
+        <button id="workFinish" type="button" hidden>STOP pracy</button>
+        <button id="workReopen" type="button" hidden>Wznów dzień</button>
+        <button id="attendanceRefresh" type="button">Odśwież stan</button>
+        <button id="attendanceRetry" type="button" hidden>Ponów zapis</button>
+      </div>
+      <form id="correctionForm" hidden>
+        <h3>Korekta godzin</h3>
+        <label for="correctionStart">START (czas polski)</label><input id="correctionStart" type="datetime-local" step="60">
+        <label for="correctionStop">STOP (czas polski, opcjonalnie)</label><input id="correctionStop" type="datetime-local" step="60">
+        <p class="scope-note">Puste pole nie usuwa godziny. Aby usunąć STOP, użyj „Wznów dzień”. Pracownik koryguje własne dni do 31 dni wstecz.</p>
+        <label for="correctionReason">Powód korekty</label><input id="correctionReason" minlength="3" maxlength="500" required>
+        <button id="correctionSave" type="submit">Zapisz korektę</button>
+      </form>
+      <section id="processPanel" aria-labelledby="processTitle">
+        <h3 id="processTitle">Proces pracownika</h3>
+        <p id="processState">Odczyt…</p><p id="processTotals"></p>
+        <label for="processChoice">Wybierz proces</label><select id="processChoice"></select>
+        <div class="work-actions">
+          <button id="processStart" type="button" disabled>Rozpocznij proces</button>
+          <button id="processChange" type="button" hidden>Zmień proces</button>
+          <button id="processLogout" type="button" hidden>Zakończ tylko proces</button>
+        </div>
+        <p class="scope-note">Zakończenie procesu pozostawia dzień otwarty. STOP pracy zamyka również proces. PRZERWA jest osobnym procesem; czas bez procesu liczymy oddzielnie. Liczniki bazują na ostatnim potwierdzonym stanie — po pracy w innej karcie użyj „Odśwież stan”.</p>
+        <p id="processHistory" class="scope-note"></p>
+      </section>
+      <section id="normPanel" aria-labelledby="normTitle">
+        <h3 id="normTitle">Wyniki i normy</h3>
+        <p class="scope-note">PAK: 70/h · PICK: 210/h. Norma łączna: (PAK + PICK/3) / (godziny PAK + PICK) / 70. Miesiąc liczymy z sum, nie ze średniej procentów dni. Przerwa i procesy niemierzalne nie wchodzą do czasu normy.</p>
+        <label for="normMonth">Miesiąc do porównania</label><input id="normMonth" type="month" required>
+        <div class="norm-grid">
+          <article><h4 id="normDayLabel">Dzień</h4><strong id="normDayPercent" class="norm-percent">—</strong><p id="normDayFreshness" class="norm-freshness"></p><p id="normDayDetails" class="norm-details"></p><p id="normDayNote" class="scope-note"></p><small id="normDayTime"></small></article>
+          <article><h4 id="normMonthLabel">Miesiąc</h4><strong id="normMonthPercent" class="norm-percent">—</strong><p id="normMonthFreshness" class="norm-freshness"></p><p id="normMonthDetails" class="norm-details"></p><p id="normMonthNote" class="scope-note"></p><small id="normMonthTime"></small></article>
+        </div>
+        <p id="normConnection" class="scope-note" role="status" aria-live="polite"></p>
+        <p class="scope-note">Spójny status odświeża się co 30 sekund, gdy karta jest widoczna. Nie przerywa wpisywania korekty. Wyniki wylicza backend; lokalny licznik czasu nie przelicza procentów. Brak danych oznaczamy kreską, nie zerem.</p>
+      </section>
+      <div id="sheetApprovalPanel" hidden>
+        <h3>Zatwierdź korektę z Drive</h3>
+        <p class="scope-note">W zakładce „Korekty” raportu wpisz propozycję z nowym UUID. Godziny podawaj w ISO z offsetem, np. 2026-09-05T08:00:00+02:00. Następnie odczytaj propozycję tutaj i zatwierdź ją swoim kontem.</p>
+        <p><a href="https://docs.google.com/spreadsheets/d/1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4/edit" target="_blank" rel="noopener noreferrer">Otwórz raport testowy V2</a></p>
+        <label for="sheetCorrectionId">correction_id z arkusza</label><input id="sheetCorrectionId" maxlength="36" placeholder="UUID korekty">
+        <button id="sheetPreviewButton" type="button">Odczytaj propozycję</button>
+        <p id="sheetProposal" role="status" aria-live="polite"></p><button id="sheetApproveButton" type="button" hidden>Zatwierdź odczytaną korektę</button>
+      </div>
+    </section>
+    <section id="commPanel" class="auth-card" aria-labelledby="commTitle" hidden>
+      <p class="eyebrow">Komunikacja V2 · Etap 8</p>
+      <h2 id="commTitle">Twoje wiadomości</h2>
+      <p id="commStatus" role="status" aria-live="polite"></p>
+      <p id="commCount" class="scope-note"></p><p id="commPolling" class="scope-note"></p>
+      <div class="work-actions"><button id="commRefresh" type="button">Odśwież wiadomości</button><button id="commOlder" type="button" hidden>Wczytaj starsze</button><button id="commRetry" type="button" hidden>Ponów zapis</button></div>
+      <p id="commEmpty">Nie wczytano wiadomości.</p><ul id="commList"></ul>
+      <section id="commDetail" aria-labelledby="commDetailTitle" hidden>
+        <h3 id="commDetailTitle"></h3><p id="commDetailText"></p><p id="commDetailMeta"></p><p id="commCause" class="scope-note"></p>
+        <div class="work-actions"><button id="commOpenAck" type="button">Potwierdzam odbiór</button><button id="commDetailClose" type="button">Zamknij podgląd</button></div>
+      </section>
+      <section id="commSender" hidden>
+        <h3>Wyślij komunikat</h3><p id="commSendState" class="scope-note"></p>
+        <form id="commSendForm">
+          <label for="commRecipient">Odbiorca</label><select id="commRecipient"></select>
+          <button id="commRecipientsRefresh" type="button">Odśwież obecnych</button>
+          <label class="comm-check"><input id="commAllOpen" type="checkbox">Wszyscy z otwartym dniem pracy</label>
+          <label for="commContent">Treść (maksymalnie 2000 znaków)</label><textarea id="commContent" maxlength="2000" required></textarea>
+          <label class="comm-check"><input id="commAckRequired" type="checkbox">Wymagaj potwierdzenia odbioru</label>
+          <button id="commSend" type="submit" disabled>Wyślij wiadomość</button>
+        </form>
+      </section>
+    </section>
+    <section class="status-card" aria-labelledby="statusTitle">
+      <div><p class="eyebrow">Stan środowiska</p><h2 id="statusTitle">Sprawdzanie backendu V2…</h2><p id="statusDescription">Łączenie z odseparowanym endpointem kontrolnym.</p></div>
+      <span id="statusChip" class="status-chip is-loading">SPRAWDZANIE</span>
+    </section>
+    <section class="grid">
+      <article><span>Frontend</span><strong>V2 0.8.0</strong><small>wydanie testowe etapu 8</small></article>
+      <article><span>Backend</span><strong id="backendVersion">—</strong><small>oddzielny workflow n8n</small></article>
+      <article><span>Zapisy pracowników</span><strong id="writesState">—</strong><small>oddzielone od testów technicznych</small></article>
+      <article><span>Baza V2</span><strong id="databaseState">—</strong><small>odczyt konfiguracji na żywo</small></article>
+    </section>
+    <section class="acceptance">
+      <h2>Etap 8 — komunikacja w trakcie wdrożenia</h2>
+      <ul>
+        <li>WORKER widzi wyłącznie własne wiadomości i może oznaczyć je jako wyświetlone lub potwierdzone.</li>
+        <li>LEADER i ADMIN mogą wysłać komunikat do wybranej osoby z otwartym dniem lub do wszystkich osób OPEN.</li>
+        <li>ACK wiadomości nie rozwiązuje przyczyny alertu. Przyczyna ma osobny stan.</li>
+        <li>Historia jest pobierana stronami i przyrostowo. Błąd odczytu nie czyści ostatniego poprawnego widoku ani norm.</li>
+        <li>Automatyczne alerty pozostają wyłączone do zatwierdzenia progów/godzin oraz — dla reguł produkcyjnych — do potwierdzenia ES.</li>
+      </ul>
+      <button id="retryButton" type="button">Sprawdź ponownie</button>
+    </section>
+    <footer>V2 0.8.0 · Etap 8 · Oddzielna baza V2, bez rozszerzania zakresu realnych testów Moniti</footer>
+  </main>
+  <script src="./norms.js?v=0.7.0" defer></script>
+  <script src="./messages.js?v=0.8.0-stage8" defer></script>
+  <script src="./attendance.js?v=0.8.0-stage8" defer></script>
+  <script src="./app.js?v=0.8.0-stage8" defer></script>
+</body>
+</html>

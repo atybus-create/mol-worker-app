@@ -1,0 +1,1738 @@
+{
+  "name": "MOL // APP V2 // ES INGEST",
+  "nodes": [
+    {
+      "id": "input",
+      "name": "Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "read-config",
+      "name": "Read Config",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "x66LbXe5CSpdMIkv"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": []
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "context",
+      "name": "Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const config={};for(const x of $('Read Config').all().map(i=>i.json)){if(!x.key||x.key.startsWith('ALLOWED_PROCESSES_'))continue;if(Object.hasOwn(config,x.key))throw Error('CONFIG_DUPLICATE');config[x.key]=JSON.parse(x.value_json);}const i=$('Input').first().json,boundary=i.origin==='BOUNDARY';if(i.lock_owner!==undefined&&!/^\\d+$/.test(String(i.lock_owner)))throw Error('ES_LOCK_INVALID');if(boundary&&(!i.lock_owner||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(i.boundary_request_id||'')))throw Error('ES_BOUNDARY_INPUT_INVALID');return [{json:{enabled:config.ES_ENABLED===true||boundary,source_enabled:config.ES_ENABLED===true,lock_owner:String(i.lock_owner||$execution.id),managed:!i.lock_owner,origin:boundary?'BOUNDARY':'SCHEDULE',boundary_request_id:boundary?i.boundary_request_id:null,batch_id:boundary?'ESB-'+i.boundary_request_id:'ES-'+String($execution.id),started_at:new Date().toISOString(),work_date:DateTime.now().setZone('Europe/Warsaw').toISODate()}}];"
+      }
+    },
+    {
+      "id": "es-enabled",
+      "name": "ES Enabled",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ES Enabled",
+              "leftValue": "={{ $json.enabled === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "disabled",
+      "name": "Disabled",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{ok:true,skipped:true,reason:'ES_DISABLED'}}];"
+      }
+    },
+    {
+      "id": "early-return",
+      "name": "Early Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return $input.all();"
+      }
+    },
+    {
+      "id": "inherited-lock",
+      "name": "Inherited Lock",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Inherited Lock",
+              "leftValue": "={{ $('Context').first().json.managed === false }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "acquire-writer",
+      "name": "Acquire Writer",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "command-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": ""
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "={{ $('Context').first().json.lock_owner }}",
+            "lease_until": "={{ $now.plus({seconds:120}).toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "read-inherited-lock",
+      "name": "Read Inherited Lock",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "command-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.lock_owner }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "check-ownership",
+      "name": "Check Ownership",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const c=$('Context').first().json,rs=$input.all().map(x=>x.json).filter(r=>r.lock_key);return [{json:{owned:rs.length===1&&rs[0].owner===c.lock_owner}}];"
+      }
+    },
+    {
+      "id": "owns-writer",
+      "name": "Owns Writer",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Owns Writer",
+              "leftValue": "={{ $json.owned === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "busy",
+      "name": "Busy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        220
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{ok:false,error_code:'COMMAND_BUSY'}}];"
+      }
+    },
+    {
+      "id": "read-pending-commands",
+      "name": "Read Pending Commands",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "RECOVERY_REQUIRED"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-pending-batch",
+      "name": "Read Pending Batch",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "fj3jJKgoY06BVtu5"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "PREPARED"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-boundary-receipt",
+      "name": "Read Boundary Receipt",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "fj3jJKgoY06BVtu5"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "batch_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.batch_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "recovery-choice",
+      "name": "Recovery Choice",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const c=$('Context').first().json,commands=$('Read Pending Commands').all().map(i=>i.json).filter(x=>x.request_id),batches=$('Read Pending Batch').all().map(i=>i.json).filter(x=>x.batch_id),receipts=$('Read Boundary Receipt').all().map(i=>i.json).filter(x=>x.batch_id);if(commands.some(x=>x.request_id!==c.boundary_request_id))return [{json:{ready:false,ok:false,error_code:'ATTENDANCE_RECOVERY_REQUIRED'}}];if(c.origin==='BOUNDARY'&&commands.filter(x=>x.request_id===c.boundary_request_id).length!==1)return [{json:{ready:false,ok:false,error_code:'BOUNDARY_COMMAND_NOT_PREPARED'}}];if(receipts.length>1||batches.length>1)return [{json:{ready:false,ok:false,error_code:'ES_BATCH_INCONSISTENT'}}];if(receipts[0]?.status==='COMMITTED')return [{json:{ready:false,ok:true,replayed:true,batch_id:c.batch_id}}];const old=batches[0];if(!old)return [{json:{ready:true,recovery:false}}];if((c.origin==='BOUNDARY'&&old.batch_id!==c.batch_id)||(c.origin!=='BOUNDARY'&&old.origin==='BOUNDARY'))return [{json:{ready:false,ok:false,error_code:'ES_RECOVERY_REQUIRED'}}];try{const plan=JSON.parse(old.plan_json);if(plan.batch_id!==old.batch_id||plan.schema_version!==1||!Array.isArray(plan.deltas)||!Array.isArray(plan.checkpoints)||!Array.isArray(plan.targets))throw Error('invalid');return [{json:{ready:true,recovery:true,plan,attempts:(old.attempts||1)+1}}];}catch{return [{json:{ready:false,ok:false,error_code:'ES_RECOVERY_PLAN_INVALID'}}];}"
+      }
+    },
+    {
+      "id": "recovery-ready",
+      "name": "Recovery Ready",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        440
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Recovery Ready",
+              "leftValue": "={{ $json.ready === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "frozen-plan",
+      "name": "Frozen Plan",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        440
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Frozen Plan",
+              "leftValue": "={{ $json.recovery === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "use-frozen",
+      "name": "Use Frozen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        440
+      ],
+      "parameters": {
+        "jsCode": "return [{json:$('Recovery Choice').first().json}];"
+      }
+    },
+    {
+      "id": "source-enabled",
+      "name": "Source Enabled",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        440
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Source Enabled",
+              "leftValue": "={{ $('Context').first().json.source_enabled === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "read-es",
+      "name": "Read ES",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1040,
+        440
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "LQnqf4nQmNKsRsMT"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "disabled-source",
+      "name": "Disabled Source",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        440
+      ],
+      "parameters": {
+        "jsCode": "const c=$('Context').first().json;return [{json:{ok:false,error_code:'ES_DISABLED',work_date:c.work_date,request_started_at:c.started_at,captured_at:new Date().toISOString(),report:[]}}];"
+      }
+    },
+    {
+      "id": "es-snapshot",
+      "name": "ES Snapshot",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        440
+      ],
+      "parameters": {
+        "jsCode": "const r=$input.first().json,c=$('Context').first().json;return [{json:{ok:r.ok===true,report:r.ok===true&&Array.isArray(r.report)?r.report:[],work_date:r.work_date||c.work_date,request_started_at:r.request_started_at||c.started_at,captured_at:r.captured_at||new Date().toISOString(),error_code:r.ok===true?null:(/^[A-Z0-9_]{1,100}$/.test(r.error_code||'')?r.error_code:'ES_REPORT_UNAVAILABLE')}}];"
+      }
+    },
+    {
+      "id": "read-employees",
+      "name": "Read Employees",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        440
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "npCr4h1LjhVL205w"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "active",
+              "condition": "isTrue",
+              "keyValue": true
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-checkpoints",
+      "name": "Read Checkpoints",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        660
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "XLDbRcZ62PLzCykY"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "work_date",
+              "condition": "eq",
+              "keyValue": "={{ $('ES Snapshot').first().json.work_date }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-open-attendance",
+      "name": "Read Open Attendance",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        660
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "HmJugmYliWT0ERn4"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "state",
+              "condition": "eq",
+              "keyValue": "OPEN"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-active-processes",
+      "name": "Read Active Processes",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        660
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "4di5yA4jpe0ZEmPL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "stop_at",
+              "condition": "isEmpty",
+              "keyValue": ""
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-boundary-attendance",
+      "name": "Read Boundary Attendance",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        660
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "HmJugmYliWT0ERn4"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "attendance_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Read Pending Commands').all().map(x=>x.json).find(x=>x.request_id===$('Context').first().json.boundary_request_id)?.aggregate_id || '__NONE__' }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "build-new-plan",
+      "name": "Build New Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        660
+      ],
+      "parameters": {
+        "jsCode": "const src=$('ES Snapshot').first().json,c=$('Context').first().json,commands=$('Read Pending Commands').all().map(x=>x.json);return [{json:{kind:'ES_FREEZE',boundary_command:c.origin==='BOUNDARY'?commands.find(x=>x.request_id===c.boundary_request_id):null,boundary_attendance:$('Read Boundary Attendance').all().map(x=>x.json).filter(x=>x.attendance_id),input:{batch_id:c.batch_id,work_date:src.work_date||c.work_date,captured_at:src.captured_at||new Date().toISOString(),request_started_at:src.request_started_at||c.started_at,report:src.ok===true?src.report:[],source_error:src.ok===true?null:src.error_code||'ES_REPORT_UNAVAILABLE',employees:$('Read Employees').all().map(x=>x.json).filter(x=>x.employee_id).map(x=>({employee_id:x.employee_id,active:x.active,es_worker_id:x.es_worker_id})),checkpoints:$('Read Checkpoints').all().map(x=>x.json).filter(x=>x.checkpoint_id),attendance:$('Read Open Attendance').all().map(x=>x.json).filter(x=>x.attendance_id),processes:$('Read Active Processes').all().map(x=>x.json).filter(x=>x.process_session_id),origin:c.origin}}}];"
+      }
+    },
+    {
+      "id": "calculate-es-plan",
+      "name": "Calculate ES Plan",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1300,
+        660
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "CUxveOxMVj1RhxHa"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "use-plan",
+      "name": "Use Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        660
+      ],
+      "parameters": {
+        "jsCode": "return $input.all();"
+      }
+    },
+    {
+      "id": "plan-valid",
+      "name": "Plan Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1820,
+        660
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Plan Valid",
+              "leftValue": "={{ !!$json.plan }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "intent-item",
+      "name": "Intent Item",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        880
+      ],
+      "parameters": {
+        "jsCode": "const d=$('Use Plan').first().json,p=d.plan;if(d.recovery)return [{json:{noop:true,lock_owner:$('Context').first().json.lock_owner}}];return [{json:{lock_owner:$('Context').first().json.lock_owner,table:'ES_BATCHES',mode:'insert_only',row:{batch_id:p.batch_id,work_date:p.work_date,status:'PREPARED',plan_json:JSON.stringify(p),summary_json:'',origin:p.origin,captured_at:p.captured_at,attempts:1,error_code:''}}}];"
+      }
+    },
+    {
+      "id": "save-intent",
+      "name": "Save Intent",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        260,
+        880
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OXqGTTwbgscoNm5P"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "delta-items",
+      "name": "Delta Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        880
+      ],
+      "parameters": {
+        "jsCode": "const p=$('Use Plan').first().json.plan,owner=$('Context').first().json.lock_owner;return p.deltas.length?p.deltas.map(row=>({json:{lock_owner:owner,table:'PRODUCTION_DELTAS',mode:'immutable',row}})):[{json:{noop:true,lock_owner:owner}}];"
+      }
+    },
+    {
+      "id": "save-deltas",
+      "name": "Save Deltas",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        780,
+        880
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OXqGTTwbgscoNm5P"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "each"
+      }
+    },
+    {
+      "id": "checkpoint-items",
+      "name": "Checkpoint Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        880
+      ],
+      "parameters": {
+        "jsCode": "const p=$('Use Plan').first().json.plan,owner=$('Context').first().json.lock_owner;return p.checkpoints.length?p.checkpoints.map(row=>({json:{lock_owner:owner,table:'ES_POLL_STATE',mode:'replace',expected_version:row.version-1,row}})):[{json:{noop:true,lock_owner:owner}}];"
+      }
+    },
+    {
+      "id": "save-checkpoints",
+      "name": "Save Checkpoints",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1300,
+        880
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OXqGTTwbgscoNm5P"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "each"
+      }
+    },
+    {
+      "id": "derived-items",
+      "name": "Derived Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        880
+      ],
+      "parameters": {
+        "jsCode": "const p=$('Use Plan').first().json.plan,owner=$('Context').first().json.lock_owner;return p.targets.length?p.targets.map(t=>({json:{lock_owner:owner,table:'OUTBOX',mode:'insert_only',row:{outbox_id:p.batch_id+':'+t.aggregate_id+':derived',request_id:p.batch_id,aggregate_id:t.aggregate_id,type:'ES_DERIVED',payload_json:JSON.stringify({employee_id:t.employee_id,work_date:t.work_date,batch_id:p.batch_id}),status:'PENDING',attempts:0,next_attempt_at:p.captured_at,lease_owner:'',lease_until:'1970-01-01T00:00:00.000Z',last_error:''}}})):[{json:{noop:true,lock_owner:owner}}];"
+      }
+    },
+    {
+      "id": "save-derived",
+      "name": "Save Derived",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1820,
+        880
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OXqGTTwbgscoNm5P"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "each"
+      }
+    },
+    {
+      "id": "commit-item",
+      "name": "Commit Item",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        1100
+      ],
+      "parameters": {
+        "jsCode": "const d=$('Use Plan').first().json,p=d.plan;return [{json:{lock_owner:$('Context').first().json.lock_owner,table:'ES_BATCHES',mode:'replace',expected_status:'PREPARED',row:{batch_id:p.batch_id,work_date:p.work_date,status:'COMMITTED',plan_json:'',summary_json:JSON.stringify({schema_version:1,request_started_at:p.request_started_at,captured_at:p.captured_at,delta_records:p.deltas.length,targets:p.targets,observations:p.observations.filter(x=>x.status!=='CAPTURED'||x.pak_delta||x.pick_delta)}),origin:p.origin,captured_at:p.captured_at,attempts:d.attempts,error_code:''}}}];"
+      }
+    },
+    {
+      "id": "commit-batch",
+      "name": "Commit Batch",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        260,
+        1100
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OXqGTTwbgscoNm5P"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "success",
+      "name": "Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        1100
+      ],
+      "parameters": {
+        "jsCode": "const d=$('Use Plan').first().json,p=d.plan;return [{json:{ok:true,batch_id:p.batch_id,recovered:d.recovery,delta_records:p.deltas.length,targets:p.targets.length,source_errors:p.observations.filter(x=>x.status.startsWith('ES_')).map(x=>({employee_id:x.employee_id,error_code:x.status}))}}];"
+      }
+    },
+    {
+      "id": "finish",
+      "name": "Finish",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        1100
+      ],
+      "parameters": {
+        "jsCode": "return $input.all();"
+      }
+    },
+    {
+      "id": "release-needed",
+      "name": "Release Needed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        1100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Release Needed",
+              "leftValue": "={{ $('Context').first().json.managed === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "release-writer",
+      "name": "Release Writer",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        1100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "command-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": "={{ $('Context').first().json.lock_owner }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "return",
+      "name": "Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        1100
+      ],
+      "parameters": {
+        "jsCode": "return [{json:$('Finish').first().json}];"
+      }
+    }
+  ],
+  "connections": {
+    "Input": {
+      "main": [
+        [
+          {
+            "node": "Read Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Config": {
+      "main": [
+        [
+          {
+            "node": "Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context": {
+      "main": [
+        [
+          {
+            "node": "ES Enabled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ES Enabled": {
+      "main": [
+        [
+          {
+            "node": "Inherited Lock",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Disabled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disabled": {
+      "main": [
+        [
+          {
+            "node": "Early Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inherited Lock": {
+      "main": [
+        [
+          {
+            "node": "Read Inherited Lock",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Acquire Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Inherited Lock": {
+      "main": [
+        [
+          {
+            "node": "Check Ownership",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acquire Writer": {
+      "main": [
+        [
+          {
+            "node": "Check Ownership",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Ownership": {
+      "main": [
+        [
+          {
+            "node": "Owns Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owns Writer": {
+      "main": [
+        [
+          {
+            "node": "Read Pending Commands",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busy": {
+      "main": [
+        [
+          {
+            "node": "Early Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Pending Commands": {
+      "main": [
+        [
+          {
+            "node": "Read Pending Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Pending Batch": {
+      "main": [
+        [
+          {
+            "node": "Read Boundary Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Boundary Receipt": {
+      "main": [
+        [
+          {
+            "node": "Recovery Choice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recovery Choice": {
+      "main": [
+        [
+          {
+            "node": "Recovery Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recovery Ready": {
+      "main": [
+        [
+          {
+            "node": "Frozen Plan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frozen Plan": {
+      "main": [
+        [
+          {
+            "node": "Use Frozen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Source Enabled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Frozen": {
+      "main": [
+        [
+          {
+            "node": "Use Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Source Enabled": {
+      "main": [
+        [
+          {
+            "node": "Read ES",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Disabled Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read ES": {
+      "main": [
+        [
+          {
+            "node": "ES Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disabled Source": {
+      "main": [
+        [
+          {
+            "node": "ES Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ES Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Read Employees",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Employees": {
+      "main": [
+        [
+          {
+            "node": "Read Checkpoints",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Checkpoints": {
+      "main": [
+        [
+          {
+            "node": "Read Open Attendance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Open Attendance": {
+      "main": [
+        [
+          {
+            "node": "Read Active Processes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Active Processes": {
+      "main": [
+        [
+          {
+            "node": "Read Boundary Attendance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Boundary Attendance": {
+      "main": [
+        [
+          {
+            "node": "Build New Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build New Plan": {
+      "main": [
+        [
+          {
+            "node": "Calculate ES Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate ES Plan": {
+      "main": [
+        [
+          {
+            "node": "Use Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Plan": {
+      "main": [
+        [
+          {
+            "node": "Plan Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Valid": {
+      "main": [
+        [
+          {
+            "node": "Intent Item",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Item": {
+      "main": [
+        [
+          {
+            "node": "Save Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Intent": {
+      "main": [
+        [
+          {
+            "node": "Delta Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delta Items": {
+      "main": [
+        [
+          {
+            "node": "Save Deltas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Deltas": {
+      "main": [
+        [
+          {
+            "node": "Checkpoint Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checkpoint Items": {
+      "main": [
+        [
+          {
+            "node": "Save Checkpoints",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Checkpoints": {
+      "main": [
+        [
+          {
+            "node": "Derived Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Derived Items": {
+      "main": [
+        [
+          {
+            "node": "Save Derived",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Derived": {
+      "main": [
+        [
+          {
+            "node": "Commit Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Commit Item": {
+      "main": [
+        [
+          {
+            "node": "Commit Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Commit Batch": {
+      "main": [
+        [
+          {
+            "node": "Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success": {
+      "main": [
+        [
+          {
+            "node": "Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finish": {
+      "main": [
+        [
+          {
+            "node": "Release Needed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Release Needed": {
+      "main": [
+        [
+          {
+            "node": "Release Writer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Release Writer": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "executionTimeout": 120,
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "errorWorkflow": "rnELTCKClbzY8lxZ"
+  }
+}

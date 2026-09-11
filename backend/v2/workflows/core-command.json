@@ -1,0 +1,896 @@
+{
+  "name": "MOL // APP V2 // CORE COMMAND",
+  "nodes": [
+    {
+      "id": "internal-input",
+      "name": "Internal Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "validate-command",
+      "name": "Validate Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        210,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\n\nconst input = $input.first().json;\nconst now = new Date().toISOString();\nconst meta = {api_version:'2.0',server_time:now};\nconst uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;\nconst request_id = uuid.test(input.request_id || '') ? input.request_id : '00000000-0000-4000-8000-' + String($execution.id).padStart(12,'0').slice(-12);\nconst fail = (code,message,status) => [{json:{valid:false,owner:String($execution.id),http_status:status,response:{ok:false,request_id,error:{code,message,retryable:false,details:{}},meta}}}];\nif(!uuid.test(input.request_id || '')) return fail('VALIDATION_ERROR','request_id musi być UUID.',400);\nif(input.operation !== 'CORE_PROBE') return fail('OPERATION_NOT_IMPLEMENTED','Operacja domenowa nie została jeszcze wdrożona.',422);\nif(input.source !== 'SYSTEM_TEST' || input.actor_id !== 'SYSTEM_TEST' || input.employee_id !== 'V2_TEST') return fail('FORBIDDEN','Próba rdzenia wymaga kontekstu SYSTEM_TEST.',403);\nif(!input.payload || typeof input.payload.value !== 'string' || input.payload.value.length>100) return fail('VALIDATION_ERROR','Nieprawidłowy payload próby.',400);\nconst payload_json=JSON.stringify({value:input.payload.value});\nconst canonical=JSON.stringify([input.actor_id,input.employee_id,input.operation,input.source,payload_json]);\nconst response={ok:true,request_id,data:{probe_value:input.payload.value,accepted:true},meta};\nreturn [{json:{valid:true,request_id,owner:String($execution.id),actor_id:input.actor_id,employee_id:input.employee_id,operation:input.operation,source:input.source,payload_json,canonical,response_json:JSON.stringify(response),fault_after_event:input.fault_after_event===true,crash_after_event:input.crash_after_event===true,now,lease_until:new Date(Date.now()+120000).toISOString()}}];\n"
+      }
+    },
+    {
+      "id": "valid-command",
+      "name": "Valid Command",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        420,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Valid Command",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "acquire-writer",
+      "name": "Acquire Writer",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        630,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "command-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": ""
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "={{ $('Validate Command').first().json.owner }}",
+            "lease_until": "={{ $('Validate Command').first().json.lease_until }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "check-ownership",
+      "name": "Check Ownership",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const c=$('Validate Command').first().json;const owned=$input.all().some(i=>i.json.owner===c.owner);return [{json:{owned,http_status:409,response:{ok:false,request_id:c.request_id,error:{code:'COMMAND_BUSY',message:'Trwa inny zapis. Ponów z tym samym request_id.',retryable:true,details:{}},meta:{api_version:'2.0',server_time:c.now}}}}];"
+      }
+    },
+    {
+      "id": "owns-writer",
+      "name": "Owns Writer",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1050,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Owns Writer",
+              "leftValue": "={{ $json.owned }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "read-command",
+      "name": "Read Command",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        1260,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "request_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Command').first().json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      }
+    },
+    {
+      "id": "decide-command",
+      "name": "Decide Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1470,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst c=$('Hash Command').first().json;\nconst rows=$input.all().map(i=>i.json).filter(r=>r.request_id);\nconst err=(code,message,status,retryable=false)=>[{json:{execute:false,http_status:status,response:{ok:false,request_id:c.request_id,error:{code,message,retryable,details:{}},meta:{api_version:'2.0',server_time:c.now}}}}];\nif(rows.length>1) return err('DUPLICATE_COMMAND','Niespójny rejestr komend.',503);\nconst old=rows[0];\nif(old && old.payload_hash!==c.payload_hash) return err('IDEMPOTENCY_CONFLICT','request_id ma już inną treść.',409);\nif(old?.status==='COMMITTED') return [{json:{execute:false,http_status:200,response:JSON.parse(old.response_json)}}];\nif(old && !['RECEIVED','COMMITTING'].includes(old.status)) return err('RECOVERY_REQUIRED','Komenda wymaga odzyskania.',503,true);\nreturn [{json:{...c,execute:true,attempts:(old?.attempts||0)+1,response_json:old?.response_json||c.response_json}}];\n"
+      }
+    },
+    {
+      "id": "execute-command",
+      "name": "Execute Command",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Execute Command",
+              "leftValue": "={{ $json.execute }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "save-intent",
+      "name": "Save Intent",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        1890,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "request_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request_id": "={{ $json.request_id }}",
+            "actor_id": "={{ $json.actor_id }}",
+            "employee_id": "={{ $json.employee_id }}",
+            "operation": "={{ $json.operation }}",
+            "source": "={{ $json.source }}",
+            "payload_hash": "={{ $json.payload_hash }}",
+            "payload_json": "={{ $json.payload_json }}",
+            "response_json": "={{ $json.response_json }}",
+            "attempts": "={{ $json.attempts }}",
+            "aggregate_id": "CORE_PROBE:V2_TEST",
+            "status": "COMMITTING",
+            "expected_version": 0,
+            "error_code": "",
+            "lease_owner": "={{ $json.owner }}",
+            "lease_until": "={{ $json.lease_until }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "save-audit",
+      "name": "Save Audit",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        2100,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SsKw8JJaizeIRoS5"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "event_id",
+              "condition": "eq",
+              "keyValue": "={{ 'probe:' + $('Decide Command').first().json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "event_id": "={{ 'probe:' + $('Decide Command').first().json.request_id }}",
+            "aggregate_id": "CORE_PROBE:V2_TEST",
+            "employee_id": "V2_TEST",
+            "event_type": "CORE_PROBE",
+            "request_id": "={{ $('Decide Command').first().json.request_id }}",
+            "actor_id": "SYSTEM_TEST",
+            "source": "SYSTEM_TEST",
+            "before_json": "{}",
+            "after_json": "={{ $('Decide Command').first().json.payload_json }}",
+            "status": "COMMITTING",
+            "occurred_at": "={{ $('Decide Command').first().json.now }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "simulate-interruption",
+      "name": "Simulate Interruption",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2310,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "Simulate Interruption",
+              "leftValue": "={{ ($('Decide Command').first().json.fault_after_event || $('Decide Command').first().json.crash_after_event) && $('Decide Command').first().json.attempts === 1 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "interrupted-response",
+      "name": "Interrupted Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2520,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const c=$('Decide Command').first().json;if(c.crash_after_event) throw new Error('STAGE3_TEST_CRASH');return [{json:{http_status:503,response:{ok:false,request_id:c.request_id,error:{code:'TEST_INTERRUPTION',message:'Kontrolowane przerwanie po audycie.',retryable:true,details:{}},meta:{api_version:'2.0',server_time:c.now}}}}];"
+      }
+    },
+    {
+      "id": "enqueue-outbox",
+      "name": "Enqueue Outbox",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        2730,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "outbox_id",
+              "condition": "eq",
+              "keyValue": "={{ 'probe:' + $('Decide Command').first().json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "outbox_id": "={{ 'probe:' + $('Decide Command').first().json.request_id }}",
+            "request_id": "={{ $('Decide Command').first().json.request_id }}",
+            "aggregate_id": "CORE_PROBE:V2_TEST",
+            "type": "CORE_PROBE",
+            "payload_json": "={{ $('Decide Command').first().json.payload_json }}",
+            "status": "PENDING",
+            "attempts": 0,
+            "next_attempt_at": "={{ $('Decide Command').first().json.now }}",
+            "lease_owner": "",
+            "last_error": ""
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "commit-audit",
+      "name": "Commit Audit",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        2940,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SsKw8JJaizeIRoS5"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "event_id",
+              "condition": "eq",
+              "keyValue": "={{ 'probe:' + $('Decide Command').first().json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "COMMITTED"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "commit-command",
+      "name": "Commit Command",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        3150,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Oz0NtvJ9SRaVFMc8"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "request_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Decide Command').first().json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "COMMITTED",
+            "lease_owner": "",
+            "error_code": ""
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "success-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{http_status:200,response:JSON.parse($('Decide Command').first().json.response_json)}}];"
+      }
+    },
+    {
+      "id": "prepare-return",
+      "name": "Prepare Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3570,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{http_status:$input.first().json.http_status,response:$input.first().json.response,owner:String($execution.id)}}];"
+      }
+    },
+    {
+      "id": "release-writer",
+      "name": "Release Writer",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        3780,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "command-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": "={{ $json.owner }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "return",
+      "name": "Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3990,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:$('Prepare Return').first().json}];"
+      }
+    },
+    {
+      "id": "hash-command",
+      "name": "Hash Command",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        550,
+        0
+      ],
+      "parameters": {
+        "action": "hash",
+        "type": "SHA256",
+        "binaryData": false,
+        "value": "={{ $json.canonical }}",
+        "dataPropertyName": "payload_hash",
+        "encoding": "hex"
+      }
+    }
+  ],
+  "connections": {
+    "Internal Input": {
+      "main": [
+        [
+          {
+            "node": "Validate Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Command": {
+      "main": [
+        [
+          {
+            "node": "Valid Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Command": {
+      "main": [
+        [
+          {
+            "node": "Hash Command",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acquire Writer": {
+      "main": [
+        [
+          {
+            "node": "Check Ownership",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Ownership": {
+      "main": [
+        [
+          {
+            "node": "Owns Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owns Writer": {
+      "main": [
+        [
+          {
+            "node": "Read Command",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Command": {
+      "main": [
+        [
+          {
+            "node": "Decide Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decide Command": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        [
+          {
+            "node": "Save Intent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Intent": {
+      "main": [
+        [
+          {
+            "node": "Save Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Audit": {
+      "main": [
+        [
+          {
+            "node": "Simulate Interruption",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate Interruption": {
+      "main": [
+        [
+          {
+            "node": "Interrupted Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enqueue Outbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interrupted Response": {
+      "main": [
+        [
+          {
+            "node": "Prepare Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enqueue Outbox": {
+      "main": [
+        [
+          {
+            "node": "Commit Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Commit Audit": {
+      "main": [
+        [
+          {
+            "node": "Commit Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Commit Command": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success Response": {
+      "main": [
+        [
+          {
+            "node": "Prepare Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Return": {
+      "main": [
+        [
+          {
+            "node": "Release Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Release Writer": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash Command": {
+      "main": [
+        [
+          {
+            "node": "Acquire Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 60,
+    "timezone": "Europe/Warsaw",
+    "executionOrder": "v1",
+    "errorWorkflow": "rnELTCKClbzY8lxZ"
+  }
+}

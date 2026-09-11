@@ -1,0 +1,14 @@
+/* Stage 8 communication panel; existing V2 layout and brand assets are unchanged. */
+#commPanel[hidden],#commSender[hidden],#commDetail[hidden]{display:none}
+#commPanel{margin-top:24px}
+#commList{list-style:none;padding:0;display:grid;gap:12px}
+#commList li{border:1px solid #36506a;border-radius:12px;padding:16px;min-width:0}
+#commList p,#commDetailMeta{font-size:.9rem;color:#b8c8dc;overflow-wrap:anywhere}
+#commDetail{border:1px solid #668eac;border-radius:12px;padding:18px;margin:16px 0}
+#commDetailText{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.55}
+#commContent{display:block;width:100%;box-sizing:border-box;min-height:100px;resize:vertical;background:#081c36;color:#eef6ff;border:1px solid #36506a;border-radius:8px;padding:12px;font:inherit}
+.comm-check{display:flex;gap:10px;align-items:center;margin:14px 0}
+.comm-check input{width:auto;margin:0}
+#commPanel .work-actions{flex-wrap:wrap}
+#commPanel button{min-height:44px}
+@media(max-width:500px){#commPanel .work-actions button{flex:1 1 150px}#commList li{padding:12px}}

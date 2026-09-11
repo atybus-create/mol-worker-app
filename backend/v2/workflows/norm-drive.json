@@ -1,0 +1,1566 @@
+{
+  "name": "MOL // APP V2 // NORM DRIVE OUTBOX",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "internal-input",
+      "name": "Internal Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "read-config",
+      "name": "Read Config",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "x66LbXe5CSpdMIkv"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "condition": "eq",
+              "keyValue": "NORM_DRIVE_ENABLED"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "enabled",
+      "name": "Enabled",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const xs=$input.all().map(x=>x.json).filter(x=>x.key);return xs.length===1&&xs[0].value_json==='true'?[{json:{enabled:true}}]:[];"
+      }
+    },
+    {
+      "id": "acquire-writer",
+      "name": "Acquire Writer",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "norm-drive-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": ""
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "={{ String($execution.id) }}",
+            "lease_until": "={{ $now.plus({seconds:120}).toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "owns-writer",
+      "name": "Owns Writer",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1300,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Owns Writer",
+              "leftValue": "={{ $json.owner === String($execution.id) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "busy",
+      "name": "Busy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{ok:false,skipped:true,error_code:'NORM_DRIVE_BUSY'}}];"
+      }
+    },
+    {
+      "id": "read-pending",
+      "name": "Read Pending",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "type",
+              "condition": "eq",
+              "keyValue": "NORM_DRIVE"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "PENDING"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 100
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-retry",
+      "name": "Read Retry",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "type",
+              "condition": "eq",
+              "keyValue": "NORM_DRIVE"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "RETRY_PENDING"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 100
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "choose-job",
+      "name": "Choose Job",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const all=[...$('Read Pending').all().map(x=>x.json),...$('Read Retry').all().map(x=>x.json)].filter(x=>x.outbox_id&&Date.parse(x.next_attempt_at)<=Date.now()).sort((a,b)=>Date.parse(a.createdAt)-Date.parse(b.createdAt));return [{json:all[0]||{idle:true}}];"
+      }
+    },
+    {
+      "id": "has-job",
+      "name": "Has Job",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Has Job",
+              "leftValue": "={{ !!$json.outbox_id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "claim-job",
+      "name": "Claim Job",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "outbox_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Choose Job').first().json.outbox_id }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "={{ $('Choose Job').first().json.status }}"
+            },
+            {
+              "keyName": "attempts",
+              "condition": "eq",
+              "keyValue": "={{ $('Choose Job').first().json.attempts }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "PROCESSING",
+            "attempts": "={{ $('Choose Job').first().json.attempts+1 }}",
+            "lease_owner": "={{ String($execution.id) }}",
+            "lease_until": "={{ $now.plus({seconds:120}).toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "claimed",
+      "name": "Claimed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        220
+      ],
+      "parameters": {
+        "jsCode": "if($input.first().json.lease_owner!==String($execution.id))throw Error('NORM_DRIVE_CLAIM_FAILED');return [{json:{ok:true}}];"
+      }
+    },
+    {
+      "id": "read-publication",
+      "name": "Read Publication",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "4pJlgFine6QhUQxX"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "summary_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Choose Job').first().json.aggregate_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "read-index",
+      "name": "Read Index",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SqNZloUkfNSg1TuG"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "kind",
+              "condition": "eq",
+              "keyValue": "NORM_MONTH"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "plan-input",
+      "name": "Plan Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const pub=$('Read Publication').all().map(x=>x.json).filter(x=>x.summary_id);let version=Infinity;try{version=JSON.parse($('Choose Job').first().json.payload_json).version;}catch{}return [{json:{kind:'PLAN',publication:pub.length===1?pub[0]:null,index_rows:$input.all().map(x=>x.json).filter(x=>x.report_key),requested_version:version,spreadsheet_id:'1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4'}}];"
+      }
+    },
+    {
+      "id": "build-plan",
+      "name": "Build Plan",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        440
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "KtpOu0qejqaKBwuv"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "valid-plan",
+      "name": "Valid Plan",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        440
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Valid Plan",
+              "leftValue": "={{ $json.ok === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "index-item",
+      "name": "Index Item",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        440
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{lock_owner:String($execution.id),table:'REPORT_INDEX',mode:'insert_only',row:$('Build Plan').first().json.plan.index}}];"
+      }
+    },
+    {
+      "id": "save-index",
+      "name": "Save Index",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        780,
+        440
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OXqGTTwbgscoNm5P"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "read-sheet",
+      "name": "Read Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        440
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Build Plan').first().json.plan.read_url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PffTtJhrPLmJ2ZrI",
+          "name": "Google Sheets ATY"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "guard-input",
+      "name": "Guard Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        440
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{kind:'GUARD',plan:$('Build Plan').first().json.plan,response:$input.first().json}}];"
+      }
+    },
+    {
+      "id": "check-sheet",
+      "name": "Check Sheet",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1560,
+        440
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "KtpOu0qejqaKBwuv"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "safe-sheet",
+      "name": "Safe Sheet",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1820,
+        440
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Safe Sheet",
+              "leftValue": "={{ $json.ok === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "write-sheet",
+      "name": "Write Sheet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        660
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1fvAKvxe0_OvJjzwJ-Ouii6zvTFBjHM-CLOhxjLzSYQ4/values:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Build Plan').first().json.plan.write_body) }}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PffTtJhrPLmJ2ZrI",
+          "name": "Google Sheets ATY"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "written",
+      "name": "Written",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        660
+      ],
+      "parameters": {
+        "jsCode": "const x=$input.first().json;return [{json:{ok:!!x.spreadsheetId&&x.totalUpdatedRows>0,error_code:'NORM_DRIVE_WRITE_FAILED'}}];"
+      }
+    },
+    {
+      "id": "write-confirmed",
+      "name": "Write Confirmed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        660
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Write Confirmed",
+              "leftValue": "={{ $json.ok === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "read-back",
+      "name": "Read Back",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        660
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Build Plan').first().json.plan.read_url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PffTtJhrPLmJ2ZrI",
+          "name": "Google Sheets ATY"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "verify-input",
+      "name": "Verify Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        660
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{kind:'VERIFY',plan:$('Build Plan').first().json.plan,response:$input.first().json}}];"
+      }
+    },
+    {
+      "id": "verify-sheet",
+      "name": "Verify Sheet",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1300,
+        660
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "KtpOu0qejqaKBwuv"
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "mode": "once"
+      }
+    },
+    {
+      "id": "mirror-confirmed",
+      "name": "Mirror Confirmed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1560,
+        660
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Mirror Confirmed",
+              "leftValue": "={{ $json.ok === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ack-items",
+      "name": "Ack Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        660
+      ],
+      "parameters": {
+        "jsCode": "const p=$('Build Plan').first().json.plan,chosen=$('Choose Job').first().json;const all=[...$('Read Pending').all().map(x=>x.json),...$('Read Retry').all().map(x=>x.json)].filter(j=>j.outbox_id&&j.type==='NORM_DRIVE'&&j.aggregate_id===p.summary_id&&(()=>{try{return JSON.parse(j.payload_json).version<=p.version;}catch{return false;}})());if(!all.some(j=>j.outbox_id===chosen.outbox_id))throw Error('NORM_JOB_NOT_VERIFIED');return all.map(j=>({json:{outbox_id:j.outbox_id,old_status:j.outbox_id===chosen.outbox_id?'PROCESSING':j.status,attempts:j.attempts+1,expected_owner:j.outbox_id===chosen.outbox_id?String($execution.id):'',summary_id:p.summary_id,version:p.version}}));"
+      }
+    },
+    {
+      "id": "complete-jobs",
+      "name": "Complete Jobs",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        880
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "outbox_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.outbox_id }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "={{ $json.old_status }}"
+            },
+            {
+              "keyName": "lease_owner",
+              "condition": "eq",
+              "keyValue": "={{ $json.expected_owner }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "DONE",
+            "attempts": "={{ $json.attempts }}",
+            "completed_at": "={{ $now.toISO() }}",
+            "last_error": "",
+            "lease_owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "success",
+      "name": "Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        880
+      ],
+      "parameters": {
+        "jsCode": "const rs=$input.all().map(x=>x.json);if(rs.length!==$('Ack Items').all().length||rs.some(x=>x.status!=='DONE'))throw Error('NORM_DRIVE_ACK_NOT_CONFIRMED');return [{json:{ok:true,summary_id:$('Build Plan').first().json.plan.summary_id,version:$('Build Plan').first().json.plan.version,rows_verified:$('Build Plan').first().json.plan.rows.length,jobs_completed:rs.length}}];"
+      }
+    },
+    {
+      "id": "failure",
+      "name": "Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        880
+      ],
+      "parameters": {
+        "jsCode": "const x=$input.first().json,j=$('Choose Job').first().json,attempts=j.attempts+1;return [{json:{ok:false,error_code:x.error_code||'NORM_DRIVE_FAILED',status:attempts>=8?'DEAD_LETTER':'RETRY_PENDING',next_attempt_at:new Date(Date.now()+Math.min(1800000,30000*2**Math.min(attempts,6))).toISOString()}}];"
+      }
+    },
+    {
+      "id": "record-failure",
+      "name": "Record Failure",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        880
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gYdo04L9BIuWc40C"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "outbox_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Choose Job').first().json.outbox_id }}"
+            },
+            {
+              "keyName": "lease_owner",
+              "condition": "eq",
+              "keyValue": "={{ String($execution.id) }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $('Failure').first().json.status }}",
+            "next_attempt_at": "={{ $('Failure').first().json.next_attempt_at }}",
+            "last_error": "={{ $('Failure').first().json.error_code }}",
+            "lease_owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "failure-result",
+      "name": "Failure Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        880
+      ],
+      "parameters": {
+        "jsCode": "return [{json:$('Failure').first().json}];"
+      }
+    },
+    {
+      "id": "idle",
+      "name": "Idle",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        880
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{ok:true,idle:true}}];"
+      }
+    },
+    {
+      "id": "finish",
+      "name": "Finish",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        880
+      ],
+      "parameters": {
+        "jsCode": "return $input.all();"
+      }
+    },
+    {
+      "id": "release-writer",
+      "name": "Release Writer",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        880
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "norm-drive-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": "={{ String($execution.id) }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "return",
+      "name": "Return",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        1100
+      ],
+      "parameters": {
+        "jsCode": "return [{json:$('Finish').first().json}];"
+      }
+    }
+  ],
+  "connections": {
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Read Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Config": {
+      "main": [
+        [
+          {
+            "node": "Enabled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enabled": {
+      "main": [
+        [
+          {
+            "node": "Acquire Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acquire Writer": {
+      "main": [
+        [
+          {
+            "node": "Owns Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Internal Input": {
+      "main": [
+        [
+          {
+            "node": "Read Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owns Writer": {
+      "main": [
+        [
+          {
+            "node": "Read Pending",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Pending": {
+      "main": [
+        [
+          {
+            "node": "Read Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Retry": {
+      "main": [
+        [
+          {
+            "node": "Choose Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choose Job": {
+      "main": [
+        [
+          {
+            "node": "Has Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Job": {
+      "main": [
+        [
+          {
+            "node": "Claim Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Idle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim Job": {
+      "main": [
+        [
+          {
+            "node": "Claimed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claimed": {
+      "main": [
+        [
+          {
+            "node": "Read Publication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Publication": {
+      "main": [
+        [
+          {
+            "node": "Read Index",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Index": {
+      "main": [
+        [
+          {
+            "node": "Plan Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Input": {
+      "main": [
+        [
+          {
+            "node": "Build Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Plan": {
+      "main": [
+        [
+          {
+            "node": "Valid Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Plan": {
+      "main": [
+        [
+          {
+            "node": "Index Item",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Index Item": {
+      "main": [
+        [
+          {
+            "node": "Save Index",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Index": {
+      "main": [
+        [
+          {
+            "node": "Read Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Sheet": {
+      "main": [
+        [
+          {
+            "node": "Guard Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard Input": {
+      "main": [
+        [
+          {
+            "node": "Check Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Sheet": {
+      "main": [
+        [
+          {
+            "node": "Safe Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Safe Sheet": {
+      "main": [
+        [
+          {
+            "node": "Write Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Sheet": {
+      "main": [
+        [
+          {
+            "node": "Written",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Written": {
+      "main": [
+        [
+          {
+            "node": "Write Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Confirmed": {
+      "main": [
+        [
+          {
+            "node": "Read Back",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Back": {
+      "main": [
+        [
+          {
+            "node": "Verify Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Input": {
+      "main": [
+        [
+          {
+            "node": "Verify Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Sheet": {
+      "main": [
+        [
+          {
+            "node": "Mirror Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mirror Confirmed": {
+      "main": [
+        [
+          {
+            "node": "Ack Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ack Items": {
+      "main": [
+        [
+          {
+            "node": "Complete Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Complete Jobs": {
+      "main": [
+        [
+          {
+            "node": "Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success": {
+      "main": [
+        [
+          {
+            "node": "Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failure": {
+      "main": [
+        [
+          {
+            "node": "Record Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Failure": {
+      "main": [
+        [
+          {
+            "node": "Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Idle": {
+      "main": [
+        [
+          {
+            "node": "Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finish": {
+      "main": [
+        [
+          {
+            "node": "Release Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Release Writer": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "executionTimeout": 120,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "errorWorkflow": "rnELTCKClbzY8lxZ"
+  }
+}

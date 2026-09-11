@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#050b12">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>MOL App V2 — Panel lidera WWW</title>
+  <link rel="stylesheet" href="../shared/tokens.css?v=20260908.4">
+  <link rel="stylesheet" href="./app.css?v=20260908.4">
+</head>
+<body>
+  <div class="web-shell" data-required-roles="LEADER,ADMIN">
+    <aside class="sidebar">
+      <a class="web-brand" href="#team"><span class="brand-mark">◆</span><span><strong>MOL App <b>V2</b></strong><small>Panel lidera WWW</small></span></a>
+      <nav aria-label="Panel lidera">
+        <button class="is-active" data-section="team">◉ <span>Zespół</span></button>
+        <button data-section="reports">▥ <span>Wydajność</span></button>
+        <button data-section="corrections">✓ <span>Korekty</span></button>
+        <button data-section="users">◎ <span>Użytkownicy</span></button>
+        <button data-section="audit">↶ <span>Historia operacji</span></button>
+      </nav>
+      <div class="sidebar-foot"><p class="mol-kicker">Dostęp WWW</p><strong>LEADER / ADMIN</strong><small>Dane pochodzą wyłącznie z backendu V2.</small></div>
+    </aside>
+    <header class="topbar">
+      <label class="search">⌕ <input type="search" placeholder="Szukaj pracownika, procesu, ID…"></label>
+      <div class="role-badges"><span class="mol-chip mol-chip--info">—</span></div>
+      <div class="profile"><div class="profile-avatar">…</div><span><strong>Ładowanie…</strong><small>Weryfikacja sesji</small></span><button aria-label="Wyloguj">⎋</button></div>
+    </header>
+    <main class="content">
+      <section class="view is-active" data-view="team">
+        <div class="page-title"><div><p class="mol-kicker">Bieżący stan</p><h1>Zespół</h1></div><label class="date-chip">Data <input type="date"></label></div>
+        <div class="kpis"><article class="mol-card"><span>Pracownicy aktywni</span><strong>—</strong><small>backend V2</small></article><article class="mol-card"><span>Bez procesu</span><strong>—</strong><small>backend V2</small></article><article class="mol-card"><span>Alerty</span><strong>—</strong><small>backend V2</small></article><article class="mol-card"><span>Średnia norma</span><strong>—</strong><small>wynik ważony</small></article><article class="mol-card"><span>Korekty oczekujące</span><strong>—</strong><small>backend V2</small></article></div>
+        <div class="dashboard-grid">
+          <section class="mol-card team-card"><div class="card-head"><div><h2>Lista pracowników</h2><span>Dane live</span></div><div class="filters"><input type="search" placeholder="Szukaj"><select><option>Wszyscy</option></select></div></div><div class="table-wrap"><table><thead><tr><th>Pracownik / ID</th><th>Status pracy</th><th>Aktualny proces</th><th>Obecność</th><th>PICK dziś</th><th>PAK dziś</th><th>PICK/PAK dziś</th><th>Norma PICK/PAK</th><th>Alerty</th></tr></thead><tbody id="teamRows"><tr><td colspan="9" class="report-empty">Ładowanie zespołu z backendu V2…</td></tr></tbody></table></div></section>
+          <aside class="mol-card employee-card"><div class="card-head"><div><p class="mol-kicker">Pracownik</p><h2 id="employeeName">Wybierz pracownika</h2><span id="employeeId">—</span></div><span id="employeeStatus" class="mol-chip mol-chip--info">—</span></div><div class="employee-kpis"><article><small>Obecność</small><strong id="employeeAttendance">—</strong></article><article><small>Bez procesu</small><strong id="employeeNoProcess">—</strong></article><article><small>Proces</small><strong id="employeeProcess">—</strong></article></div><div class="employee-actions"></div></aside>
+        </div>
+      </section>
+      <section class="view" data-view="reports" hidden></section>
+      <section class="view" data-view="corrections" hidden></section>
+      <section class="view" data-view="users" hidden></section>
+      <section class="view" data-view="audit" hidden></section>
+    </main>
+  </div>
+  <script src="../shared/processes.js?v=20260908.4"></script>
+  <script src="../shared/roles.js?v=20260908.4"></script>
+  <script src="./app.js?v=20260908.4"></script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+{
+  "name": "MOL // APP V2 // MONITI ADAPTER",
+  "nodes": [
+    {
+      "id": "adapter-input",
+      "name": "Adapter Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "worker-moniti-magic-request",
+      "name": "WORKER // AUTH // Pobierz magic link z Bearer",
+      "notes": "Bearer Moniti jest przechowywany wyłącznie w credentialzie n8n.",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "position": [
+        250,
+        0
+      ],
+      "parameters": {
+        "url": "https://admin.moniti.app/api/users/104612/magic_link",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json, text/plain, */*"
+            },
+            {
+              "name": "accept-language",
+              "value": "pl_PL"
+            },
+            {
+              "name": "origin",
+              "value": "https://web.moniti.app"
+            },
+            {
+              "name": "referer",
+              "value": "https://web.moniti.app/"
+            },
+            {
+              "name": "x-api-format",
+              "value": "2.7"
+            },
+            {
+              "name": "x-app-name",
+              "value": "moniti web"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "jDX7MFgk2vvXqZ5f",
+          "name": "MONITI // Bearer do magic link OK"
+        }
+      }
+    },
+    {
+      "id": "worker-moniti-magic-parse",
+      "name": "WORKER // AUTH // Zweryfikuj magic link",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const response = $input.first()?.json || {};\nconst statusCode = Number(response.statusCode ?? response.status ?? 200);\nif (statusCode === 401 || statusCode === 403) throw new Error('Bearer Moniti jest nieważny lub wygasł.');\nif (statusCode < 200 || statusCode >= 300) throw new Error(`Moniti nie zwróciło magic linku. HTTP ${statusCode}.`);\nlet root = response.data ?? response.body ?? response;\nif (typeof root === 'string') {\n  try { root = JSON.parse(root); } catch { throw new Error('Odpowiedź Moniti nie jest prawidłowym JSON-em.'); }\n}\nconst directToken = String(root?.token ?? '').trim();\nif (directToken) return [{json:{magicUrl:`https://admin.moniti.app/?magic=${encodeURIComponent(directToken)}`}}];\nconst strings=[];\nconst visit=(value,depth=0)=>{ if(depth>8||value==null)return; if(typeof value==='string'){strings.push(value);try{visit(JSON.parse(value),depth+1)}catch{};return;} if(Array.isArray(value)){for(const item of value)visit(item,depth+1);return;} if(typeof value==='object'){for(const [key,val] of Object.entries(value)){if(/magic|link|url/i.test(key)&&typeof val==='string')strings.unshift(val);visit(val,depth+1);}}};\nvisit(root);\nlet magicUrl='';\nfor(const value of strings){const u=value.match(/https?:\\/\\/admin\\.moniti\\.app\\/?\\?magic=([A-Za-z0-9_-]+)/i);if(u){magicUrl=u[0];break;}const t=value.match(/(?:^|[?&]\\\"?magic\\\"?[=:]\\\"?)([A-Za-z0-9_-]{32,})/i);if(t){magicUrl=`https://admin.moniti.app/?magic=${t[1]}`;break;}if(/^[A-Za-z0-9_-]{64,}$/.test(value.trim())){magicUrl=`https://admin.moniti.app/?magic=${value.trim()}`;break;}}\nif(!magicUrl) throw new Error('Odpowiedź Moniti nie zawiera prawidłowego magic linku.');\nconst parsed=new URL(magicUrl);\nif(parsed.protocol!=='https:'||parsed.hostname!=='admin.moniti.app'||!parsed.searchParams.get('magic')) throw new Error('Magic link wskazuje nieoczekiwany adres.');\nreturn [{json:{magicUrl:parsed.toString()}}];"
+      }
+    },
+    {
+      "id": "worker-moniti-session-request",
+      "name": "WORKER // AUTH // Utwórz świeżą sesję PHPSESSID",
+      "notes": "Tworzy świeżą sesję dla każdego odczytu. Nie zapisuje PHPSESSID.",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "position": [
+        750,
+        0
+      ],
+      "parameters": {
+        "url": "={{$json.magicUrl}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "accept-language",
+              "value": "pl-PL,pl;q=0.9"
+            },
+            {
+              "name": "referer",
+              "value": "https://web.moniti.app/"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "body"
+            }
+          },
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "worker-moniti-session-extract",
+      "name": "WORKER // AUTH // Odczytaj świeże PHPSESSID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const response=$input.first()?.json||{};\nconst statusCode=Number(response.statusCode??response.status??0);\nif(![200,301,302,303,307,308].includes(statusCode)) throw new Error(`Otwarcie magic linku nie utworzyło sesji. HTTP ${statusCode||'brak'}.`);\nconst headers=response.headers||{};\nconst raw=headers['set-cookie']??headers['Set-Cookie']??'';\nconst lines=Array.isArray(raw)?raw:[raw];\nlet sid='';\nfor(const line of lines){const m=String(line??'').match(/(?:^|[,\\s])PHPSESSID=([^;,\\s]+)/i);if(m){sid=m[1];break;}}\nif(!sid) throw new Error('Moniti nie zwróciło świeżego PHPSESSID.');\nreturn [{json:{cookieHeader:`PHPSESSID=${sid}`}}];"
+      }
+    },
+    {
+      "id": "moniti-apply",
+      "name": "Read or Apply Moniti",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// n8n Code node; only the explicitly authorized test day and three workers.\nconst req=$('Adapter Input').first().json;\nconst cookie=$input.first().json.cookieHeader;\nconst allowedWorkers=[99191,99186,99185], testDate='2026-09-05';\nconst today=DateTime.now().setZone('Europe/Warsaw').toISODate();\nconst workerId=Number(req.worker_id),date=req.work_date;\nconst failure=(code,uncertain=false)=>[{json:{ok:false,code,uncertain,worker_id:workerId,work_date:date}}];\nif(!allowedWorkers.includes(workerId)||date!==testDate)return failure('MONITI_TEST_SCOPE');\nif(req.mode!=='read'&&today!==testDate)return failure('MONITI_TEST_WINDOW_CLOSED');\nif(!['read','apply'].includes(req.mode))return failure('MONITI_INVALID_MODE');\nif(!/^PHPSESSID=[^;\\s]+$/.test(cookie||''))return failure('MONITI_AUTH_FAILED');\nconst base='https://admin.moniti.app/api/worker_days';\nconst day=DateTime.fromISO(date,{zone:'Europe/Warsaw'});\nconst query=`${base}?worker=${workerId}&date%5Bafter%5D=${day.minus({days:1}).toISODate()}&date%5Bbefore%5D=${day.plus({days:1}).toISODate()}&order%5Bdate%5D=asc`;\nconst headers={accept:'application/json',cookie,'content-type':'application/json','x-api-format':'2.7',referer:'https://admin.moniti.app/'};\nconst call=opts=>this.helpers.httpRequest({...opts,headers,json:true,timeout:20000});\nconst iso=value=>value?new Date(value).toISOString():null;\nconst members=body=>Array.isArray(body?.['hydra:member'])?body['hydra:member']:Array.isArray(body)?body:[];\nconst read=async()=>{const body=await call({method:'GET',url:query});const rows=members(body).filter(r=>String(r.date).slice(0,10)===date);if(rows.length>1)throw new Error('MONITI_DUPLICATE_DAY');return rows[0]||null;};\nconst matches=(entry,target)=>!!entry&&!!target&&iso(entry.start)===iso(target.start_at)&&iso(entry.finish)===iso(target.stop_at);\nlet wrote=false;\ntry{\n  let current=await read();\n  let entries=Array.isArray(current?.workerDayEntries)?current.workerDayEntries:[];\n  if(req.mode==='read')return [{json:{ok:true,worker_id:workerId,work_date:date,day_id:current?.id||null,finished:current?.finished??false,entries:entries.map(e=>({entry_id:e.id,start_at:iso(e.start),stop_at:iso(e.finish)}))}}];\n  const after=req.after,before=req.before;\n  if(!after?.start_at||after.work_date!==date||DateTime.fromISO(after.start_at).setZone('Europe/Warsaw').toISODate()!==date)return failure('MONITI_INVALID_TARGET');\n  if(!Number.isFinite(Date.parse(after.start_at))||Date.parse(after.start_at)>Date.now()||(after.stop_at&&(!Number.isFinite(Date.parse(after.stop_at))||Date.parse(after.stop_at)>Date.now()||Date.parse(after.stop_at)<Date.parse(after.start_at))))return failure('MONITI_INVALID_TARGET');\n  if(entries.length>1)return failure('MONITI_MULTIPLE_ENTRIES');\n  if(entries.length===1&&matches(entries[0],after)&&current.finished===(after.state==='CLOSED'))return [{json:{ok:true,verified:true,idempotent:true,day_id:current.id,entry_id:entries[0].id,start_at:iso(entries[0].start),stop_at:iso(entries[0].finish)}}];\n  if((!before&&entries.length)||(before&&(entries.length!==1||!matches(entries[0],before))))return failure('MONITI_EXTERNAL_CONFLICT');\n  if(!current){\n    if(before)return failure('MONITI_EXTERNAL_CONFLICT');\n    wrote=true;await call({method:'POST',url:base+'/generate',body:{from:date,to:date,workers:[`/api/workers/${workerId}`]}});\n    current=await read();if(!current?.id)return failure('MONITI_DAY_NOT_CREATED',true);\n    entries=Array.isArray(current.workerDayEntries)?current.workerDayEntries:[];\n    if(entries.length)return failure('MONITI_EXTERNAL_CONFLICT',true);\n  }\n  const entry=entries[0]||{department:null,approved:true,workerDayEntryActivities:[],workerDay:`/api/worker_days/${current.id}`,odometer:0,startAction:null,finishAction:null,jobPosition:null,isRemote:false,warnings:[],note:'MOL V2 — test 2026-09-05'};\n  const updated={...entry,start:after.start_at,finish:after.stop_at||null,finished:after.state==='CLOSED',totalTime:after.stop_at?Math.round((Date.parse(after.stop_at)-Date.parse(after.start_at))/60000):0};\n  wrote=true;\n  await call({method:'PUT',url:base+'/'+current.id,body:{...current,workerDayEntries:[updated],finished:after.state==='CLOSED',dayEndDate:after.stop_at||after.start_at}});\n  const checked=await read(),verified=checked?.workerDayEntries||[];\n  if(verified.length!==1||!matches(verified[0],after)||checked.finished!==(after.state==='CLOSED'))return failure('MONITI_WRITE_NOT_CONFIRMED',true);\n  return [{json:{ok:true,verified:true,idempotent:false,day_id:checked.id,entry_id:verified[0].id,start_at:iso(verified[0].start),stop_at:iso(verified[0].finish)}}];\n}catch{return failure('MONITI_UNAVAILABLE',wrote);}\n\r\n"
+      }
+    }
+  ],
+  "connections": {
+    "Adapter Input": {
+      "main": [
+        [
+          {
+            "node": "WORKER // AUTH // Pobierz magic link z Bearer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WORKER // AUTH // Pobierz magic link z Bearer": {
+      "main": [
+        [
+          {
+            "node": "WORKER // AUTH // Zweryfikuj magic link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WORKER // AUTH // Zweryfikuj magic link": {
+      "main": [
+        [
+          {
+            "node": "WORKER // AUTH // Utwórz świeżą sesję PHPSESSID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WORKER // AUTH // Utwórz świeżą sesję PHPSESSID": {
+      "main": [
+        [
+          {
+            "node": "WORKER // AUTH // Odczytaj świeże PHPSESSID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WORKER // AUTH // Odczytaj świeże PHPSESSID": {
+      "main": [
+        [
+          {
+            "node": "Read or Apply Moniti",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 120,
+    "errorWorkflow": "rnELTCKClbzY8lxZ",
+    "timezone": "Europe/Warsaw",
+    "executionOrder": "v1"
+  }
+}

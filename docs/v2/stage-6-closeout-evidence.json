@@ -1,0 +1,69 @@
+{
+  "date": "2026-09-05",
+  "scope": "stage 6 process permissions and repository synchronization",
+  "acceptance": "DO ODBIORU",
+  "stage7_started": false,
+  "baseline_main": "386ef2fb804ed6d85f11710d5ca76b967e0f7755",
+  "backup_branch": "backup/pre-stage6-closeout-20260905",
+  "tested_code_commit": "59631dbcf72b5e2e3f79fee7c023052f553ce031",
+  "ci_run_id": 33977902727,
+  "ci_conclusion": "success",
+  "automated_tests": {
+    "process_domain_cases": 41,
+    "attendance_domain_cases": 39,
+    "generated_decide_fixture_cases": 23,
+    "password": "PASS",
+    "auth": "PASS",
+    "attendance_ui": "PASS",
+    "contract": "PASS",
+    "v2_isolation": "PASS",
+    "generator_reproducible": true,
+    "generated_decide_sha256": "8dcdac4927dc6459ef3667360abfe4bf34d10acb518590619543d7fbd19bea86",
+    "note": "Generated code hash from CI, not a separately computed live workflow hash. Fixture tests are not authenticated end-to-end API tests."
+  },
+  "published_workflows": {
+    "attendance_service": {"id":"qPVmcfp6pUg3GbzH","active_version":"8a8a7d2b-f41a-472a-a7ab-78237dbac7a9"},
+    "health": {"id":"sfoWeuiJBN2qvCRF","active_version":"c1d0d26e-5e25-41ba-88d6-5a5175740947"}
+  },
+  "n8n_validation": {
+    "nodes": 61,
+    "enabled_nodes": 61,
+    "valid_connections": 72,
+    "expressions": 113,
+    "errors": 0,
+    "warnings": 13,
+    "warning_type": "intentional executeOnce on table reads"
+  },
+  "live_checks": {
+    "health": {"http_status":200,"version":"0.6.0","stage":6,"database":"ONLINE","core_status":"READY"},
+    "unauthenticated_process_start": {"http_status":401,"code":"UNAUTHENTICATED"},
+    "unauthenticated_process_change": {"http_status":401,"code":"UNAUTHENTICATED"},
+    "unauthenticated_process_logout": {"http_status":401,"code":"UNAUTHENTICATED"},
+    "authenticated_role_tests": "BLOCKED_BY_TOOL_SAFETY_NOT_PASSED",
+    "new_browser_cycle": "NOT_RUN"
+  },
+  "configuration": {
+    "table": "MOL_V2_CONFIG",
+    "scope": "process_permissions",
+    "role_entries": 3,
+    "employee_entries": 3,
+    "physical_employee_allowed_processes_column": false,
+    "office_roles": ["LEADER","ADMIN"]
+  },
+  "final_operational_read": {
+    "attendance": [
+      {"employee_id":"MOL004","state":"CLOSED","version":31,"moniti_sync":"SYNCED","drive_sync":"SYNCED"},
+      {"employee_id":"MOL014","state":"CLOSED","version":20,"moniti_sync":"SYNCED","drive_sync":"SYNCED"},
+      {"employee_id":"MOL015","state":"CLOSED","version":10,"moniti_sync":"SYNCED","drive_sync":"SYNCED"}
+    ],
+    "active_processes": 0,
+    "recovery_required": 0,
+    "incomplete_attendance_drive": 0,
+    "command_writer_free": true,
+    "auth_writer_free": true,
+    "closeout_technical_sessions_revoked": 3,
+    "attendance_changes_during_closeout": 0,
+    "new_moniti_writes": 0,
+    "v1_changed": false
+  }
+}

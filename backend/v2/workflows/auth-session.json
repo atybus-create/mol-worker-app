@@ -1,0 +1,371 @@
+{
+  "name": "MOL // APP V2 // AUTH SESSION",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Webhook",
+      "webhookId": "b06256e0-5c3e-4b6f-a718-5299ff8d5394",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "mol-app-v2-auth-session",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://atybus-create.github.io"
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Pragma",
+                "value": "no-cache"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "validate-input",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst i=$input.first().json;const authorization=i.headers?.authorization||'';const m=/^Bearer ([0-9a-f]{64})$/.exec(authorization);const request_id=i.body?.request_id||'';if(false&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(request_id))return [{json:result(400,'VALIDATION_ERROR','Nieprawidłowy request_id.')}];return [{json:m?{valid:true,session_token:m[1],request_id}:result(401,'UNAUTHENTICATED','Zaloguj się ponownie.',request_id)}];"
+      }
+    },
+    {
+      "id": "input-valid",
+      "name": "Input Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Input Valid",
+              "leftValue": "={{ $json.valid === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "hash-token",
+      "name": "Hash Token",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "action": "hash",
+        "type": "SHA256",
+        "binaryData": false,
+        "value": "={{ $('Validate Input').first().json.session_token }}",
+        "dataPropertyName": "token_hash",
+        "encoding": "hex"
+      }
+    },
+    {
+      "id": "read-session",
+      "name": "Read Session",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        1200,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "JXNEIdijeKfhuwYD"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "token_hash",
+              "condition": "eq",
+              "keyValue": "={{ $json.token_hash }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      }
+    },
+    {
+      "id": "check-session",
+      "name": "Check Session",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst rows=$input.all().map(i=>i.json).filter(r=>r.session_id);const s=rows[0];if(rows.length!==1||(!false&&(s.revoked_at||!(Date.parse(s.expires_at)>Date.now()))))return [{json:result(401,'UNAUTHENTICATED','Sesja wygasła lub została zakończona.',$('Validate Input').first().json.request_id)}];return [{json:{valid:true,session:s}}];"
+      }
+    },
+    {
+      "id": "session-valid",
+      "name": "Session Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Session Valid",
+              "leftValue": "={{ $json.valid === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "read-employee",
+      "name": "Read Employee",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        1920,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "npCr4h1LjhVL205w"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "employee_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Check Session').first().json.session.employee_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      }
+    },
+    {
+      "id": "session-response",
+      "name": "Session Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst rows=$input.all().map(i=>i.json).filter(r=>r.employee_id);const e=rows[0];if(rows.length!==1||e.active!==true||!['WORKER','LEADER','ADMIN'].includes(e.role))return [{json:result(401,'UNAUTHENTICATED','Konto jest nieaktywne.')}];return [{json:{http_status:200,body:{ok:true,request_id:'',data:{expires_at:$('Check Session').first().json.session.expires_at,user:{employee_id:e.employee_id,display_name:e.display_name,role:e.role}},meta:{api_version:'2.0',server_time:new Date().toISOString()}}}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Input Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Valid": {
+      "main": [
+        [
+          {
+            "node": "Hash Token",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash Token": {
+      "main": [
+        [
+          {
+            "node": "Read Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Session": {
+      "main": [
+        [
+          {
+            "node": "Check Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Session": {
+      "main": [
+        [
+          {
+            "node": "Session Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Session Valid": {
+      "main": [
+        [
+          {
+            "node": "Read Employee",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Employee": {
+      "main": [
+        [
+          {
+            "node": "Session Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Session Response": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 60,
+    "errorWorkflow": "rnELTCKClbzY8lxZ",
+    "timezone": "Europe/Warsaw",
+    "executionOrder": "v1"
+  }
+}

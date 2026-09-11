@@ -1,0 +1,1414 @@
+{
+  "name": "MOL // APP V2 // AUTH LOGIN",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Webhook",
+      "webhookId": "b4c2b80c-fcc5-4221-9a9f-b8e1d17c700a",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mol-app-v2-auth-login",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://atybus-create.github.io"
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Pragma",
+                "value": "no-cache"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "validate-input",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst b=$input.first().json.body||{};const valid=typeof b.request_id==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(b.request_id||'')&&typeof b.login==='string'&&b.login.trim().length>0&&b.login.length<=100&&typeof b.password==='string'&&b.password.length>0&&b.password.length<=200;return [{json:valid?{valid:true,request_id:b.request_id.toLowerCase(),login:b.login.trim().toLowerCase(),password:b.password}:result(400,'VALIDATION_ERROR','Podaj login i hasło oraz poprawny request_id.')}];"
+      }
+    },
+    {
+      "id": "input-valid",
+      "name": "Input Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Input Valid",
+              "leftValue": "={{ $json.valid === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "acquire-auth-lock",
+      "name": "Acquire Auth Lock",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "auth-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": ""
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "={{ String($execution.id) }}",
+            "lease_until": "={{ $now.plus({seconds:60}).toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "own-lock",
+      "name": "Own Lock",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Own Lock",
+              "leftValue": "={{ $json.owner === String($execution.id) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "busy",
+      "name": "Busy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:result(409,'AUTH_BUSY','Trwa inne żądanie. Spróbuj ponownie.',$('Validate Input').first().json.request_id)}];"
+      }
+    },
+    {
+      "id": "release-auth-lock",
+      "name": "Release Auth Lock",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        1680,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "uKfyrOkB2zoSEuBH"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lock_key",
+              "condition": "eq",
+              "keyValue": "auth-writer"
+            },
+            {
+              "keyName": "owner",
+              "condition": "eq",
+              "keyValue": "={{ String($execution.id) }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "owner": "",
+            "lease_until": "1970-01-01T00:00:00.000Z"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "final-response",
+      "name": "Final Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:$('Prepare Response').first().json}];"
+      }
+    },
+    {
+      "id": "read-employee",
+      "name": "Read Employee",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        2160,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "npCr4h1LjhVL205w"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "login",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Input').first().json.login }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      }
+    },
+    {
+      "id": "employee-context",
+      "name": "Employee Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst rows=$input.all().map(i=>i.json).filter(r=>r.employee_id);const employee=rows.length===1?rows[0]:null;return [{json:{employee,limit_key:employee?.employee_id||'_unknown'}}];"
+      }
+    },
+    {
+      "id": "read-limit",
+      "name": "Read Limit",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        2640,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "XNQosSJXp23l2EBU"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "limit_key",
+              "condition": "eq",
+              "keyValue": "={{ $('Employee Context').first().json.limit_key }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      }
+    },
+    {
+      "id": "check-limit",
+      "name": "Check Limit",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst rows=$input.all().map(i=>i.json).filter(r=>r.limit_key);const row=rows[0]||{};const now=Date.now();const fresh=Number.isFinite(Date.parse(row.window_start))&&now-Date.parse(row.window_start)<900000;const attempts=fresh?Number(row.attempts):0;if(rows.length>1||!Number.isFinite(attempts))return [{json:result(503,'AUTH_UNAVAILABLE','Logowanie chwilowo niedostępne.')}];if(attempts>=5)return [{json:result(429,'RATE_LIMITED','Za dużo prób. Spróbuj po 15 minutach.',$('Validate Input').first().json.request_id)}];return [{json:{allowed:true,attempts:attempts+1,window_start:fresh?row.window_start:new Date(now).toISOString()}}];"
+      }
+    },
+    {
+      "id": "limit-allows",
+      "name": "Limit Allows",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3120,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Limit Allows",
+              "leftValue": "={{ $json.allowed === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "count-attempt",
+      "name": "Count Attempt",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        3360,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "XNQosSJXp23l2EBU"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "limit_key",
+              "condition": "eq",
+              "keyValue": "={{ $('Employee Context').first().json.limit_key }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "limit_key": "={{ $('Employee Context').first().json.limit_key }}",
+            "attempts": "={{ $('Check Limit').first().json.attempts }}",
+            "window_start": "={{ $('Check Limit').first().json.window_start }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "verify-password",
+      "name": "Verify Password",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\n// node_modules/@noble/hashes/utils.js\nfunction isBytes(a) {\n  return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === \"Uint8Array\";\n}\nfunction anumber(n, title = \"\") {\n  if (!Number.isSafeInteger(n) || n < 0) {\n    const prefix = title && `\"${title}\" `;\n    throw new Error(`${prefix}expected integer >= 0, got ${n}`);\n  }\n}\nfunction abytes(value, length, title = \"\") {\n  const bytes = isBytes(value);\n  const len = value?.length;\n  const needsLen = length !== void 0;\n  if (!bytes || needsLen && len !== length) {\n    const prefix = title && `\"${title}\" `;\n    const ofLen = needsLen ? ` of length ${length}` : \"\";\n    const got = bytes ? `length=${len}` : `type=${typeof value}`;\n    throw new Error(prefix + \"expected Uint8Array\" + ofLen + \", got \" + got);\n  }\n  return value;\n}\nfunction ahash(h) {\n  if (typeof h !== \"function\" || typeof h.create !== \"function\")\n    throw new Error(\"Hash must wrapped by utils.createHasher\");\n  anumber(h.outputLen);\n  anumber(h.blockLen);\n}\nfunction aexists(instance, checkFinished = true) {\n  if (instance.destroyed)\n    throw new Error(\"Hash instance has been destroyed\");\n  if (checkFinished && instance.finished)\n    throw new Error(\"Hash#digest() has already been called\");\n}\nfunction aoutput(out, instance) {\n  abytes(out, void 0, \"digestInto() output\");\n  const min = instance.outputLen;\n  if (out.length < min) {\n    throw new Error('\"digestInto() output\" expected to be of length >=' + min);\n  }\n}\nfunction u8(arr) {\n  return new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength);\n}\nfunction u32(arr) {\n  return new Uint32Array(arr.buffer, arr.byteOffset, Math.floor(arr.byteLength / 4));\n}\nfunction clean(...arrays) {\n  for (let i = 0; i < arrays.length; i++) {\n    arrays[i].fill(0);\n  }\n}\nfunction createView(arr) {\n  return new DataView(arr.buffer, arr.byteOffset, arr.byteLength);\n}\nfunction rotr(word, shift) {\n  return word << 32 - shift | word >>> shift;\n}\nfunction rotl(word, shift) {\n  return word << shift | word >>> 32 - shift >>> 0;\n}\nvar isLE = /* @__PURE__ */ (() => new Uint8Array(new Uint32Array([287454020]).buffer)[0] === 68)();\nfunction byteSwap(word) {\n  return word << 24 & 4278190080 | word << 8 & 16711680 | word >>> 8 & 65280 | word >>> 24 & 255;\n}\nvar swap8IfBE = isLE ? (n) => n : (n) => byteSwap(n);\nfunction byteSwap32(arr) {\n  for (let i = 0; i < arr.length; i++) {\n    arr[i] = byteSwap(arr[i]);\n  }\n  return arr;\n}\nvar swap32IfBE = isLE ? (u) => u : byteSwap32;\nvar hasHexBuiltin = /* @__PURE__ */ (() => (\n  // @ts-ignore\n  typeof Uint8Array.from([]).toHex === \"function\" && typeof Uint8Array.fromHex === \"function\"\n))();\nvar hexes = /* @__PURE__ */ Array.from({ length: 256 }, (_, i) => i.toString(16).padStart(2, \"0\"));\nfunction bytesToHex(bytes) {\n  abytes(bytes);\n  if (hasHexBuiltin)\n    return bytes.toHex();\n  let hex = \"\";\n  for (let i = 0; i < bytes.length; i++) {\n    hex += hexes[bytes[i]];\n  }\n  return hex;\n}\nvar asciis = { _0: 48, _9: 57, A: 65, F: 70, a: 97, f: 102 };\nfunction asciiToBase16(ch) {\n  if (ch >= asciis._0 && ch <= asciis._9)\n    return ch - asciis._0;\n  if (ch >= asciis.A && ch <= asciis.F)\n    return ch - (asciis.A - 10);\n  if (ch >= asciis.a && ch <= asciis.f)\n    return ch - (asciis.a - 10);\n  return;\n}\nfunction hexToBytes(hex) {\n  if (typeof hex !== \"string\")\n    throw new Error(\"hex string expected, got \" + typeof hex);\n  if (hasHexBuiltin)\n    return Uint8Array.fromHex(hex);\n  const hl = hex.length;\n  const al = hl / 2;\n  if (hl % 2)\n    throw new Error(\"hex string expected, got unpadded hex of length \" + hl);\n  const array = new Uint8Array(al);\n  for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {\n    const n1 = asciiToBase16(hex.charCodeAt(hi));\n    const n2 = asciiToBase16(hex.charCodeAt(hi + 1));\n    if (n1 === void 0 || n2 === void 0) {\n      const char = hex[hi] + hex[hi + 1];\n      throw new Error('hex string expected, got non-hex character \"' + char + '\" at index ' + hi);\n    }\n    array[ai] = n1 * 16 + n2;\n  }\n  return array;\n}\nvar nextTick = async () => {\n};\nasync function asyncLoop(iters, tick, cb) {\n  let ts = Date.now();\n  for (let i = 0; i < iters; i++) {\n    cb(i);\n    const diff = Date.now() - ts;\n    if (diff >= 0 && diff < tick)\n      continue;\n    await nextTick();\n    ts += diff;\n  }\n}\nfunction utf8ToBytes(str) {\n  if (typeof str !== \"string\")\n    throw new Error(\"string expected\");\n  return new Uint8Array(new TextEncoder().encode(str));\n}\nfunction kdfInputToBytes(data, errorTitle = \"\") {\n  if (typeof data === \"string\")\n    return utf8ToBytes(data);\n  return abytes(data, void 0, errorTitle);\n}\nfunction concatBytes(...arrays) {\n  let sum = 0;\n  for (let i = 0; i < arrays.length; i++) {\n    const a = arrays[i];\n    abytes(a);\n    sum += a.length;\n  }\n  const res = new Uint8Array(sum);\n  for (let i = 0, pad = 0; i < arrays.length; i++) {\n    const a = arrays[i];\n    res.set(a, pad);\n    pad += a.length;\n  }\n  return res;\n}\nfunction checkOpts(defaults, opts) {\n  if (opts !== void 0 && {}.toString.call(opts) !== \"[object Object]\")\n    throw new Error(\"options must be object or undefined\");\n  const merged = Object.assign(defaults, opts);\n  return merged;\n}\nfunction createHasher(hashCons, info = {}) {\n  const hashC = (msg, opts) => hashCons(opts).update(msg).digest();\n  const tmp = hashCons(void 0);\n  hashC.outputLen = tmp.outputLen;\n  hashC.blockLen = tmp.blockLen;\n  hashC.create = (opts) => hashCons(opts);\n  Object.assign(hashC, info);\n  return Object.freeze(hashC);\n}\nfunction randomBytes(bytesLength = 32) {\n  const cr = typeof globalThis === \"object\" ? globalThis.crypto : null;\n  if (typeof cr?.getRandomValues !== \"function\")\n    throw new Error(\"crypto.getRandomValues must be defined\");\n  return cr.getRandomValues(new Uint8Array(bytesLength));\n}\nvar oidNist = (suffix) => ({\n  oid: Uint8Array.from([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, suffix])\n});\n\n// node_modules/@noble/hashes/hmac.js\nvar _HMAC = class {\n  oHash;\n  iHash;\n  blockLen;\n  outputLen;\n  finished = false;\n  destroyed = false;\n  constructor(hash, key) {\n    ahash(hash);\n    abytes(key, void 0, \"key\");\n    this.iHash = hash.create();\n    if (typeof this.iHash.update !== \"function\")\n      throw new Error(\"Expected instance of class which extends utils.Hash\");\n    this.blockLen = this.iHash.blockLen;\n    this.outputLen = this.iHash.outputLen;\n    const blockLen = this.blockLen;\n    const pad = new Uint8Array(blockLen);\n    pad.set(key.length > blockLen ? hash.create().update(key).digest() : key);\n    for (let i = 0; i < pad.length; i++)\n      pad[i] ^= 54;\n    this.iHash.update(pad);\n    this.oHash = hash.create();\n    for (let i = 0; i < pad.length; i++)\n      pad[i] ^= 54 ^ 92;\n    this.oHash.update(pad);\n    clean(pad);\n  }\n  update(buf) {\n    aexists(this);\n    this.iHash.update(buf);\n    return this;\n  }\n  digestInto(out) {\n    aexists(this);\n    abytes(out, this.outputLen, \"output\");\n    this.finished = true;\n    this.iHash.digestInto(out);\n    this.oHash.update(out);\n    this.oHash.digestInto(out);\n    this.destroy();\n  }\n  digest() {\n    const out = new Uint8Array(this.oHash.outputLen);\n    this.digestInto(out);\n    return out;\n  }\n  _cloneInto(to) {\n    to ||= new _HMAC(sha256, new Uint8Array());\n    const { oHash, iHash, finished, destroyed, blockLen, outputLen } = this;\n    to = to;\n    to.finished = finished;\n    to.destroyed = destroyed;\n    to.blockLen = blockLen;\n    to.outputLen = outputLen;\n    to.oHash = oHash._cloneInto(to.oHash);\n    to.iHash = iHash._cloneInto(to.iHash);\n    return to;\n  }\n  clone() {\n    return this._cloneInto();\n  }\n  destroy() {\n    this.destroyed = true;\n    this.oHash.destroy();\n    this.iHash.destroy();\n  }\n};\nvar hmac = (hash, key, message) => new _HMAC(hash, key).update(message).digest();\nhmac.create = (hash, key) => new _HMAC(hash, key);\n\n// node_modules/@noble/hashes/pbkdf2.js\nfunction pbkdf2Init(hash, _password, _salt, _opts) {\n  ahash(hash);\n  const opts = checkOpts({ dkLen: 32, asyncTick: 10 }, _opts);\n  const { c, dkLen, asyncTick } = opts;\n  anumber(c, \"c\");\n  anumber(dkLen, \"dkLen\");\n  anumber(asyncTick, \"asyncTick\");\n  if (c < 1)\n    throw new Error(\"iterations (c) must be >= 1\");\n  const password = kdfInputToBytes(_password, \"password\");\n  const salt = kdfInputToBytes(_salt, \"salt\");\n  const DK = new Uint8Array(dkLen);\n  const PRF = hmac.create(hash, password);\n  const PRFSalt = PRF._cloneInto().update(salt);\n  return { c, dkLen, asyncTick, DK, PRF, PRFSalt };\n}\nfunction pbkdf2Output(PRF, PRFSalt, DK, prfW, u) {\n  PRF.destroy();\n  PRFSalt.destroy();\n  if (prfW)\n    prfW.destroy();\n  clean(u);\n  return DK;\n}\nfunction pbkdf2(hash, password, salt, opts) {\n  const { c, dkLen, DK, PRF, PRFSalt } = pbkdf2Init(hash, password, salt, opts);\n  let prfW;\n  const arr = new Uint8Array(4);\n  const view = createView(arr);\n  const u = new Uint8Array(PRF.outputLen);\n  for (let ti = 1, pos = 0; pos < dkLen; ti++, pos += PRF.outputLen) {\n    const Ti = DK.subarray(pos, pos + PRF.outputLen);\n    view.setInt32(0, ti, false);\n    (prfW = PRFSalt._cloneInto(prfW)).update(arr).digestInto(u);\n    Ti.set(u.subarray(0, Ti.length));\n    for (let ui = 1; ui < c; ui++) {\n      PRF._cloneInto(prfW).update(u).digestInto(u);\n      for (let i = 0; i < Ti.length; i++)\n        Ti[i] ^= u[i];\n    }\n  }\n  return pbkdf2Output(PRF, PRFSalt, DK, prfW, u);\n}\nasync function pbkdf2Async(hash, password, salt, opts) {\n  const { c, dkLen, asyncTick, DK, PRF, PRFSalt } = pbkdf2Init(hash, password, salt, opts);\n  let prfW;\n  const arr = new Uint8Array(4);\n  const view = createView(arr);\n  const u = new Uint8Array(PRF.outputLen);\n  for (let ti = 1, pos = 0; pos < dkLen; ti++, pos += PRF.outputLen) {\n    const Ti = DK.subarray(pos, pos + PRF.outputLen);\n    view.setInt32(0, ti, false);\n    (prfW = PRFSalt._cloneInto(prfW)).update(arr).digestInto(u);\n    Ti.set(u.subarray(0, Ti.length));\n    await asyncLoop(c - 1, asyncTick, () => {\n      PRF._cloneInto(prfW).update(u).digestInto(u);\n      for (let i = 0; i < Ti.length; i++)\n        Ti[i] ^= u[i];\n    });\n  }\n  return pbkdf2Output(PRF, PRFSalt, DK, prfW, u);\n}\n\n// node_modules/@noble/hashes/_md.js\nfunction Chi(a, b, c) {\n  return a & b ^ ~a & c;\n}\nfunction Maj(a, b, c) {\n  return a & b ^ a & c ^ b & c;\n}\nvar HashMD = class {\n  blockLen;\n  outputLen;\n  padOffset;\n  isLE;\n  // For partial updates less than block size\n  buffer;\n  view;\n  finished = false;\n  length = 0;\n  pos = 0;\n  destroyed = false;\n  constructor(blockLen, outputLen, padOffset, isLE2) {\n    this.blockLen = blockLen;\n    this.outputLen = outputLen;\n    this.padOffset = padOffset;\n    this.isLE = isLE2;\n    this.buffer = new Uint8Array(blockLen);\n    this.view = createView(this.buffer);\n  }\n  update(data) {\n    aexists(this);\n    abytes(data);\n    const { view, buffer, blockLen } = this;\n    const len = data.length;\n    for (let pos = 0; pos < len; ) {\n      const take = Math.min(blockLen - this.pos, len - pos);\n      if (take === blockLen) {\n        const dataView = createView(data);\n        for (; blockLen <= len - pos; pos += blockLen)\n          this.process(dataView, pos);\n        continue;\n      }\n      buffer.set(data.subarray(pos, pos + take), this.pos);\n      this.pos += take;\n      pos += take;\n      if (this.pos === blockLen) {\n        this.process(view, 0);\n        this.pos = 0;\n      }\n    }\n    this.length += data.length;\n    this.roundClean();\n    return this;\n  }\n  digestInto(out) {\n    aexists(this);\n    aoutput(out, this);\n    this.finished = true;\n    const { buffer, view, blockLen, isLE: isLE2 } = this;\n    let { pos } = this;\n    buffer[pos++] = 128;\n    clean(this.buffer.subarray(pos));\n    if (this.padOffset > blockLen - pos) {\n      this.process(view, 0);\n      pos = 0;\n    }\n    for (let i = pos; i < blockLen; i++)\n      buffer[i] = 0;\n    view.setBigUint64(blockLen - 8, BigInt(this.length * 8), isLE2);\n    this.process(view, 0);\n    const oview = createView(out);\n    const len = this.outputLen;\n    if (len % 4)\n      throw new Error(\"_sha2: outputLen must be aligned to 32bit\");\n    const outLen = len / 4;\n    const state = this.get();\n    if (outLen > state.length)\n      throw new Error(\"_sha2: outputLen bigger than state\");\n    for (let i = 0; i < outLen; i++)\n      oview.setUint32(4 * i, state[i], isLE2);\n  }\n  digest() {\n    const { buffer, outputLen } = this;\n    this.digestInto(buffer);\n    const res = buffer.slice(0, outputLen);\n    this.destroy();\n    return res;\n  }\n  _cloneInto(to) {\n    to ||= new _SHA256();\n    to.set(...this.get());\n    const { blockLen, buffer, length, finished, destroyed, pos } = this;\n    to.destroyed = destroyed;\n    to.finished = finished;\n    to.length = length;\n    to.pos = pos;\n    if (length % blockLen)\n      to.buffer.set(buffer);\n    return to;\n  }\n  clone() {\n    return this._cloneInto();\n  }\n};\nvar SHA256_IV = /* @__PURE__ */ Uint32Array.from([\n  1779033703,\n  3144134277,\n  1013904242,\n  2773480762,\n  1359893119,\n  2600822924,\n  528734635,\n  1541459225\n]);\nvar SHA224_IV = /* @__PURE__ */ Uint32Array.from([\n  3238371032,\n  914150663,\n  812702999,\n  4144912697,\n  4290775857,\n  1750603025,\n  1694076839,\n  3204075428\n]);\nvar SHA384_IV = /* @__PURE__ */ Uint32Array.from([\n  3418070365,\n  3238371032,\n  1654270250,\n  914150663,\n  2438529370,\n  812702999,\n  355462360,\n  4144912697,\n  1731405415,\n  4290775857,\n  2394180231,\n  1750603025,\n  3675008525,\n  1694076839,\n  1203062813,\n  3204075428\n]);\nvar SHA512_IV = /* @__PURE__ */ Uint32Array.from([\n  1779033703,\n  4089235720,\n  3144134277,\n  2227873595,\n  1013904242,\n  4271175723,\n  2773480762,\n  1595750129,\n  1359893119,\n  2917565137,\n  2600822924,\n  725511199,\n  528734635,\n  4215389547,\n  1541459225,\n  327033209\n]);\n\n// node_modules/@noble/hashes/_u64.js\nvar U32_MASK64 = /* @__PURE__ */ BigInt(2 ** 32 - 1);\nvar _32n = /* @__PURE__ */ BigInt(32);\nfunction fromBig(n, le = false) {\n  if (le)\n    return { h: Number(n & U32_MASK64), l: Number(n >> _32n & U32_MASK64) };\n  return { h: Number(n >> _32n & U32_MASK64) | 0, l: Number(n & U32_MASK64) | 0 };\n}\nfunction split(lst, le = false) {\n  const len = lst.length;\n  let Ah = new Uint32Array(len);\n  let Al = new Uint32Array(len);\n  for (let i = 0; i < len; i++) {\n    const { h, l } = fromBig(lst[i], le);\n    [Ah[i], Al[i]] = [h, l];\n  }\n  return [Ah, Al];\n}\nvar toBig = (h, l) => BigInt(h >>> 0) << _32n | BigInt(l >>> 0);\nvar shrSH = (h, _l, s) => h >>> s;\nvar shrSL = (h, l, s) => h << 32 - s | l >>> s;\nvar rotrSH = (h, l, s) => h >>> s | l << 32 - s;\nvar rotrSL = (h, l, s) => h << 32 - s | l >>> s;\nvar rotrBH = (h, l, s) => h << 64 - s | l >>> s - 32;\nvar rotrBL = (h, l, s) => h >>> s - 32 | l << 64 - s;\nvar rotr32H = (_h, l) => l;\nvar rotr32L = (h, _l) => h;\nvar rotlSH = (h, l, s) => h << s | l >>> 32 - s;\nvar rotlSL = (h, l, s) => l << s | h >>> 32 - s;\nvar rotlBH = (h, l, s) => l << s - 32 | h >>> 64 - s;\nvar rotlBL = (h, l, s) => h << s - 32 | l >>> 64 - s;\nfunction add(Ah, Al, Bh, Bl) {\n  const l = (Al >>> 0) + (Bl >>> 0);\n  return { h: Ah + Bh + (l / 2 ** 32 | 0) | 0, l: l | 0 };\n}\nvar add3L = (Al, Bl, Cl) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0);\nvar add3H = (low, Ah, Bh, Ch) => Ah + Bh + Ch + (low / 2 ** 32 | 0) | 0;\nvar add4L = (Al, Bl, Cl, Dl) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0) + (Dl >>> 0);\nvar add4H = (low, Ah, Bh, Ch, Dh) => Ah + Bh + Ch + Dh + (low / 2 ** 32 | 0) | 0;\nvar add5L = (Al, Bl, Cl, Dl, El) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0) + (Dl >>> 0) + (El >>> 0);\nvar add5H = (low, Ah, Bh, Ch, Dh, Eh) => Ah + Bh + Ch + Dh + Eh + (low / 2 ** 32 | 0) | 0;\nvar u64 = {\n  fromBig,\n  split,\n  toBig,\n  shrSH,\n  shrSL,\n  rotrSH,\n  rotrSL,\n  rotrBH,\n  rotrBL,\n  rotr32H,\n  rotr32L,\n  rotlSH,\n  rotlSL,\n  rotlBH,\n  rotlBL,\n  add,\n  add3L,\n  add3H,\n  add4L,\n  add4H,\n  add5H,\n  add5L\n};\nvar u64_default = u64;\n\n// node_modules/@noble/hashes/sha2.js\nvar SHA256_K = /* @__PURE__ */ Uint32Array.from([\n  1116352408,\n  1899447441,\n  3049323471,\n  3921009573,\n  961987163,\n  1508970993,\n  2453635748,\n  2870763221,\n  3624381080,\n  310598401,\n  607225278,\n  1426881987,\n  1925078388,\n  2162078206,\n  2614888103,\n  3248222580,\n  3835390401,\n  4022224774,\n  264347078,\n  604807628,\n  770255983,\n  1249150122,\n  1555081692,\n  1996064986,\n  2554220882,\n  2821834349,\n  2952996808,\n  3210313671,\n  3336571891,\n  3584528711,\n  113926993,\n  338241895,\n  666307205,\n  773529912,\n  1294757372,\n  1396182291,\n  1695183700,\n  1986661051,\n  2177026350,\n  2456956037,\n  2730485921,\n  2820302411,\n  3259730800,\n  3345764771,\n  3516065817,\n  3600352804,\n  4094571909,\n  275423344,\n  430227734,\n  506948616,\n  659060556,\n  883997877,\n  958139571,\n  1322822218,\n  1537002063,\n  1747873779,\n  1955562222,\n  2024104815,\n  2227730452,\n  2361852424,\n  2428436474,\n  2756734187,\n  3204031479,\n  3329325298\n]);\nvar SHA256_W = /* @__PURE__ */ new Uint32Array(64);\nvar SHA2_32B = class extends HashMD {\n  constructor(outputLen) {\n    super(64, outputLen, 8, false);\n  }\n  get() {\n    const { A, B, C, D, E, F, G, H } = this;\n    return [A, B, C, D, E, F, G, H];\n  }\n  // prettier-ignore\n  set(A, B, C, D, E, F, G, H) {\n    this.A = A | 0;\n    this.B = B | 0;\n    this.C = C | 0;\n    this.D = D | 0;\n    this.E = E | 0;\n    this.F = F | 0;\n    this.G = G | 0;\n    this.H = H | 0;\n  }\n  process(view, offset) {\n    for (let i = 0; i < 16; i++, offset += 4)\n      SHA256_W[i] = view.getUint32(offset, false);\n    for (let i = 16; i < 64; i++) {\n      const W15 = SHA256_W[i - 15];\n      const W2 = SHA256_W[i - 2];\n      const s0 = rotr(W15, 7) ^ rotr(W15, 18) ^ W15 >>> 3;\n      const s1 = rotr(W2, 17) ^ rotr(W2, 19) ^ W2 >>> 10;\n      SHA256_W[i] = s1 + SHA256_W[i - 7] + s0 + SHA256_W[i - 16] | 0;\n    }\n    let { A, B, C, D, E, F, G, H } = this;\n    for (let i = 0; i < 64; i++) {\n      const sigma1 = rotr(E, 6) ^ rotr(E, 11) ^ rotr(E, 25);\n      const T1 = H + sigma1 + Chi(E, F, G) + SHA256_K[i] + SHA256_W[i] | 0;\n      const sigma0 = rotr(A, 2) ^ rotr(A, 13) ^ rotr(A, 22);\n      const T2 = sigma0 + Maj(A, B, C) | 0;\n      H = G;\n      G = F;\n      F = E;\n      E = D + T1 | 0;\n      D = C;\n      C = B;\n      B = A;\n      A = T1 + T2 | 0;\n    }\n    A = A + this.A | 0;\n    B = B + this.B | 0;\n    C = C + this.C | 0;\n    D = D + this.D | 0;\n    E = E + this.E | 0;\n    F = F + this.F | 0;\n    G = G + this.G | 0;\n    H = H + this.H | 0;\n    this.set(A, B, C, D, E, F, G, H);\n  }\n  roundClean() {\n    clean(SHA256_W);\n  }\n  destroy() {\n    this.set(0, 0, 0, 0, 0, 0, 0, 0);\n    clean(this.buffer);\n  }\n};\nvar _SHA256 = class extends SHA2_32B {\n  // We cannot use array here since array allows indexing by variable\n  // which means optimizer/compiler cannot use registers.\n  A = SHA256_IV[0] | 0;\n  B = SHA256_IV[1] | 0;\n  C = SHA256_IV[2] | 0;\n  D = SHA256_IV[3] | 0;\n  E = SHA256_IV[4] | 0;\n  F = SHA256_IV[5] | 0;\n  G = SHA256_IV[6] | 0;\n  H = SHA256_IV[7] | 0;\n  constructor() {\n    super(32);\n  }\n};\nvar _SHA224 = class extends SHA2_32B {\n  A = SHA224_IV[0] | 0;\n  B = SHA224_IV[1] | 0;\n  C = SHA224_IV[2] | 0;\n  D = SHA224_IV[3] | 0;\n  E = SHA224_IV[4] | 0;\n  F = SHA224_IV[5] | 0;\n  G = SHA224_IV[6] | 0;\n  H = SHA224_IV[7] | 0;\n  constructor() {\n    super(28);\n  }\n};\nvar K512 = /* @__PURE__ */ (() => split([\n  \"0x428a2f98d728ae22\",\n  \"0x7137449123ef65cd\",\n  \"0xb5c0fbcfec4d3b2f\",\n  \"0xe9b5dba58189dbbc\",\n  \"0x3956c25bf348b538\",\n  \"0x59f111f1b605d019\",\n  \"0x923f82a4af194f9b\",\n  \"0xab1c5ed5da6d8118\",\n  \"0xd807aa98a3030242\",\n  \"0x12835b0145706fbe\",\n  \"0x243185be4ee4b28c\",\n  \"0x550c7dc3d5ffb4e2\",\n  \"0x72be5d74f27b896f\",\n  \"0x80deb1fe3b1696b1\",\n  \"0x9bdc06a725c71235\",\n  \"0xc19bf174cf692694\",\n  \"0xe49b69c19ef14ad2\",\n  \"0xefbe4786384f25e3\",\n  \"0x0fc19dc68b8cd5b5\",\n  \"0x240ca1cc77ac9c65\",\n  \"0x2de92c6f592b0275\",\n  \"0x4a7484aa6ea6e483\",\n  \"0x5cb0a9dcbd41fbd4\",\n  \"0x76f988da831153b5\",\n  \"0x983e5152ee66dfab\",\n  \"0xa831c66d2db43210\",\n  \"0xb00327c898fb213f\",\n  \"0xbf597fc7beef0ee4\",\n  \"0xc6e00bf33da88fc2\",\n  \"0xd5a79147930aa725\",\n  \"0x06ca6351e003826f\",\n  \"0x142929670a0e6e70\",\n  \"0x27b70a8546d22ffc\",\n  \"0x2e1b21385c26c926\",\n  \"0x4d2c6dfc5ac42aed\",\n  \"0x53380d139d95b3df\",\n  \"0x650a73548baf63de\",\n  \"0x766a0abb3c77b2a8\",\n  \"0x81c2c92e47edaee6\",\n  \"0x92722c851482353b\",\n  \"0xa2bfe8a14cf10364\",\n  \"0xa81a664bbc423001\",\n  \"0xc24b8b70d0f89791\",\n  \"0xc76c51a30654be30\",\n  \"0xd192e819d6ef5218\",\n  \"0xd69906245565a910\",\n  \"0xf40e35855771202a\",\n  \"0x106aa07032bbd1b8\",\n  \"0x19a4c116b8d2d0c8\",\n  \"0x1e376c085141ab53\",\n  \"0x2748774cdf8eeb99\",\n  \"0x34b0bcb5e19b48a8\",\n  \"0x391c0cb3c5c95a63\",\n  \"0x4ed8aa4ae3418acb\",\n  \"0x5b9cca4f7763e373\",\n  \"0x682e6ff3d6b2b8a3\",\n  \"0x748f82ee5defb2fc\",\n  \"0x78a5636f43172f60\",\n  \"0x84c87814a1f0ab72\",\n  \"0x8cc702081a6439ec\",\n  \"0x90befffa23631e28\",\n  \"0xa4506cebde82bde9\",\n  \"0xbef9a3f7b2c67915\",\n  \"0xc67178f2e372532b\",\n  \"0xca273eceea26619c\",\n  \"0xd186b8c721c0c207\",\n  \"0xeada7dd6cde0eb1e\",\n  \"0xf57d4f7fee6ed178\",\n  \"0x06f067aa72176fba\",\n  \"0x0a637dc5a2c898a6\",\n  \"0x113f9804bef90dae\",\n  \"0x1b710b35131c471b\",\n  \"0x28db77f523047d84\",\n  \"0x32caab7b40c72493\",\n  \"0x3c9ebe0a15c9bebc\",\n  \"0x431d67c49c100d4c\",\n  \"0x4cc5d4becb3e42b6\",\n  \"0x597f299cfc657e2a\",\n  \"0x5fcb6fab3ad6faec\",\n  \"0x6c44198c4a475817\"\n].map((n) => BigInt(n))))();\nvar SHA512_Kh = /* @__PURE__ */ (() => K512[0])();\nvar SHA512_Kl = /* @__PURE__ */ (() => K512[1])();\nvar SHA512_W_H = /* @__PURE__ */ new Uint32Array(80);\nvar SHA512_W_L = /* @__PURE__ */ new Uint32Array(80);\nvar SHA2_64B = class extends HashMD {\n  constructor(outputLen) {\n    super(128, outputLen, 16, false);\n  }\n  // prettier-ignore\n  get() {\n    const { Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl } = this;\n    return [Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl];\n  }\n  // prettier-ignore\n  set(Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl) {\n    this.Ah = Ah | 0;\n    this.Al = Al | 0;\n    this.Bh = Bh | 0;\n    this.Bl = Bl | 0;\n    this.Ch = Ch | 0;\n    this.Cl = Cl | 0;\n    this.Dh = Dh | 0;\n    this.Dl = Dl | 0;\n    this.Eh = Eh | 0;\n    this.El = El | 0;\n    this.Fh = Fh | 0;\n    this.Fl = Fl | 0;\n    this.Gh = Gh | 0;\n    this.Gl = Gl | 0;\n    this.Hh = Hh | 0;\n    this.Hl = Hl | 0;\n  }\n  process(view, offset) {\n    for (let i = 0; i < 16; i++, offset += 4) {\n      SHA512_W_H[i] = view.getUint32(offset);\n      SHA512_W_L[i] = view.getUint32(offset += 4);\n    }\n    for (let i = 16; i < 80; i++) {\n      const W15h = SHA512_W_H[i - 15] | 0;\n      const W15l = SHA512_W_L[i - 15] | 0;\n      const s0h = rotrSH(W15h, W15l, 1) ^ rotrSH(W15h, W15l, 8) ^ shrSH(W15h, W15l, 7);\n      const s0l = rotrSL(W15h, W15l, 1) ^ rotrSL(W15h, W15l, 8) ^ shrSL(W15h, W15l, 7);\n      const W2h = SHA512_W_H[i - 2] | 0;\n      const W2l = SHA512_W_L[i - 2] | 0;\n      const s1h = rotrSH(W2h, W2l, 19) ^ rotrBH(W2h, W2l, 61) ^ shrSH(W2h, W2l, 6);\n      const s1l = rotrSL(W2h, W2l, 19) ^ rotrBL(W2h, W2l, 61) ^ shrSL(W2h, W2l, 6);\n      const SUMl = add4L(s0l, s1l, SHA512_W_L[i - 7], SHA512_W_L[i - 16]);\n      const SUMh = add4H(SUMl, s0h, s1h, SHA512_W_H[i - 7], SHA512_W_H[i - 16]);\n      SHA512_W_H[i] = SUMh | 0;\n      SHA512_W_L[i] = SUMl | 0;\n    }\n    let { Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl } = this;\n    for (let i = 0; i < 80; i++) {\n      const sigma1h = rotrSH(Eh, El, 14) ^ rotrSH(Eh, El, 18) ^ rotrBH(Eh, El, 41);\n      const sigma1l = rotrSL(Eh, El, 14) ^ rotrSL(Eh, El, 18) ^ rotrBL(Eh, El, 41);\n      const CHIh = Eh & Fh ^ ~Eh & Gh;\n      const CHIl = El & Fl ^ ~El & Gl;\n      const T1ll = add5L(Hl, sigma1l, CHIl, SHA512_Kl[i], SHA512_W_L[i]);\n      const T1h = add5H(T1ll, Hh, sigma1h, CHIh, SHA512_Kh[i], SHA512_W_H[i]);\n      const T1l = T1ll | 0;\n      const sigma0h = rotrSH(Ah, Al, 28) ^ rotrBH(Ah, Al, 34) ^ rotrBH(Ah, Al, 39);\n      const sigma0l = rotrSL(Ah, Al, 28) ^ rotrBL(Ah, Al, 34) ^ rotrBL(Ah, Al, 39);\n      const MAJh = Ah & Bh ^ Ah & Ch ^ Bh & Ch;\n      const MAJl = Al & Bl ^ Al & Cl ^ Bl & Cl;\n      Hh = Gh | 0;\n      Hl = Gl | 0;\n      Gh = Fh | 0;\n      Gl = Fl | 0;\n      Fh = Eh | 0;\n      Fl = El | 0;\n      ({ h: Eh, l: El } = add(Dh | 0, Dl | 0, T1h | 0, T1l | 0));\n      Dh = Ch | 0;\n      Dl = Cl | 0;\n      Ch = Bh | 0;\n      Cl = Bl | 0;\n      Bh = Ah | 0;\n      Bl = Al | 0;\n      const All = add3L(T1l, sigma0l, MAJl);\n      Ah = add3H(All, T1h, sigma0h, MAJh);\n      Al = All | 0;\n    }\n    ({ h: Ah, l: Al } = add(this.Ah | 0, this.Al | 0, Ah | 0, Al | 0));\n    ({ h: Bh, l: Bl } = add(this.Bh | 0, this.Bl | 0, Bh | 0, Bl | 0));\n    ({ h: Ch, l: Cl } = add(this.Ch | 0, this.Cl | 0, Ch | 0, Cl | 0));\n    ({ h: Dh, l: Dl } = add(this.Dh | 0, this.Dl | 0, Dh | 0, Dl | 0));\n    ({ h: Eh, l: El } = add(this.Eh | 0, this.El | 0, Eh | 0, El | 0));\n    ({ h: Fh, l: Fl } = add(this.Fh | 0, this.Fl | 0, Fh | 0, Fl | 0));\n    ({ h: Gh, l: Gl } = add(this.Gh | 0, this.Gl | 0, Gh | 0, Gl | 0));\n    ({ h: Hh, l: Hl } = add(this.Hh | 0, this.Hl | 0, Hh | 0, Hl | 0));\n    this.set(Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl);\n  }\n  roundClean() {\n    clean(SHA512_W_H, SHA512_W_L);\n  }\n  destroy() {\n    clean(this.buffer);\n    this.set(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);\n  }\n};\nvar _SHA512 = class extends SHA2_64B {\n  Ah = SHA512_IV[0] | 0;\n  Al = SHA512_IV[1] | 0;\n  Bh = SHA512_IV[2] | 0;\n  Bl = SHA512_IV[3] | 0;\n  Ch = SHA512_IV[4] | 0;\n  Cl = SHA512_IV[5] | 0;\n  Dh = SHA512_IV[6] | 0;\n  Dl = SHA512_IV[7] | 0;\n  Eh = SHA512_IV[8] | 0;\n  El = SHA512_IV[9] | 0;\n  Fh = SHA512_IV[10] | 0;\n  Fl = SHA512_IV[11] | 0;\n  Gh = SHA512_IV[12] | 0;\n  Gl = SHA512_IV[13] | 0;\n  Hh = SHA512_IV[14] | 0;\n  Hl = SHA512_IV[15] | 0;\n  constructor() {\n    super(64);\n  }\n};\nvar _SHA384 = class extends SHA2_64B {\n  Ah = SHA384_IV[0] | 0;\n  Al = SHA384_IV[1] | 0;\n  Bh = SHA384_IV[2] | 0;\n  Bl = SHA384_IV[3] | 0;\n  Ch = SHA384_IV[4] | 0;\n  Cl = SHA384_IV[5] | 0;\n  Dh = SHA384_IV[6] | 0;\n  Dl = SHA384_IV[7] | 0;\n  Eh = SHA384_IV[8] | 0;\n  El = SHA384_IV[9] | 0;\n  Fh = SHA384_IV[10] | 0;\n  Fl = SHA384_IV[11] | 0;\n  Gh = SHA384_IV[12] | 0;\n  Gl = SHA384_IV[13] | 0;\n  Hh = SHA384_IV[14] | 0;\n  Hl = SHA384_IV[15] | 0;\n  constructor() {\n    super(48);\n  }\n};\nvar T224_IV = /* @__PURE__ */ Uint32Array.from([\n  2352822216,\n  424955298,\n  1944164710,\n  2312950998,\n  502970286,\n  855612546,\n  1738396948,\n  1479516111,\n  258812777,\n  2077511080,\n  2011393907,\n  79989058,\n  1067287976,\n  1780299464,\n  286451373,\n  2446758561\n]);\nvar T256_IV = /* @__PURE__ */ Uint32Array.from([\n  573645204,\n  4230739756,\n  2673172387,\n  3360449730,\n  596883563,\n  1867755857,\n  2520282905,\n  1497426621,\n  2519219938,\n  2827943907,\n  3193839141,\n  1401305490,\n  721525244,\n  746961066,\n  246885852,\n  2177182882\n]);\nvar _SHA512_224 = class extends SHA2_64B {\n  Ah = T224_IV[0] | 0;\n  Al = T224_IV[1] | 0;\n  Bh = T224_IV[2] | 0;\n  Bl = T224_IV[3] | 0;\n  Ch = T224_IV[4] | 0;\n  Cl = T224_IV[5] | 0;\n  Dh = T224_IV[6] | 0;\n  Dl = T224_IV[7] | 0;\n  Eh = T224_IV[8] | 0;\n  El = T224_IV[9] | 0;\n  Fh = T224_IV[10] | 0;\n  Fl = T224_IV[11] | 0;\n  Gh = T224_IV[12] | 0;\n  Gl = T224_IV[13] | 0;\n  Hh = T224_IV[14] | 0;\n  Hl = T224_IV[15] | 0;\n  constructor() {\n    super(28);\n  }\n};\nvar _SHA512_256 = class extends SHA2_64B {\n  Ah = T256_IV[0] | 0;\n  Al = T256_IV[1] | 0;\n  Bh = T256_IV[2] | 0;\n  Bl = T256_IV[3] | 0;\n  Ch = T256_IV[4] | 0;\n  Cl = T256_IV[5] | 0;\n  Dh = T256_IV[6] | 0;\n  Dl = T256_IV[7] | 0;\n  Eh = T256_IV[8] | 0;\n  El = T256_IV[9] | 0;\n  Fh = T256_IV[10] | 0;\n  Fl = T256_IV[11] | 0;\n  Gh = T256_IV[12] | 0;\n  Gl = T256_IV[13] | 0;\n  Hh = T256_IV[14] | 0;\n  Hl = T256_IV[15] | 0;\n  constructor() {\n    super(32);\n  }\n};\nvar sha256 = /* @__PURE__ */ createHasher(\n  () => new _SHA256(),\n  /* @__PURE__ */ oidNist(1)\n);\nvar sha224 = /* @__PURE__ */ createHasher(\n  () => new _SHA224(),\n  /* @__PURE__ */ oidNist(4)\n);\nvar sha512 = /* @__PURE__ */ createHasher(\n  () => new _SHA512(),\n  /* @__PURE__ */ oidNist(3)\n);\nvar sha384 = /* @__PURE__ */ createHasher(\n  () => new _SHA384(),\n  /* @__PURE__ */ oidNist(2)\n);\nvar sha512_256 = /* @__PURE__ */ createHasher(\n  () => new _SHA512_256(),\n  /* @__PURE__ */ oidNist(6)\n);\nvar sha512_224 = /* @__PURE__ */ createHasher(\n  () => new _SHA512_224(),\n  /* @__PURE__ */ oidNist(5)\n);\n\n// password.js\nfunction verifyPassword(password, encoded) {\n  const parts = typeof encoded === \"string\" ? encoded.split(\"$\") : [];\n  const valid = parts.length === 4 && parts[0] === \"pbkdf2-sha256\" && parts[1] === \"600000\" && /^[0-9a-f]{32}$/.test(parts[2]) && /^[0-9a-f]{64}$/.test(parts[3]);\n  const salt = valid ? parts[2] : \"00000000000000000000000000000000\";\n  const expected = valid ? parts[3] : \"0\".repeat(64);\n  const actual = bytesToHex(pbkdf2(sha256, utf8ToBytes(password), hexToBytes(salt), { c: 6e5, dkLen: 32 }));\n  let difference = 0;\n  for (let i = 0; i < 64; i++) difference |= actual.charCodeAt(i) ^ expected.charCodeAt(i);\n  return valid && difference === 0;\n}\n\n// password-entry.js\nvar MolPassword = { verifyPassword };\n/*! Bundled license information:\n\n@noble/hashes/utils.js:\n  (*! noble-hashes - MIT License (c) 2022 Paul Miller (paulmillr.com) *)\n*/\n\nconst e=$('Employee Context').first().json.employee;const input=$('Validate Input').first().json;const matches=MolPassword.verifyPassword(input.password,e?.password_hash);if(!matches||e?.active!==true||!['WORKER','LEADER','ADMIN'].includes(e?.role))return [{json:result(401,'INVALID_CREDENTIALS','Nieprawidłowy login lub hasło.',input.request_id)}];return [{json:{verified:true,user:{employee_id:e.employee_id,display_name:e.display_name,role:e.role}}}];"
+      }
+    },
+    {
+      "id": "password-valid",
+      "name": "Password Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3840,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Password Valid",
+              "leftValue": "={{ $json.verified === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "read-receipt",
+      "name": "Read Receipt",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        4080,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "sbWYwBwKoktbD3Yf"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "request_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Input').first().json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      }
+    },
+    {
+      "id": "receipt-state",
+      "name": "Receipt State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4320,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst rows=$input.all().map(i=>i.json).filter(r=>r.request_id);const row=rows[0];if(rows.length>1)return [{json:result(503,'AUTH_UNAVAILABLE','Niespójne dane sesji.')}];if(row&&(row.employee_id!==$('Verify Password').first().json.user.employee_id))return [{json:result(409,'REQUEST_ID_CONFLICT','Użyj nowego identyfikatora logowania.')}];if(row&&!(Date.parse(row.expires_at)>Date.now()))return [{json:result(401,'SESSION_EXPIRED','Poprzednia sesja wygasła. Zaloguj się ponownie.')}];return [{json:{usable:true,exists:!!row,receipt:row||null}}];"
+      }
+    },
+    {
+      "id": "receipt-usable",
+      "name": "Receipt Usable",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Receipt Usable",
+              "leftValue": "={{ $json.usable === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "receipt-exists",
+      "name": "Receipt Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4800,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Receipt Exists",
+              "leftValue": "={{ $json.exists === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "generate-token",
+      "name": "Generate Token",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        5040,
+        0
+      ],
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "session_token",
+        "encodingType": "hex",
+        "stringLength": 64
+      }
+    },
+    {
+      "id": "hash-token",
+      "name": "Hash Token",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        5280,
+        0
+      ],
+      "parameters": {
+        "action": "hash",
+        "type": "SHA256",
+        "binaryData": false,
+        "value": "={{ $json.session_token }}",
+        "dataPropertyName": "token_hash",
+        "encoding": "hex"
+      }
+    },
+    {
+      "id": "build-login-response",
+      "name": "Build Login Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5520,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst token=$input.first().json.session_token;if(!/^[0-9a-f]{64}$/.test(token))throw new Error('TOKEN_GENERATION_FAILED');const expires_at=new Date(Date.now()+12*3600000).toISOString();const response={ok:true,request_id:$('Validate Input').first().json.request_id,data:{session_token:token,expires_at,user:$('Verify Password').first().json.user},meta:{api_version:'2.0',server_time:new Date().toISOString()}};return [{json:{response,expires_at,token_hash:$input.first().json.token_hash}}];"
+      }
+    },
+    {
+      "id": "encrypt-receipt",
+      "name": "Encrypt Receipt",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        5760,
+        0
+      ],
+      "parameters": {
+        "action": "encrypt",
+        "mode": "symmetric",
+        "cipher": "aes-256-gcm",
+        "value": "={{ JSON.stringify($json.response) }}",
+        "dataPropertyName": "encrypted_response"
+      },
+      "credentials": {
+        "crypto": {
+          "id": "79mc2IFYLaJLMrgJ",
+          "name": "MOL V2 AUTH receipt encryption"
+        }
+      }
+    },
+    {
+      "id": "store-receipt",
+      "name": "Store Receipt",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        6000,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "sbWYwBwKoktbD3Yf"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": []
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request_id": "={{ $('Validate Input').first().json.request_id }}",
+            "employee_id": "={{ $('Verify Password').first().json.user.employee_id }}",
+            "encrypted_response": "={{ $json.encrypted_response }}",
+            "token_hash": "={{ $('Build Login Response').first().json.token_hash }}",
+            "expires_at": "={{ $('Build Login Response').first().json.expires_at }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "receipt-context",
+      "name": "Receipt Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6240,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst input=$input.first().json;return [{json:input.receipt||input}];"
+      }
+    },
+    {
+      "id": "read-issued-session",
+      "name": "Read Issued Session",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        6480,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "JXNEIdijeKfhuwYD"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Input').first().json.request_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "returnAll": false,
+        "limit": 2
+      }
+    },
+    {
+      "id": "issued-session-state",
+      "name": "Issued Session State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6720,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nconst rows=$input.all().map(i=>i.json).filter(r=>r.session_id);const s=rows[0];const r=$('Receipt Context').first().json;if(rows.length>1||s&&(s.token_hash!==r.token_hash||s.employee_id!==r.employee_id))return [{json:result(503,'AUTH_UNAVAILABLE','Niespójne dane sesji.')}];if(s&&(s.revoked_at||!(Date.parse(s.expires_at)>Date.now())))return [{json:result(401,'SESSION_EXPIRED','Sesja została zakończona. Zaloguj się ponownie.')}];return [{json:{usable:true,exists:!!s}}];"
+      }
+    },
+    {
+      "id": "issued-session-usable",
+      "name": "Issued Session Usable",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6960,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Issued Session Usable",
+              "leftValue": "={{ $json.usable === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "session-exists",
+      "name": "Session Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        7200,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Session Exists",
+              "leftValue": "={{ $json.exists === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "insert-session",
+      "name": "Insert Session",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        7440,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "JXNEIdijeKfhuwYD"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": []
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $('Validate Input').first().json.request_id }}",
+            "employee_id": "={{ $('Receipt Context').first().json.employee_id }}",
+            "token_hash": "={{ $('Receipt Context').first().json.token_hash }}",
+            "expires_at": "={{ $('Receipt Context').first().json.expires_at }}",
+            "last_seen_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "decrypt-receipt",
+      "name": "Decrypt Receipt",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        7680,
+        0
+      ],
+      "parameters": {
+        "action": "decrypt",
+        "mode": "symmetric",
+        "cipher": "aes-256-gcm",
+        "value": "={{ $('Receipt Context').first().json.encrypted_response }}",
+        "dataPropertyName": "clear_response"
+      },
+      "credentials": {
+        "crypto": {
+          "id": "79mc2IFYLaJLMrgJ",
+          "name": "MOL V2 AUTH receipt encryption"
+        }
+      }
+    },
+    {
+      "id": "reset-limit",
+      "name": "Reset Limit",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        7920,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "XNQosSJXp23l2EBU"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "limit_key",
+              "condition": "eq",
+              "keyValue": "={{ $('Employee Context').first().json.limit_key }}"
+            }
+          ]
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "attempts": 0,
+            "window_start": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "login-success",
+      "name": "Login Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8160,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn [{json:{http_status:200,body:JSON.parse($('Decrypt Receipt').first().json.clear_response)}}];"
+      }
+    },
+    {
+      "id": "prepare-response",
+      "name": "Prepare Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8400,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result=(status,code,message,request_id='')=>({http_status:status,body:{ok:false,request_id,error:{code,message},meta:{api_version:'2.0',server_time:new Date().toISOString()}}});\nreturn $input.all();"
+      }
+    }
+  ],
+  "connections": {
+    "Acquire Auth Lock": {
+      "main": [
+        [
+          {
+            "node": "Own Lock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Own Lock": {
+      "main": [
+        [
+          {
+            "node": "Read Employee",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busy": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Response": {
+      "main": [
+        [
+          {
+            "node": "Release Auth Lock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Release Auth Lock": {
+      "main": [
+        [
+          {
+            "node": "Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Response": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Input Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Valid": {
+      "main": [
+        [
+          {
+            "node": "Acquire Auth Lock",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Employee": {
+      "main": [
+        [
+          {
+            "node": "Employee Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Employee Context": {
+      "main": [
+        [
+          {
+            "node": "Read Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Limit": {
+      "main": [
+        [
+          {
+            "node": "Check Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Limit": {
+      "main": [
+        [
+          {
+            "node": "Limit Allows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit Allows": {
+      "main": [
+        [
+          {
+            "node": "Count Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Attempt": {
+      "main": [
+        [
+          {
+            "node": "Verify Password",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Password": {
+      "main": [
+        [
+          {
+            "node": "Password Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Password Valid": {
+      "main": [
+        [
+          {
+            "node": "Read Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Receipt": {
+      "main": [
+        [
+          {
+            "node": "Receipt State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receipt State": {
+      "main": [
+        [
+          {
+            "node": "Receipt Usable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receipt Usable": {
+      "main": [
+        [
+          {
+            "node": "Receipt Exists",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receipt Exists": {
+      "main": [
+        [
+          {
+            "node": "Receipt Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Token": {
+      "main": [
+        [
+          {
+            "node": "Hash Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash Token": {
+      "main": [
+        [
+          {
+            "node": "Build Login Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Login Response": {
+      "main": [
+        [
+          {
+            "node": "Encrypt Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Encrypt Receipt": {
+      "main": [
+        [
+          {
+            "node": "Store Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Receipt": {
+      "main": [
+        [
+          {
+            "node": "Receipt Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receipt Context": {
+      "main": [
+        [
+          {
+            "node": "Read Issued Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Issued Session": {
+      "main": [
+        [
+          {
+            "node": "Issued Session State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Issued Session State": {
+      "main": [
+        [
+          {
+            "node": "Issued Session Usable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Issued Session Usable": {
+      "main": [
+        [
+          {
+            "node": "Session Exists",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Session Exists": {
+      "main": [
+        [
+          {
+            "node": "Decrypt Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Session": {
+      "main": [
+        [
+          {
+            "node": "Decrypt Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decrypt Receipt": {
+      "main": [
+        [
+          {
+            "node": "Reset Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reset Limit": {
+      "main": [
+        [
+          {
+            "node": "Login Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Login Success": {
+      "main": [
+        [
+          {
+            "node": "Prepare Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 60,
+    "errorWorkflow": "rnELTCKClbzY8lxZ",
+    "timezone": "Europe/Warsaw",
+    "executionOrder": "v1"
+  }
+}
