@@ -279,6 +279,38 @@
     if (style) style.remove();
   }
 
+  function mountMobileLogout() {
+    const isMobileApp = /\/pwa\/mobile\/index\.html$/.test(location.pathname);
+    if (!isMobileApp || document.getElementById('mobileLogoutButtonV3')) return;
+    const host = document.querySelector('.worker-hero');
+    if (!host) return;
+
+    const button = document.createElement('button');
+    button.id = 'mobileLogoutButtonV3';
+    button.type = 'button';
+    button.textContent = 'Wyloguj';
+    button.setAttribute('aria-label', 'Wyloguj z MOL App V3');
+    button.style.cssText = 'margin-top:14px;width:100%;min-height:48px;border:1px solid rgba(255,82,97,.55);border-radius:12px;background:rgba(101,26,38,.75);color:#f4f8fb;font:700 14px system-ui;cursor:pointer';
+
+    button.addEventListener('click', async () => {
+      if (button.disabled) return;
+      button.disabled = true;
+      const label = button.textContent;
+      button.textContent = 'Wylogowywanie…';
+      try {
+        await logout({ clearOnFailure: true });
+      } catch {
+        clearToken();
+      } finally {
+        clearToken();
+        button.textContent = label;
+        redirectLogin('session');
+      }
+    });
+
+    host.appendChild(button);
+  }
+
   window.MOLApi = Object.freeze({
     BASE,
     BUILD,
@@ -304,4 +336,7 @@
     canonicalizeRole,
     reveal,
   });
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountMobileLogout, { once: true });
+  else mountMobileLogout();
 })();
