@@ -4,7 +4,7 @@
   const api = window.MOLApi;
   if (!api) return;
 
-  const BUILD = '20260911.4';
+  const BUILD = '20260911.5';
   const shell = document.querySelector('.worker-shell');
   const startButton = document.querySelector('[data-action="start"]');
   const stopButton = document.querySelector('[data-action="stop"]');
@@ -131,6 +131,34 @@
     processPanel.innerHTML = `<p class="mol-kicker">ETAP 3</p><h2>Proces pracy</h2><p>${state === 'OPEN' ? 'Wybierz wykonywany proces. Zmiana zamyka poprzedni proces i od razu rozpoczyna nowy.' : 'Proces można wybrać dopiero po rozpoczęciu dnia pracy.'}</p><div class="action-grid" data-process-options>${cards || '<p>Brak dostępnych procesów.</p>'}</div>${active ? '<button type="button" class="mol-button mol-button--danger" data-panel-process-stop style="width:100%;margin-top:14px">Zakończ aktywny proces</button>' : ''}`;
     processPanel.querySelectorAll('[data-process-code]').forEach((button) => button.addEventListener('click', () => runProcess(active ? 'CHANGE' : 'START', button.dataset.processCode)));
     processPanel.querySelector('[data-panel-process-stop]')?.addEventListener('click', () => runProcess('STOP'));
+  }
+
+  function showProcessScreen(event) {
+    event?.preventDefault?.();
+    event?.stopImmediatePropagation?.();
+    const state = String(attendanceState?.attendance?.state || 'NOT_STARTED').toUpperCase();
+    if (busy) return;
+    if (state !== 'OPEN') {
+      setStatus('Najpierw rozpocznij pracę. Dopiero potem możesz wybrać proces.', 'error');
+      return;
+    }
+    if (!processPanel) {
+      setStatus('Nie udało się otworzyć listy procesów.', 'error');
+      return;
+    }
+
+    renderProcessPanel();
+    if (typeof window.MOLMobileShow === 'function') {
+      window.MOLMobileShow('process');
+      return;
+    }
+
+    shell.dataset.screen = 'process';
+    document.querySelectorAll('[data-nav]').forEach((button) => button.classList.toggle('is-active', button.dataset.nav === 'process'));
+    document.querySelectorAll('.worker-hero,.work-status,.kpi-grid,.section-block,.active-process').forEach((node) => { node.hidden = true; });
+    document.querySelectorAll('[data-panel]').forEach((panel) => { panel.hidden = panel !== processPanel; });
+    processPanel.hidden = false;
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
   function setButtonState() {
@@ -264,6 +292,9 @@
 
   startButton?.addEventListener('click', (event) => { event.preventDefault(); if (!startButton.disabled) runAttendance('START'); }, true);
   stopButton?.addEventListener('click', (event) => { event.preventDefault(); if (!stopButton.disabled) runAttendance('STOP'); }, true);
+  processButton?.addEventListener('click', showProcessScreen, true);
+  changeProcessButton?.addEventListener('click', showProcessScreen, true);
+  processNav?.addEventListener('click', showProcessScreen, true);
   processStopButton?.addEventListener('click', (event) => { event.preventDefault(); if (!processStopButton.disabled) runProcess('STOP'); }, true);
 
   (async () => {
