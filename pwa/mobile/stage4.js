@@ -2,7 +2,7 @@
   'use strict';
   const api = window.MOLApi;
   if (!api) return;
-  const BUILD = '20260911.8';
+  const BUILD = '20260911.9';
   let timer = null;
   let lastDailyVersion = 0;
   let lastMonthlyVersion = 0;
@@ -114,7 +114,7 @@
     setStageLabel(`Ładowanie normy V3 · build ${BUILD}…`);
     refresh();
     if (timer) clearInterval(timer);
-    timer = setInterval(refresh, 30000);
+    timer = setInterval(refresh, 300000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
     window.addEventListener('mol-v3-process-changed', refresh);
   };
