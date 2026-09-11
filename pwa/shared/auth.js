@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD = '20260911.1';
+  const BUILD = '20260911.2';
   const form = document.querySelector('[data-auth-form]');
   const password = document.querySelector('[data-auth-password]');
   const toggle = document.querySelector('[data-auth-toggle]');
@@ -31,7 +31,7 @@
     const script = document.createElement('script');
     script.src = `../shared/api.js?v=${BUILD}`;
     script.onload = () => resolve(window.MOLApi);
-    script.onerror = () => reject(new Error('Nie udało się załadować klienta API V2.'));
+    script.onerror = () => reject(new Error('Nie udało się załadować klienta API V3.'));
     document.head.append(script);
   });
 
@@ -60,7 +60,7 @@
     setMessage('Logowanie…');
     try {
       const api = await loadApi();
-      const session = await api.login(username, secret);
+      const session = await api.login(username, secret, { surface });
       const role = String(session?.user?.role || '').toUpperCase();
       if (surface === 'web' && role === 'WORKER') {
         try { await api.logout({ clearOnFailure: true }); } catch { api.clearToken(); }
