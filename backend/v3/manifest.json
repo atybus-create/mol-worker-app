@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "project_id": "2QU4nSVpDVPvyHyw",
+  "version": "3.0.0-stage0",
+  "workflows": {
+    "health": "5xDy7GPmnhtXkoed"
+  },
+  "frontend": {
+    "build": "20260911.1",
+    "mobile": "/pwa/mobile/login.html",
+    "web": "/pwa/web/login.html",
+    "route_overrides": {
+      "mol-app-health": "mol-app-v3-health"
+    },
+    "features": {
+      "health": true,
+      "auth": false
+    }
+  }
+}
