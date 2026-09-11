@@ -5,7 +5,7 @@
   const script = document.currentScript;
   const scriptUrl = new URL(script.src, location.href);
   const scopeUrl = new URL("./", scriptUrl);
-  const workerUrl = new URL("./sw.js?v=20260911.2-authfix1", scriptUrl);
+  const workerUrl = new URL("./sw.js?v=20260911.5-stage3", scriptUrl);
   let reloadAfterUpdate = false;
 
   function showUpdate(registration) {
