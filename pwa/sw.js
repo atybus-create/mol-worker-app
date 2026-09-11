@@ -1,4 +1,4 @@
-const VERSION = "mol-pwa-test-20260911.1";
+const VERSION = "mol-pwa-test-20260911.2-authfix1";
 const SHELL = [
   "./",
   "./offline.html",
@@ -80,6 +80,22 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(async () => (await caches.match(request, {ignoreSearch: true})) || (await caches.match("./offline.html")))
+    );
+    return;
+  }
+
+  const criticalFresh = url.pathname.endsWith('/shared/auth.js') || url.pathname.endsWith('/shared/api.js') || url.pathname.endsWith('/pwa-register.js');
+  if (criticalFresh) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(VERSION).then((cache) => cache.put(url.pathname, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(url.pathname))
     );
     return;
   }
