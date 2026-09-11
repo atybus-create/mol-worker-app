@@ -2,7 +2,7 @@
   'use strict';
   const api = window.MOLApi;
   if (!api) return;
-  const BUILD = '20260911.7';
+  const BUILD = '20260911.8';
   let timer = null;
   let lastDailyVersion = 0;
   let lastMonthlyVersion = 0;
@@ -18,7 +18,7 @@
   const hhmm = (iso) => {
     if (!iso) return '—';
     const d = new Date(iso);
-    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' });
+    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleTimeString('pl-PL', { timeZone:'Europe/Warsaw', hour:'2-digit', minute:'2-digit' });
   };
 
   function setMetric(section, values) {
@@ -57,40 +57,66 @@
     if (progress) progress.style.width = `${Math.max(0, Math.min(100, num(data?.combined?.norm_pct)))}%`;
   }
 
+  function renderActiveProcessExecution(data) {
+    const host = document.querySelector('.active-process');
+    if (!host || !data) return;
+    const activeName = host.querySelector('h2')?.textContent?.toUpperCase() || '';
+    const candidates = [...host.querySelectorAll('strong')].filter((node) => node !== host.querySelector('h2'));
+    const valueNode = candidates.at(-1);
+    if (!valueNode) return;
+    if (activeName.includes('PAK')) valueNode.textContent = qty(data.pak?.eligible);
+    else if (activeName.includes('KOMPLET')) valueNode.textContent = qty(data.pick?.eligible);
+  }
+
   function setStageLabel(text) {
     const node = document.querySelector('.performance-block .section-title span');
     if (node) node.textContent = text;
   }
 
-  async function refresh() {
+  async function refreshDaily() {
+    const daily = await api.request('mol-app-v3-performance-daily', { timeoutMs: 20000 });
+    const dv = num(daily?.snapshot_version);
+    if (!lastDailyVersion || dv >= lastDailyVersion) {
+      lastDailyVersion = dv;
+      renderDrawer('today', daily);
+      renderTop(daily);
+      renderActiveProcessExecution(daily);
+      setStageLabel(`${stateLabel(daily)} · V3 · build ${BUILD}`);
+    }
+  }
+
+  async function refreshMonthly() {
     try {
-      const [daily, monthly] = await Promise.all([
-        api.read('mol-app-v3-performance-daily'),
-        api.read('mol-app-v3-performance-monthly')
-      ]);
-      const dv = num(daily?.snapshot_version);
+      const monthly = await api.request('mol-app-v3-performance-monthly', { timeoutMs: 30000 });
       const mv = num(monthly?.snapshot_version);
-      if (!lastDailyVersion || dv >= lastDailyVersion) {
-        lastDailyVersion = dv;
-        renderDrawer('today', daily);
-        renderTop(daily);
-        setStageLabel(`${stateLabel(daily)} · V3 · build ${BUILD}`);
-      }
       if (!lastMonthlyVersion || mv >= lastMonthlyVersion) {
         lastMonthlyVersion = mv;
         renderDrawer('month', monthly);
       }
     } catch (error) {
-      console.error('Etap 4 / performance', error);
-      setStageLabel('Błąd odświeżenia · pozostawiono ostatni poprawny wynik');
+      console.warn('Etap 4 / monthly', error);
+      const drawer = document.querySelector('[data-norm-period="month"] summary small');
+      if (drawer) drawer.textContent = 'Błąd odświeżenia miesiąca';
+    }
+  }
+
+  async function refresh() {
+    try {
+      await refreshDaily();
+      refreshMonthly();
+    } catch (error) {
+      console.error('Etap 4 / daily', error);
+      setStageLabel(`Błąd odświeżenia normy: ${error?.message || 'brak odpowiedzi backendu'}`);
     }
   }
 
   const start = () => {
+    setStageLabel(`Ładowanie normy V3 · build ${BUILD}…`);
     refresh();
     if (timer) clearInterval(timer);
-    timer = setInterval(refresh, 60000);
+    timer = setInterval(refresh, 30000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+    window.addEventListener('mol-v3-process-changed', refresh);
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
