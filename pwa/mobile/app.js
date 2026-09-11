@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD = '20260910.1';
+  const BUILD = '20260911.1';
   window.MOL_BUILD = BUILD;
   const shell = document.querySelector('.worker-shell');
   if (!shell) return;
