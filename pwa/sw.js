@@ -1,4 +1,4 @@
-const VERSION = "mol-pwa-test-20260911.5-stage3";
+const VERSION = "mol-pwa-test-20260911.8-stage4";
 const SHELL = [
   "./",
   "./offline.html",
@@ -23,6 +23,7 @@ const SHELL = [
   "./mobile/app.css",
   "./mobile/app.js",
   "./mobile/stage3.js",
+  "./mobile/stage4.js",
   "./mobile/manager.css",
   "./mobile/manager.js",
   "./mobile/report-integrity.js",
@@ -83,7 +84,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  const criticalFresh = url.pathname.endsWith('/shared/auth.js') || url.pathname.endsWith('/shared/api.js') || url.pathname.endsWith('/mobile/app.js') || url.pathname.endsWith('/mobile/stage3.js') || url.pathname.endsWith('/pwa-register.js');
+  const criticalFresh = url.pathname.endsWith('/shared/auth.js') || url.pathname.endsWith('/shared/api.js') || url.pathname.endsWith('/mobile/app.js') || url.pathname.endsWith('/mobile/stage3.js') || url.pathname.endsWith('/mobile/stage4.js') || url.pathname.endsWith('/pwa-register.js');
   if (criticalFresh) {
     event.respondWith(
       fetch(request)
