@@ -1,0 +1,20 @@
+(() => {
+  'use strict';
+  const api=window.MOLApi;if(!api)return;
+  const style=document.createElement('style');style.textContent=`.v3-comm{margin:12px 16px}.v3-comm-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.v3-comm-list{display:grid;gap:10px;margin-top:10px}.v3-msg{padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.04)}.v3-msg[data-open="true"]{border-color:rgba(255,188,64,.55)}.v3-msg h3{font-size:14px;margin:0 0 5px}.v3-msg p{margin:0 0 8px;font-size:13px;line-height:1.4}.v3-msg small{opacity:.72}.v3-msg button{margin-top:9px;width:100%}.v3-comm-empty{opacity:.7;font-size:13px}`;document.head.append(style);
+  const TYPE={NO_PROCESS:'Brak procesu',NO_ACTIVITY:'Brak aktywności',WRONG_PROCESS:'Niezgodny proces',WORK_OUTSIDE_APP:'Praca poza aplikacją',ATTENDANCE_CORRECTION:'Korekta czasu pracy',FORGOTTEN_STOP:'Brak STOP',MANUAL:'Komunikat lidera'};
+  const root=document.createElement('section');root.className='mol-card v3-comm';root.innerHTML='<div class="v3-comm-head"><div><p class="mol-kicker">Komunikacja</p><h2>Alerty i komunikaty</h2></div><span class="mol-chip mol-chip--info" data-v3comm-count>0</span></div><div class="v3-comm-list" data-v3comm-list><p class="v3-comm-empty">Ładowanie…</p></div>';
+  const anchor=document.querySelector('.work-status')||document.querySelector('.worker-hero');anchor?.after(root);
+  const list=root.querySelector('[data-v3comm-list]'),count=root.querySelector('[data-v3comm-count]');
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let browserId='';try{browserId=localStorage.getItem('mol.v3.browser_id')||'';if(!browserId){browserId=crypto.randomUUID();localStorage.setItem('mol.v3.browser_id',browserId);}}catch{browserId=crypto.randomUUID();}
+  let stopped=false,pollTimer=0,heartTimer=0;
+  async function heartbeat(){if(stopped||document.visibilityState==='hidden')return;try{await api.write('mol-app-v3-comm-heartbeat',{request_id:api.requestId(),surface:'mobile',browser_id:browserId});}catch(e){if(e.status===401)stopped=true;}}
+  async function markShown(items){for(const m of items.filter(x=>!x.shown_at)){try{await api.write('mol-app-v3-comm-shown',{request_id:api.requestId(),message_id:m.message_id});}catch{}}}
+  function render(data){const items=Array.isArray(data?.items)?data.items:[];const active=items.filter(x=>x.cause_status==='OPEN'&&(!x.ack_required||!x.ack_at));count.textContent=String(active.length);if(!items.length){list.innerHTML='<p class="v3-comm-empty">Brak komunikatów.</p>';return;}list.innerHTML=items.map(m=>`<article class="v3-msg" data-open="${m.cause_status==='OPEN'}"><h3>${esc(TYPE[m.type]||m.type)}</h3><p>${esc(m.content)}</p><small>${m.cause_status==='RESOLVED'?'Rozwiązany':m.ack_at?'Potwierdzony':m.shown_at?'Wyświetlony':'Oczekuje'} · ${esc(new Date(m.sent_at).toLocaleString('pl-PL'))}</small>${m.ack_required&&!m.ack_at?`<button class="mol-button mol-button--primary" type="button" data-comm-ack="${esc(m.message_id)}">Potwierdzam</button>`:''}</article>`).join('');}
+  async function poll(){if(stopped||document.visibilityState==='hidden')return;try{const data=await api.read('mol-app-v3-comm-list',{limit:25});render(data);await markShown(data.items||[]);}catch(e){if(e.status===401){stopped=true;return;}list.innerHTML=`<p class="v3-comm-empty">${esc(e.message||'Błąd komunikacji')}</p>`;}}
+  list.addEventListener('click',async e=>{const b=e.target.closest('[data-comm-ack]');if(!b)return;b.disabled=true;try{await api.write('mol-app-v3-comm-ack',{request_id:api.requestId(),message_id:b.dataset.commAck});await poll();}catch(err){b.disabled=false;alert(err.message||'Nie udało się potwierdzić komunikatu.');}});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){heartbeat();poll();}});
+  heartbeat();poll();heartTimer=setInterval(heartbeat,30000);pollTimer=setInterval(poll,20000);
+  window.addEventListener('pagehide',()=>{clearInterval(heartTimer);clearInterval(pollTimer);});
+})();
