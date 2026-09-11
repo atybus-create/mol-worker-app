@@ -4,6 +4,8 @@
   if (!api) return;
   const BUILD = '20260911.7';
   let timer = null;
+  let lastDailyVersion = 0;
+  let lastMonthlyVersion = 0;
 
   const num = (v) => Number.isFinite(Number(v)) ? Number(v) : 0;
   const qty = (v) => String(Math.round(num(v)));
@@ -13,10 +15,23 @@
     const h = Math.floor(total / 60), m = total % 60;
     return h ? `${h} h ${String(m).padStart(2,'0')} min` : `${m} min`;
   };
+  const hhmm = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' });
+  };
 
   function setMetric(section, values) {
     const nodes = section?.querySelectorAll('.performance-metrics b') || [];
     values.forEach((value, index) => { if (nodes[index]) nodes[index].textContent = value; });
+  }
+
+  function stateLabel(data) {
+    const s = data?.source?.performance_state || {};
+    if (s.mapping_ok === false) return 'Brak mapowania operatora ES';
+    if (s.freshness === 'FRESH') return `EasyStorage · świeże ${hhmm(s.last_success_at)}`;
+    if (s.freshness === 'STALE') return `EasyStorage · STALE · ostatnio ${hhmm(s.last_success_at)}`;
+    return `EasyStorage · UNAVAILABLE · ostatnio ${hhmm(s.last_success_at)}`;
   }
 
   function renderDrawer(period, data) {
@@ -27,7 +42,7 @@
     const heading = drawer.querySelector('.performance-period h3');
     const sections = drawer.querySelectorAll('.performance-breakdown');
     const label = period === 'today' ? (data.date || 'Dzisiaj') : (data.month || 'Bieżący miesiąc');
-    if (summarySmall) summarySmall.textContent = period === 'today' ? 'EasyStorage · LIVE' : `${data.days_count || 0} dni · wynik ważony`;
+    if (summarySmall) summarySmall.textContent = period === 'today' ? stateLabel(data) : `${data.days_count || 0} dni · wynik ważony`;
     if (summaryValue) summaryValue.textContent = pct(data.combined?.norm_pct);
     if (heading) heading.textContent = label;
     setMetric(sections[0], [qty(data.pak?.total), qty(data.pak?.eligible), qty(data.pak?.outside), minutes(data.pak?.minutes), pct(data.pak?.norm_pct)]);
@@ -53,13 +68,21 @@
         api.read('mol-app-v3-performance-daily'),
         api.read('mol-app-v3-performance-monthly')
       ]);
-      renderDrawer('today', daily);
-      renderDrawer('month', monthly);
-      renderTop(daily);
-      setStageLabel(`EasyStorage · V3 · build ${BUILD}`);
+      const dv = num(daily?.snapshot_version);
+      const mv = num(monthly?.snapshot_version);
+      if (!lastDailyVersion || dv >= lastDailyVersion) {
+        lastDailyVersion = dv;
+        renderDrawer('today', daily);
+        renderTop(daily);
+        setStageLabel(`${stateLabel(daily)} · V3 · build ${BUILD}`);
+      }
+      if (!lastMonthlyVersion || mv >= lastMonthlyVersion) {
+        lastMonthlyVersion = mv;
+        renderDrawer('month', monthly);
+      }
     } catch (error) {
       console.error('Etap 4 / performance', error);
-      setStageLabel('Brak aktualnych danych wydajności');
+      setStageLabel('Błąd odświeżenia · pozostawiono ostatni poprawny wynik');
     }
   }
 
