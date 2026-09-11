@@ -2,8 +2,15 @@
   'use strict';
 
   const BASE = 'https://n8n.estyl.team/webhook/';
-  const SESSION_KEY = 'mol.v2.session';
-  const BUILD = '20260910.1';
+  const SESSION_KEY = 'mol.v3.session';
+  const BUILD = '20260911.1';
+  const ROUTE_OVERRIDES = Object.freeze({
+    'mol-app-health': 'mol-app-v3-health',
+  });
+  const FEATURES = Object.freeze({
+    health: true,
+    auth: false,
+  });
   const state = { token: '' };
 
   try { state.token = sessionStorage.getItem(SESSION_KEY) || ''; } catch { /* storage is optional */ }
@@ -48,6 +55,7 @@
 
   const endpoint = (path) => {
     const normalized = String(path || '').replace(/^\/+/, '');
+    if (ROUTE_OVERRIDES[normalized]) return ROUTE_OVERRIDES[normalized];
     if (normalized === 'mol-app-v2-message-send') return 'mol-app-v2-leader-message';
     return normalized;
   };
@@ -185,6 +193,8 @@
     }
   }
 
+  const health = () => request('mol-app-health', { auth: false, timeoutMs: 15000 });
+
   const session = () => request('mol-app-v2-auth-session', { timeoutMs: 30000 });
 
   async function logout({ clearOnFailure = false } = {}) {
@@ -264,6 +274,8 @@
     BASE,
     BUILD,
     SESSION_KEY,
+    ROUTE_OVERRIDES,
+    FEATURES,
     MOLApiError,
     requestId,
     todayISO,
@@ -274,6 +286,7 @@
     read,
     write,
     login,
+    health,
     logout,
     session,
     requireSession,

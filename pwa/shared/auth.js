@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD = '20260910.1';
+  const BUILD = '20260911.1';
   const form = document.querySelector('[data-auth-form]');
   const password = document.querySelector('[data-auth-password]');
   const toggle = document.querySelector('[data-auth-toggle]');
@@ -9,8 +9,9 @@
   const submit = form?.querySelector('[type="submit"]');
   const surface = document.body.dataset.surface || 'mobile';
   const versionLabel = document.querySelector('[data-app-version]');
-  if (versionLabel) versionLabel.textContent = `MOL V2 · TEST · build ${BUILD}`;
+  if (versionLabel) versionLabel.textContent = `MOL V3 · TEST · build ${BUILD}`;
   let busy = false;
+  let authEnabled = false;
 
   const setMessage = (text, state = '') => {
     if (!message) return;
@@ -50,6 +51,7 @@
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (busy) return;
+    if (!authEnabled) return setMessage('Logowanie V3 nie zostało jeszcze uruchomione.', 'is-error');
     const data = new FormData(form);
     const username = String(data.get('username') || '').trim();
     const secret = String(data.get('password') || '');
@@ -77,9 +79,16 @@
 
   (async () => {
     try {
-      const api = await loadApi();
-      if (!api.getToken()) return;
       setBusy(true);
+      const api = await loadApi();
+      const health = await api.health();
+      if (health?.status !== 'READY') throw new Error('Backend V3 nie potwierdził gotowości.');
+      if (!api.FEATURES.auth) {
+        setMessage('Backend V3 online. Logowanie zostanie podłączone w następnym etapie.', 'is-success');
+        return;
+      }
+      authEnabled = true;
+      if (!api.getToken()) return;
       setMessage('Sprawdzanie istniejącej sesji…');
       const session = await api.requireSession({ surface });
       if (!session) return;
@@ -92,7 +101,7 @@
       else setMessage(error.message || 'Nie udało się sprawdzić sesji.', 'is-error');
       try { window.MOLApi?.clearToken(); } catch { /* no-op */ }
     } finally {
-      setBusy(false);
+      setBusy(!authEnabled);
     }
   })();
 })();
