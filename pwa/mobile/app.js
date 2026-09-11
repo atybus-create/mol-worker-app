@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD = '20260911.5';
+  const BUILD = '20260911.7';
   window.MOL_BUILD = BUILD;
   const shell = document.querySelector('.worker-shell');
   if (!shell) return;
@@ -51,6 +51,7 @@
     await loadScript('../shared/api.js');
     await loadScript('../shared/regression-guards.js');
     await loadScript('./stage3.js');
+    await loadScript('./stage4.js');
   };
   loadSupport().catch((error) => {
     console.error(error);
