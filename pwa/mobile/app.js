@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD = '20260911.2';
+  const BUILD = '20260911.3';
   window.MOL_BUILD = BUILD;
   const shell = document.querySelector('.worker-shell');
   if (!shell) return;
@@ -50,14 +50,13 @@
     await loadScript('./report-integrity.js');
     await loadScript('../shared/api.js');
     await loadScript('../shared/regression-guards.js');
-    await loadScript('./live.js');
-    await loadScript('./live-actions.js');
+    await loadScript('./stage2.js');
   };
   loadSupport().catch((error) => {
     console.error(error);
     const banner = document.createElement('div'); banner.setAttribute('role','alert');
     banner.style.cssText='position:fixed;z-index:99999;left:12px;right:12px;top:12px;padding:12px 16px;border-radius:10px;background:#45151a;color:#fff;font:600 14px system-ui';
-    banner.textContent=`Błąd uruchomienia MOL V2: ${error.message}`; document.body.prepend(banner);
+    banner.textContent=`Błąd uruchomienia MOL V3: ${error.message}`; document.body.prepend(banner);
   });
   show('home');
 })();
