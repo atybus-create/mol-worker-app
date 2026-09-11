@@ -4,7 +4,7 @@
   const api = window.MOLApi;
   if (!api) return;
 
-  const BUILD = '20260911.5';
+  const BUILD = '20260911.6';
   const shell = document.querySelector('.worker-shell');
   const startButton = document.querySelector('[data-action="start"]');
   const stopButton = document.querySelector('[data-action="stop"]');
@@ -123,12 +123,17 @@
     const state = String(attendanceState?.attendance?.state || 'NOT_STARTED').toUpperCase();
     const active = processState?.active_process || null;
     const catalog = Array.isArray(processState?.process_catalog) ? processState.process_catalog : [];
+    const sessions = Array.isArray(processState?.process_sessions) ? processState.process_sessions : [];
     const disabled = busy || state !== 'OPEN';
     const cards = catalog.map((item) => {
       const current = active?.process_code === item.process_code;
       return `<button type="button" class="mol-button process-option${current ? ' mol-button--primary' : ''}" data-process-code="${item.process_code}" ${disabled || current ? 'disabled' : ''}><span><strong>${item.display_name}</strong><small>${current ? 'Aktywny teraz' : active ? 'Zmień na ten proces' : 'Rozpocznij proces'}</small></span></button>`;
     }).join('');
-    processPanel.innerHTML = `<p class="mol-kicker">ETAP 3</p><h2>Proces pracy</h2><p>${state === 'OPEN' ? 'Wybierz wykonywany proces. Zmiana zamyka poprzedni proces i od razu rozpoczyna nowy.' : 'Proces można wybrać dopiero po rozpoczęciu dnia pracy.'}</p><div class="action-grid" data-process-options>${cards || '<p>Brak dostępnych procesów.</p>'}</div>${active ? '<button type="button" class="mol-button mol-button--danger" data-panel-process-stop style="width:100%;margin-top:14px">Zakończ aktywny proces</button>' : ''}`;
+    const history = sessions.map((item) => {
+      const seconds = elapsedSeconds(item.start_at, item.stop_at || null);
+      return `<div class="mol-card" style="padding:10px 12px;margin-top:8px"><strong>${processName(item.process_code)}</strong><small style="display:block;margin-top:4px">${clock(item.start_at)}–${item.stop_at ? clock(item.stop_at) : 'teraz'} · ${duration(seconds)}</small></div>`;
+    }).join('');
+    processPanel.innerHTML = `<p class="mol-kicker">ETAP 3</p><h2>Proces pracy</h2><p>${state === 'OPEN' ? 'Wybierz wykonywany proces. Zmiana zamyka poprzedni proces i od razu rozpoczyna nowy.' : 'Proces można wybrać dopiero po rozpoczęciu dnia pracy.'}</p><div class="action-grid" data-process-options>${cards || '<p>Brak dostępnych procesów.</p>'}</div>${active ? '<button type="button" class="mol-button mol-button--danger" data-panel-process-stop style="width:100%;margin-top:14px">Zakończ aktywny proces</button>' : ''}${history ? `<div style="margin-top:20px"><div class="section-title"><h2>Dzisiejsze procesy</h2><span>odzyskane z backendu V3</span></div>${history}</div>` : ''}`;
     processPanel.querySelectorAll('[data-process-code]').forEach((button) => button.addEventListener('click', () => runProcess(active ? 'CHANGE' : 'START', button.dataset.processCode)));
     processPanel.querySelector('[data-panel-process-stop]')?.addEventListener('click', () => runProcess('STOP'));
   }
@@ -199,6 +204,13 @@
     if (stats[2]) stats[2].textContent = active ? clock(active.start_at) : '—';
     if (kpis[0]) kpis[0].textContent = duration(presence);
     if (kpis[1]) kpis[1].textContent = duration(noProcessSeconds);
+
+    const processStart = document.querySelector('[data-active-process-start]');
+    const processTimer = document.querySelector('[data-active-process-timer]');
+    const noProcess = document.querySelector('[data-active-no-process]');
+    if (processStart) processStart.textContent = active ? clock(active.start_at) : '—';
+    if (processTimer) processTimer.textContent = active ? duration(elapsedSeconds(active.start_at)) : '—';
+    if (noProcess) noProcess.textContent = duration(noProcessSeconds);
   }
 
   function render() {
