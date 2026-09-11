@@ -1,8 +1,8 @@
-# MOL App V2 — źródło wydania PWA TEST RC1
+# MOL App V3 — źródło wydania PWA TEST
 
 Status: **AKTYWNE ŹRÓDŁO RC1**
 
-Build: `20260910.1`
+Build: `20260911.1`
 
 Katalog `/pwa/` zawiera zatwierdzone źródło publikacji PWA TEST RC1.
 
@@ -12,7 +12,7 @@ Katalog `/pwa/` zawiera zatwierdzone źródło publikacji PWA TEST RC1.
 - `mobile/login.html` — logowanie WORKER, LEADER i ADMIN,
 - `web/login.html` — logowanie LEADER i ADMIN,
 - `shared/auth.js` — wspólny klient logowania,
-- `shared/api.js` — wspólny klient API V2.
+- `shared/api.js` — wspólny klient API z centralną mapą przełączania funkcji na V3.
 
 ## Role
 
@@ -24,7 +24,7 @@ WORKER jest odrzucany w panelu WWW także przez autoryzację backendu. Ukrycie i
 
 ## Źródła danych i zapisy
 
-Aplikacja korzysta z rzeczywistych endpointów API V2 pod `https://n8n.estyl.team/webhook/`. Nie zawiera danych demonstracyjnych.
+Aplikacja korzysta z rzeczywistych endpointów pod `https://n8n.estyl.team/webhook/`. Funkcje są przełączane na V3 pojedynczo, dopiero po odbiorze. Nie zawiera danych demonstracyjnych.
 
 Pełne testy E2E nie są uruchamiane w sesji użytkownika. Awaria opcjonalnej sekcji nie blokuje podstawowych operacji czasu pracy i procesów.
 

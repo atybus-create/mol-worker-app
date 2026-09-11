@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#050b12">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
-  <title>MOL App V2 TEST</title>
+  <title>MOL App V3 TEST</title>
   <style>
     body{margin:0;min-height:100vh;display:grid;place-items:center;background:#050b12;color:#f4f8fb;font-family:Inter,system-ui,sans-serif}
     main{text-align:center;padding:24px;max-width:34rem}p{color:#9fb6c9}.choices{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}a{color:#051018;background:#12c8ff;padding:12px 16px;border-radius:10px;font-weight:700;text-decoration:none}
@@ -15,19 +15,19 @@
 </head>
 <body>
   <main>
-    <h1>MOL App V2</h1>
-    <p>Środowisko TEST · build 20260910.1</p>
+    <h1>MOL App V3</h1>
+    <p>Środowisko TEST · build 20260911.1</p>
     <p>Otwieram właściwy ekran logowania…</p>
-    <div class="choices"><a href="./mobile/login.html?v=20260910.1">Mobile</a><a href="./web/login.html?v=20260910.1">WWW</a></div>
+    <div class="choices"><a href="./mobile/login.html?v=20260911.1">Mobile</a><a href="./web/login.html?v=20260911.1">WWW</a></div>
   </main>
   <script>
     (() => {
       const requested = new URLSearchParams(location.search).get('surface');
       const mobileDevice = matchMedia('(max-width: 760px)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       const surface = requested === 'mobile' || requested === 'web' ? requested : (mobileDevice ? 'mobile' : 'web');
-      window.setTimeout(() => location.replace('./' + surface + '/login.html?v=20260910.1'), 180);
+      window.setTimeout(() => location.replace('./' + surface + '/login.html?v=20260911.1'), 180);
     })();
   </script>
-  <script src="./pwa-register.js?v=20260910.1"></script>
+  <script src="./pwa-register.js?v=20260911.1"></script>
 </body>
 </html>
