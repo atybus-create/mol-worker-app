@@ -5,7 +5,7 @@
   const script = document.currentScript;
   const scriptUrl = new URL(script.src, location.href);
   const scopeUrl = new URL("./", scriptUrl);
-  const workerUrl = new URL("./sw.js?v=20260911.1", scriptUrl);
+  const workerUrl = new URL("./sw.js?v=20260911.2-authfix1", scriptUrl);
   let reloadAfterUpdate = false;
 
   function showUpdate(registration) {
@@ -36,7 +36,8 @@
     if (reloadAfterUpdate) location.reload();
   });
 
-  navigator.serviceWorker.register(workerUrl, {scope: scopeUrl.pathname}).then((registration) => {
+  navigator.serviceWorker.register(workerUrl, {scope: scopeUrl.pathname, updateViaCache: "none"}).then((registration) => {
+    registration.update().catch(() => {});
     if (registration.waiting) showUpdate(registration);
     registration.addEventListener("updatefound", () => {
       const candidate = registration.installing;
