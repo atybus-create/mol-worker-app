@@ -1,0 +1,79 @@
+{
+  "name": "MOL // APP V3 // API HEALTH",
+  "nodes": [
+    {
+      "id": "a8d4474b-4ca4-4727-bbcf-dfa5f29cb6fb",
+      "name": "GET // V3 Health",
+      "webhookId": "b397952d-3800-499a-b596-0ca39543e67b",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "mol-app-v3-health",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://atybus-create.github.io"
+        }
+      }
+    },
+    {
+      "id": "d56fbf6e-029d-483e-95f6-79a726c2a070",
+      "name": "Build // Health Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [240, 0],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {"id": "ok", "name": "ok", "type": "boolean", "value": true},
+            {"id": "request-id", "name": "request_id", "type": "string", "value": "={{ $json.headers?.['x-request-id'] || '' }}"},
+            {"id": "status", "name": "data.status", "type": "string", "value": "READY"},
+            {"id": "service", "name": "data.service", "type": "string", "value": "MOL_APP_V3"},
+            {"id": "version", "name": "meta.api_version", "type": "string", "value": "3.0.0"},
+            {"id": "time", "name": "meta.server_time", "type": "string", "value": "={{ $now.toUTC().toISO() }}"}
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {"dotNotation": true}
+      }
+    },
+    {
+      "id": "f7cf0d59-c45a-4c70-b584-9df5bf8af381",
+      "name": "Respond // 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [480, 0],
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {"name": "Cache-Control", "value": "no-store"},
+              {"name": "X-Content-Type-Options", "value": "nosniff"}
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "GET // V3 Health": {
+      "main": [[{"node": "Build // Health Response", "type": "main", "index": 0}]]
+    },
+    "Build // Health Response": {
+      "main": [[{"node": "Respond // 200", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "executionTimeout": 30,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "saveManualExecutions": true
+  }
+}
