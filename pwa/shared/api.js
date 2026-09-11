@@ -3,13 +3,16 @@
 
   const BASE = 'https://n8n.estyl.team/webhook/';
   const SESSION_KEY = 'mol.v3.session';
-  const BUILD = '20260911.1';
+  const BUILD = '20260911.2';
   const ROUTE_OVERRIDES = Object.freeze({
     'mol-app-health': 'mol-app-v3-health',
+    'mol-app-v2-auth-login': 'mol-app-v3-auth-login',
+    'mol-app-v2-auth-session': 'mol-app-v3-auth-session',
+    'mol-app-v2-auth-logout': 'mol-app-v3-auth-logout',
   });
   const FEATURES = Object.freeze({
     health: true,
-    auth: false,
+    auth: true,
   });
   const state = { token: '' };
 
@@ -88,6 +91,7 @@
     auth = true,
     binary = false,
     timeoutMs = 45000,
+    headers: extraHeaders = null,
   } = {}) {
     const normalized = endpoint(path);
     const url = new URL(BASE + normalized);
@@ -100,7 +104,7 @@
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
-    const headers = { Accept: 'application/json' };
+    const headers = { Accept: 'application/json', ...(extraHeaders || {}) };
     if (auth) {
       if (!state.token) throw new MOLApiError('Brak aktywnej sesji.', { status: 401, code: 'UNAUTHENTICATED' });
       headers.Authorization = `Bearer ${state.token}`;
@@ -137,7 +141,7 @@
 
       const raw = (await response.text()).replace(/^\uFEFF/, '');
       if (!raw.trim()) {
-        throw new MOLApiError(`Backend V2 ${normalized} zwrócił pustą odpowiedź (HTTP ${response.status}).`, {
+        throw new MOLApiError(`Backend ${normalized} zwrócił pustą odpowiedź (HTTP ${response.status}).`, {
           status: response.status,
           code: 'EMPTY_RESPONSE',
           retryable: response.status >= 500,
@@ -148,7 +152,7 @@
       try { parsed = JSON.parse(raw); }
       catch {
         const contentType = response.headers.get('content-type') || 'brak Content-Type';
-        throw new MOLApiError(`Backend V2 ${normalized} zwrócił niepoprawny JSON (HTTP ${response.status}, ${contentType}).`, {
+        throw new MOLApiError(`Backend ${normalized} zwrócił niepoprawny JSON (HTTP ${response.status}, ${contentType}).`, {
           status: response.status,
           code: 'INVALID_JSON',
           retryable: response.status >= 500,
@@ -175,11 +179,13 @@
     }
   }
 
-  async function login(loginName, password) {
+  async function login(loginName, password, { surface = 'mobile' } = {}) {
+    const safeSurface = surface === 'web' ? 'web' : 'mobile';
     const body = {
       request_id: requestId(),
       login: String(loginName || '').trim(),
       password: String(password || ''),
+      surface: safeSurface,
     };
     try {
       const data = await request('mol-app-v2-auth-login', { method: 'POST', body, auth: false, timeoutMs: 30000 });
@@ -195,7 +201,10 @@
 
   const health = () => request('mol-app-health', { auth: false, timeoutMs: 15000 });
 
-  const session = () => request('mol-app-v2-auth-session', { timeoutMs: 30000 });
+  const session = ({ surface = 'mobile' } = {}) => request('mol-app-v2-auth-session', {
+    timeoutMs: 30000,
+    headers: { 'X-MOL-Surface': surface === 'web' ? 'web' : 'mobile' },
+  });
 
   async function logout({ clearOnFailure = false } = {}) {
     if (!state.token) { clearToken(); return { alreadyInactive: true }; }
@@ -213,7 +222,7 @@
   async function requireSession({ surface = 'mobile' } = {}) {
     if (!state.token) return null;
     try {
-      const data = await session();
+      const data = await session({ surface });
       const role = String(data?.user?.role || '').toUpperCase();
       if (!data?.user?.employee_id || !['WORKER', 'LEADER', 'ADMIN'].includes(role)) {
         throw new MOLApiError('Nieprawidłowy zakres sesji.', { status: 401, code: 'UNAUTHENTICATED' });
