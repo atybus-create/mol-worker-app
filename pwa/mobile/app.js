@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD = '20260911.11';
+  const BUILD = '20260914.2';
   window.MOL_BUILD = BUILD;
   const shell = document.querySelector('.worker-shell');
   if (!shell) return;
@@ -18,7 +18,7 @@
   bottomNav?.classList.toggle('has-manager', capabilities.managerMobile);
 
   const panels = () => [...document.querySelectorAll('[data-panel]')];
-  const dashboard = () => [...document.querySelectorAll('.worker-hero,.work-status,.kpi-grid,.section-block,.active-process')];
+  const dashboard = () => [...document.querySelectorAll('.worker-hero,.work-status,.kpi-grid,.section-block,.active-process,.v3-comm')];
   function show(requested) {
     const screen = requested === 'team' && !capabilities.managerMobile ? 'home' : requested;
     shell.dataset.screen = screen;
