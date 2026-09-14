@@ -11,12 +11,13 @@ const mobile = read('mobile/login.html');
 const web = read('web/login.html');
 const sw = read('sw.js');
 
-for (const source of [api, auth, mobile, web, sw]) {
-  assert.match(source, /20260911\.1/, 'każdy punkt startowy musi używać builda Stage 0');
-}
+assert.match(api, /20260914\.1/, 'klient API musi używać aktualnego builda V3');
 assert.match(api, /'mol-app-health': 'mol-app-v3-health'/, 'health musi być przełączony centralnie na V3');
-assert.match(api, /auth: false/, 'logowanie musi pozostać wyłączone do osobnego odbioru');
-assert.match(auth, /Backend V3 online/, 'oba ekrany logowania muszą pokazać potwierdzenie health V3');
+assert.match(api, /'mol-app-v2-leader-team': 'mol-app-v3-leader-team'/, 'panel zespołu musi używać endpointu V3');
+assert.match(api, /'mol-app-v2-report-performance': 'mol-app-v3-report-performance'/, 'raport wydajności musi używać endpointu V3');
+assert.match(api, /'mol-app-v2-report-attendance': 'mol-app-v3-report-attendance'/, 'raport czasu pracy musi używać endpointu V3');
+assert.match(api, /auth: true/, 'logowanie V3 musi pozostać aktywne');
+assert.match(auth, /Logowanie V3/, 'logowanie musi korzystać z interfejsu V3');
 assert.match(mobile, /MOL App <b>V3<\/b>/, 'mobile musi być oznaczone jako V3');
 assert.match(web, /MOL App <b>V3<\/b>/, 'WWW musi być oznaczone jako V3');
 

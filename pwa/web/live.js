@@ -175,7 +175,7 @@
     }).catch(() => { if (kpis[3]) kpis[3].textContent = '—'; });
 
     const subtitle = document.querySelector('.team-card .card-head span');
-    if (subtitle) subtitle.textContent = `${items.length} osób · dane z backendu V2`;
+    if (subtitle) subtitle.textContent = `${items.length} osób · dane z backendu V3`;
     populateReportPeople(items);
     populateMessageRecipients(items.filter((row) => row.attendance?.state === 'OPEN'));
     if (!currentEmployee && items[0]) selectEmployee(items[0]);
@@ -218,12 +218,8 @@
       return section;
     })();
     if (!detail) return;
-    detail.innerHTML = `<h3>Pełny podgląd operacyjny pracownika</h3><p class="mol-muted">Odczytuję historię ${esc(item.employee.display_name)}…</p>`;
-    try {
-      const history = await api.read('mol-app-v2-employee-history', { employee_id: currentEmployee, date_from: monthStart(), date_to: today(), limit: 60 });
-      const timeline = Array.isArray(history?.timeline) ? history.timeline : [];
-      const active = item.process?.state === 'ACTIVE';
-      detail.innerHTML = `
+    const active = item.process?.state === 'ACTIVE';
+    detail.innerHTML = `
         <h3>Pełny podgląd operacyjny pracownika</h3>
         <div class="employee-required-grid">
           <span><small>START</small><strong>${clock(item.attendance?.start_at)}</strong></span>
@@ -237,10 +233,7 @@
           <span><small>Świeżość norm</small><strong>${esc(item.norm?.freshness || 'UNAVAILABLE')}</strong></span>
           <span><small>Stan dnia</small><strong>${esc(item.attendance?.state || 'NOT_STARTED')}</strong></span>
         </div>
-        <div class="employee-event-history"><h3>Historia zdarzeń osoby</h3>${timeline.slice(0, 16).map((entry) => `<div><b>${entry.occurred_at ? when(entry.occurred_at) : '—'}</b><span>${esc(entry.kind)} · ${esc(entry.data?.event_type || entry.data?.work_date || entry.data?.status || '')}</span><small>${esc(entry.data?.source || '')}</small></div>`).join('') || '<p class="mol-muted">Brak wpisów w wybranym okresie.</p>'}</div>`;
-    } catch (error) {
-      detail.innerHTML = `<h3>Historia · ${esc(item.employee.display_name)}</h3><p class="mol-muted">${esc(error.message)}</p>`;
-    }
+        <div class="employee-event-history"><h3>Sesje procesów</h3>${Object.entries(item.time_by_process || {}).map(([code, seconds]) => `<div><b>${esc(processName(code))}</b><span>${duration(seconds)}</span><small>${esc(code)}</small></div>`).join('') || '<p class="mol-muted">Brak sesji procesu dla wybranego dnia.</p>'}</div>`;
   }
 
   async function loadTeam(silent = false) {
@@ -361,7 +354,7 @@
     const body = view.querySelector('[data-report-body]');
     if (body) body.innerHTML = (data?.rows || []).map((row) => `<tr><td><b>${esc(row.display_name)}</b><small>${esc(row.employee_id)} · ${esc(row.work_date)}</small></td><td>${number(row.pick_total)}</td><td class="good">${number(row.pick_eligible)}</td><td class="warn">${number(row.pick_outside)}</td><td>${duration(row.pick_seconds)}</td><td>${percent(row.pick_percent)}</td><td>${number(row.pak_total)}</td><td class="good">${number(row.pak_eligible)}</td><td class="warn">${number(row.pak_outside)}</td><td>${duration(row.pak_seconds)}</td><td>${percent(row.pak_percent)}</td><td>${number(row.combined_total_units, 1)}</td><td class="good">${number(row.combined_eligible_units, 1)}</td><td class="warn">${number(row.combined_outside_units, 1)}</td><td>${duration(row.combined_seconds)}</td><td>${percent(row.combined_percent)}</td><td>${esc(row.freshness || 'UNAVAILABLE')}</td></tr>`).join('') || '<tr><td colspan="17" class="report-empty">Brak danych dla wybranego zakresu.</td></tr>';
     const generated = view.querySelector('[data-report-generated]');
-    if (generated) generated.textContent = `Backend V2 · ${day(data.date_from)} – ${day(data.date_to)} · ${summary.employees || 0} osób · wynik ważony: PAK + PICK ÷ 3`;
+    if (generated) generated.textContent = `Backend V3 · ${day(data.date_from)} – ${day(data.date_to)} · ${summary.employees || 0} osób · wynik ważony: PAK + PICK ÷ 3`;
   }
 
   async function generatePerformance() {
@@ -403,7 +396,7 @@
     const body = view.querySelector('[data-worktime-body]');
     if (body) body.innerHTML = rows.map((row) => `<tr data-live-history-id="${esc(row.employee_id)}"><td>${day(row.work_date)}</td><td><b>${esc(row.display_name)}</b><small>${esc(row.employee_id)}</small></td><td><span class="status ${row.attendance_state === 'OPEN' ? 'success' : row.attendance_state === 'CLOSED' ? 'muted' : 'warning'}">${esc(row.attendance_state)}</span></td><td>${clock(row.start_at)}</td><td>${clock(row.stop_at)}</td><td><strong>${duration(row.presence_seconds)}</strong></td><td><small>${esc(processTimes(row.time_by_process))}</small></td><td><strong>${duration(row.no_process_seconds)}</strong></td><td>${(row.corrections?.length || 0) + (row.direct_correction_events?.length || 0)}</td><td><small>Moniti ${esc(row.moniti_sync || '—')} · Drive ${esc(row.drive_sync || '—')}</small></td><td><button class="mol-button" type="button" data-live-history-button="${esc(row.employee_id)}">Historia</button></td></tr>`).join('') || '<tr><td colspan="11" class="report-empty">Brak danych dla wybranego zakresu.</td></tr>';
     const generated = view.querySelector('[data-worktime-generated]');
-    if (generated) generated.textContent = `Backend V2 · ${day(data.date_from)} – ${day(data.date_to)} · ${summary.employees || 0} osób · ${rows.length} wierszy`;
+    if (generated) generated.textContent = `Backend V3 · ${day(data.date_from)} – ${day(data.date_to)} · ${summary.employees || 0} osób · ${rows.length} wierszy`;
     body?.querySelectorAll('[data-live-history-button]').forEach((button) => button.addEventListener('click', () => {
       const item = teamData?.items?.find((entry) => entry.employee.employee_id === button.dataset.liveHistoryButton);
       if (item) {
@@ -440,11 +433,7 @@
       reports.querySelector('[data-report-generate]')?.addEventListener('click', (event) => { event.preventDefault(); event.stopImmediatePropagation(); generatePerformance().catch((error) => setStatus(error.message, 'error')); }, true);
       reports.querySelectorAll('[data-report-export]').forEach((button) => button.addEventListener('click', (event) => {
         event.preventDefault(); event.stopImmediatePropagation();
-        const format = String(button.dataset.reportExport || '').toLowerCase();
-        setStatus(`Przygotowuję plik ${format.toUpperCase()}…`);
-        api.download('mol-app-v2-report-export', { report_type: 'performance', format, date_from: from?.value, date_to: to?.value, employee_ids: selectedIds(reports) }, `mol_v2_performance.${format}`)
-          .then((filename) => setStatus(`Pobrano ${filename}.`, 'ok'))
-          .catch((error) => setStatus(error.message, 'error'));
+        setStatus('Eksport CSV/XLSX nie jest jeszcze częścią odebranych endpointów V3.', 'info');
       }, true));
     }
     if (worktime) {
@@ -455,27 +444,16 @@
       if (from && (from.value === '2026-09-01' || !from.value)) from.value = monthStart();
       if (to && (to.value === '2026-09-07' || !to.value)) to.value = today();
       worktime.querySelector('[data-worktime-generate]')?.addEventListener('click', (event) => { event.preventDefault(); event.stopImmediatePropagation(); generateAttendance().catch((error) => setStatus(error.message, 'error')); }, true);
-      worktime.querySelectorAll('[data-worktime-export]').forEach((button) => button.addEventListener('click', (event) => {
-        event.preventDefault(); event.stopImmediatePropagation();
-        const format = String(button.dataset.worktimeExport || '').toLowerCase();
-        const status = worktime.querySelector('[data-worktime-status]')?.value || 'ALL';
-        setStatus(`Przygotowuję plik ${format.toUpperCase()}…`);
-        api.download('mol-app-v2-report-export', { report_type: 'attendance', format, date_from: from?.value, date_to: to?.value, employee_ids: selectedIds(worktime), status: status === 'ALL' ? null : status }, `mol_v2_attendance.${format}`)
-          .then((filename) => setStatus(`Pobrano ${filename}.`, 'ok'))
-          .catch((error) => setStatus(error.message, 'error'));
-      }, true));
+      worktime.querySelectorAll('[data-worktime-export]').forEach((button) => button.addEventListener('click', (event) => { event.preventDefault(); event.stopImmediatePropagation(); setStatus('Eksport CSV/XLSX nie jest jeszcze częścią odebranych endpointów V3.', 'info'); }, true));
       worktime.querySelector('[data-worktime-status]')?.addEventListener('change', () => generateAttendance().catch(() => {}));
     }
   }
 
   async function loadUsers() {
-    const data = await api.read('mol-app-v2-user-list');
     const view = await waitFor('[data-view="users"]');
     const list = view?.querySelector('.user-list-card');
-    if (list) list.innerHTML = `<h2>Lista użytkowników</h2>${(data?.items || []).map((user) => `<div class="user-row"><div><b>${esc(user.display_name)}</b><small>${esc(user.employee_id)} · ${esc(user.login || '')}</small></div><span>${esc(user.role)}</span><span class="${user.active ? 'good' : 'danger'}">${user.active ? 'Aktywna' : 'Nieaktywna'}</span><div class="user-row-actions"><button class="mol-button" disabled>Ładowanie akcji…</button></div></div>`).join('') || '<p class="mol-muted">Brak kont.</p>'}`;
-    const form = view?.querySelector('[data-live-user-form]');
-    form?.querySelectorAll('input,select,button').forEach((node) => { node.disabled = true; });
-    return data;
+    if (list) list.innerHTML = '<h2>Użytkownicy</h2><p class="mol-muted">Zarządzanie kontami nie należy do odebranych etapów V3. Nie uruchomiono starych zapisów V2.</p>';
+    return { items: [] };
   }
 
   function correctionLabel(status) {
@@ -483,26 +461,24 @@
   }
 
   async function loadCorrections() {
-    const data = await api.read('mol-app-v2-corrections-queue');
     const view = await waitFor('[data-view="corrections"]');
     const body = view?.querySelector('tbody');
-    if (body) body.innerHTML = (data?.items || []).map((item) => `<tr><td>${esc(item.employee_id)}</td><td>${esc(item.work_date)}</td><td>v${esc(item.expected_version)}</td><td>${clock(item.start_at)} → ${item.stop_at ? clock(item.stop_at) : 'bez zmiany'}</td><td>${esc(item.reason || '')}</td><td><span class="correction-status">${esc(correctionLabel(item.status))}</span></td><td class="web-action-pair"><button class="accept" disabled>Ładowanie…</button><button class="reject" disabled>Ładowanie…</button></td></tr>`).join('') || '<tr><td colspan="7">Brak korekt.</td></tr>';
+    if (body) body.innerHTML = '<tr><td colspan="7">Korekty nie należą do odebranych etapów V3.</td></tr>';
     const stats = view?.querySelectorAll('.web-stat-grid article strong') || [];
-    if (stats[0]) stats[0].textContent = String(data?.pending_count || 0);
+    if (stats[0]) stats[0].textContent = '—';
     const oldMarker = document.querySelector('[data-live-correction-pending]');
     oldMarker?.remove();
-    const marker = document.createElement('span'); marker.hidden = true; marker.dataset.liveCorrectionPending = 'true'; marker.dataset.count = String(data?.pending_count || 0); document.body.append(marker);
+    const marker = document.createElement('span'); marker.hidden = true; marker.dataset.liveCorrectionPending = 'true'; marker.dataset.count = '—'; document.body.append(marker);
     const refresh = view?.querySelector('.view-toolbar button');
     refresh?.addEventListener('click', (event) => { event.preventDefault(); event.stopImmediatePropagation(); loadCorrections().catch((error) => setStatus(error.message, 'error')); }, true);
-    return data;
+    return { items: [], pending_count: 0 };
   }
 
   async function loadAudit() {
-    const data = await api.read('mol-app-v2-audit-history', { date_from: monthStart(), date_to: today(), limit: 100 });
     const view = await waitFor('[data-view="audit"]');
     const list = view?.querySelector('.audit-list');
-    if (list) list.innerHTML = (data?.items || []).map((item) => `<div class="audit-item"><b>${when(item.occurred_at)}</b><span>${esc(item.event_type)}</span><span>${esc(item.actor_id || '—')}</span><span>${esc(item.source_stream || item.source || '—')}</span></div>`).join('') || '<p class="mol-muted">Brak wpisów audytu w bieżącym miesiącu.</p>';
-    return data;
+    if (list) list.innerHTML = '<p class="mol-muted">Historia operacji będzie podłączona w osobnym etapie V3. Stary odczyt V2 pozostaje wyłączony.</p>';
+    return { items: [] };
   }
 
   async function lockAndPopulateMessages() {
@@ -563,11 +539,9 @@
       bindGlobal();
       bindReports();
       await loadTeam();
-      const optionalResults = await Promise.allSettled([loadUsers(), loadCorrections(), loadAudit(), lockAndPopulateMessages()]);
-      const optionalFailures = optionalResults.filter((result) => result.status === 'rejected');
+      await Promise.all([loadUsers(), loadCorrections(), loadAudit(), lockAndPopulateMessages()]);
       document.documentElement.dataset.liveReadsReady = 'true';
-      if (optionalFailures.length) setStatus(`Panel jest gotowy. Nie wczytano ${optionalFailures.length} opcjonalnych sekcji.`, 'error');
-      else setStatus('Panel i sekcje dodatkowe są gotowe.', 'ok');
+      setStatus('Panel V3 gotowy: zespół, wydajność i czas pracy są podłączone do backendu V3.', 'ok');
     } catch (error) {
       if (error.status === 401) return api.redirectLogin('session');
       if (error.status === 403) return api.redirectLogin('worker_web');

@@ -3,12 +3,15 @@
 
   const BASE = 'https://n8n.estyl.team/webhook/';
   const SESSION_KEY = 'mol.v3.session';
-  const BUILD = '20260911.9';
+  const BUILD = '20260914.1';
   const ROUTE_OVERRIDES = Object.freeze({
     'mol-app-health': 'mol-app-v3-health',
     'mol-app-v2-auth-login': 'mol-app-v3-auth-login',
     'mol-app-v2-auth-session': 'mol-app-v3-auth-session',
     'mol-app-v2-auth-logout': 'mol-app-v3-auth-logout',
+    'mol-app-v2-leader-team': 'mol-app-v3-leader-team',
+    'mol-app-v2-report-performance': 'mol-app-v3-report-performance',
+    'mol-app-v2-report-attendance': 'mol-app-v3-report-attendance',
   });
   const FEATURES = Object.freeze({ health: true, auth: true });
   const state = { token: '' };
@@ -19,7 +22,7 @@
   const setToken=t=>{state.token=String(t||'');try{state.token?sessionStorage.setItem(SESSION_KEY,state.token):sessionStorage.removeItem(SESSION_KEY);}catch{}};
   const clearToken=()=>setToken(''); const getToken=()=>state.token;
   const endpoint=path=>{const n=String(path||'').replace(/^\/+/, '');if(ROUTE_OVERRIDES[n])return ROUTE_OVERRIDES[n];if(n==='mol-app-v2-message-send')return'mol-app-v2-leader-message';return n;};
-  const readQuery=(path,query)=>{const n=endpoint(path),q=query&&typeof query==='object'&&!Array.isArray(query)?{...query}:{},d=todayISO();if(n==='mol-app-v2-worker-status'&&!q.work_date)q.work_date=d;if(n==='mol-app-v2-leader-team'&&!q.work_date)q.work_date=d;if(n==='mol-app-v2-norms-daily'&&!q.date&&!q.work_date)q.date=d;if(n==='mol-app-v2-norms-monthly'&&!q.month)q.month=d.slice(0,7);return q;};
+  const readQuery=(path,query)=>{const n=endpoint(path),q=query&&typeof query==='object'&&!Array.isArray(query)?{...query}:{},d=todayISO();if(n==='mol-app-v2-worker-status'&&!q.work_date)q.work_date=d;if(n==='mol-app-v3-leader-team'&&!q.work_date)q.work_date=d;if(n==='mol-app-v2-norms-daily'&&!q.date&&!q.work_date)q.date=d;if(n==='mol-app-v2-norms-monthly'&&!q.month)q.month=d.slice(0,7);return q;};
   const unwrapEnvelope=value=>{let e=value;if(typeof e==='string'){try{e=JSON.parse(e);}catch{}}if(Array.isArray(e)&&e.length===1&&e[0]&&typeof e[0]==='object')e=e[0];if(e&&typeof e==='object'&&e.ok===undefined&&e.body&&typeof e.body==='object')e=e.body;return e;};
   async function request(path,{method='GET',query=null,body=null,auth=true,binary=false,timeoutMs=45000,headers:extraHeaders=null}={}){const n=endpoint(path),url=new URL(BASE+n),effectiveQuery=String(method).toUpperCase()==='GET'?readQuery(n,query):(query||{});for(const[k,v]of Object.entries(effectiveQuery)){if(v===undefined||v===null||v==='')continue;url.searchParams.set(k,Array.isArray(v)?v.join(','):String(v));}const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs),headers={Accept:'application/json',...(extraHeaders||{})};if(auth){if(!state.token)throw new MOLApiError('Brak aktywnej sesji.',{status:401,code:'UNAUTHENTICATED'});headers.Authorization=`Bearer ${state.token}`;}if(body!==null)headers['Content-Type']='application/json';try{const response=await fetch(url,{method,cache:'no-store',credentials:'omit',headers,body:body!==null?JSON.stringify(body):undefined,signal:controller.signal});if(binary){if(!response.ok)throw new MOLApiError(`HTTP ${response.status}`,{status:response.status});return{blob:await response.blob(),disposition:response.headers.get('content-disposition')||'',contentType:response.headers.get('content-type')||''};}const raw=(await response.text()).replace(/^\uFEFF/,'');if(!raw.trim())throw new MOLApiError(`Backend ${n} zwrócił pustą odpowiedź (HTTP ${response.status}).`,{status:response.status,code:'EMPTY_RESPONSE',retryable:response.status>=500});let parsed;try{parsed=JSON.parse(raw);}catch{throw new MOLApiError(`Backend ${n} zwrócił niepoprawny JSON (HTTP ${response.status}).`,{status:response.status,code:'INVALID_JSON',retryable:response.status>=500});}const envelope=unwrapEnvelope(parsed);if(!response.ok||envelope?.ok!==true)throw new MOLApiError(envelope?.error?.message||'Operacja nie została potwierdzona.',{status:response.status,code:envelope?.error?.code||'',retryable:envelope?.error?.retryable===true,details:envelope?.error?.details||null});return envelope.data;}catch(error){if(error?.name==='AbortError'||error instanceof TypeError)throw new MOLApiError('Brak potwierdzenia z serwera. Sprawdź połączenie i spróbuj ponownie.',{retryable:true});throw error;}finally{clearTimeout(timer);}}
   async function login(loginName,password,{surface='mobile'}={}){const safeSurface=surface==='web'?'web':'mobile',body={request_id:requestId(),login:String(loginName||'').trim(),password:String(password||''),surface:safeSurface};try{const data=await request('mol-app-v2-auth-login',{method:'POST',body,auth:false,timeoutMs:120000});if(!/^[0-9a-f]{64}$/.test(String(data?.session_token||''))||!data?.user?.employee_id)throw new MOLApiError('Backend zwrócił nieprawidłową sesję.');setToken(data.session_token);return data;}finally{body.password='';}}
