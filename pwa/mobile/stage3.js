@@ -4,7 +4,7 @@
   const api = window.MOLApi;
   if (!api) return;
 
-  const BUILD = '20260915.3';
+  const BUILD = '20260915.6';
   const shell = document.querySelector('.worker-shell');
   const processNav = document.querySelector('.bottom-nav [data-nav="process"]');
   const processPanel = document.querySelector('[data-panel="process"]');
@@ -118,7 +118,6 @@
   function renderProcessPanel() {
     if (!processPanel) return;
     const state = String(attendanceState?.attendance?.state || 'NOT_STARTED').toUpperCase();
-    const attendance = attendanceState?.attendance || {};
     const active = processState?.active_process || null;
     const catalog = Array.isArray(processState?.process_catalog) ? processState.process_catalog : [];
     const sessions = Array.isArray(processState?.process_sessions) ? processState.process_sessions : [];
@@ -127,6 +126,7 @@
     const canStop = !busy && working;
     const canChange = !busy && working;
     const canEndProcess = !busy && working && !!active;
+    const canResume = !busy && state === 'CLOSED';
 
     const cards = catalog.map((item) => {
       const current = active?.process_code === item.process_code;
@@ -152,7 +152,7 @@
         <button type="button" class="mol-button" data-process-action="change-process" ${canChange ? '' : 'disabled'}><span><strong>Zmień proces</strong><small>${active ? `Aktywny: ${processName(active.process_code)}` : working ? 'Wybierz proces poniżej' : 'Najpierw rozpocznij pracę'}</small></span></button>
         <button type="button" class="mol-button mol-button--danger" data-process-action="process-stop" ${canEndProcess ? '' : 'disabled'}><span><strong>Zakończ proces</strong><small>${active ? 'Zakończ aktywny proces bez kończenia pracy' : 'Brak aktywnego procesu'}</small></span></button>
         <button type="button" class="mol-button" data-process-action="change-hours" disabled><span><strong>Zmień godziny pracy</strong><small>Korekta godzin wymaga zatwierdzenia lidera w V3</small></span></button>
-        <button type="button" class="mol-button" data-process-action="resume" disabled><span><strong>Wznów pracę</strong><small>${state === 'CLOSED' ? 'Backend V3 nie udostępnia jeszcze bezpiecznego wznowienia' : 'Dostępne po zakończeniu dnia'}</small></span></button>
+        <button type="button" class="mol-button" data-process-action="resume" ${canResume ? '' : 'disabled'}><span><strong>Wznów pracę</strong><small>${state === 'CLOSED' ? 'Cofnij dzisiejsze zakończenie pracy' : 'Dostępne po zakończeniu dnia'}</small></span></button>
       </div>
       <div class="section-title process-picker-title"><h2>Wybierz proces</h2><span>${working ? 'Zmiana zamyka poprzedni proces' : 'Najpierw rozpocznij pracę'}</span></div>
       <div class="action-grid process-picker" data-process-options>${cards || '<p class="mol-muted">Brak dostępnych procesów.</p>'}</div>
@@ -161,6 +161,7 @@
 
     processPanel.querySelector('[data-process-action="attendance-start"]')?.addEventListener('click', () => runAttendance('START'));
     processPanel.querySelector('[data-process-action="attendance-stop"]')?.addEventListener('click', () => runAttendance('STOP'));
+    processPanel.querySelector('[data-process-action="resume"]')?.addEventListener('click', () => runAttendance('RESUME'));
     processPanel.querySelector('[data-process-action="process-stop"]')?.addEventListener('click', () => runProcess('STOP'));
     processPanel.querySelector('[data-process-action="change-process"]')?.addEventListener('click', () => {
       processPanel.querySelector('[data-process-options]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -179,7 +180,7 @@
     }
     shell.dataset.screen = 'process';
     document.querySelectorAll('[data-nav]').forEach((button) => button.classList.toggle('is-active', button.dataset.nav === 'process'));
-    document.querySelectorAll('.worker-hero,.work-status,.kpi-grid,.performance-block').forEach((node) => { node.hidden = true; });
+    document.querySelectorAll('.worker-hero,.work-status,.home-actions-block,.kpi-grid,.performance-block').forEach((node) => { node.hidden = true; });
     document.querySelectorAll('[data-panel]').forEach((panel) => { panel.hidden = panel !== processPanel; });
     processPanel.hidden = false;
     window.scrollTo({ top: 0, behavior: 'auto' });
@@ -251,22 +252,28 @@
     const state = String(attendanceState?.attendance?.state || 'NOT_STARTED').toUpperCase();
     if (state === 'OPEN' && processState.active_process) setStatus(`Praca trwa. Aktywny proces: ${processName(processState.active_process.process_code)}.`, 'ok');
     else if (state === 'OPEN') setStatus('Praca trwa. Wybierz proces; czas bez procesu jest liczony.', 'ok');
-    else if (state === 'CLOSED') setStatus(`Dzień pracy zakończony o ${clock(attendanceState.attendance?.stop_at)}.`, 'ok');
-    else setStatus('Brak rozpoczętego dnia. Pracę rozpoczniesz w zakładce Proces.', 'ok');
+    else if (state === 'CLOSED') setStatus(`Dzień pracy zakończony o ${clock(attendanceState.attendance?.stop_at)}. Możesz cofnąć zakończenie przyciskiem Wznów pracę.`, 'ok');
+    else setStatus('Brak rozpoczętego dnia. Pracę rozpoczniesz przyciskiem MONITI Rozpocznij pracę.', 'ok');
   }
 
   async function runAttendance(action) {
     if (busy) return;
     busy = true;
     setButtonState();
-    showOverlay(action === 'START' ? 'Zapisujemy START' : 'Zapisujemy STOP', 'Czekamy na potwierdzenie w Moniti. Nie klikaj ponownie.');
+    const title = action === 'START' ? 'Zapisujemy START' : action === 'RESUME' ? 'Wznawiamy pracę' : 'Zapisujemy STOP';
+    showOverlay(title, 'Czekamy na potwierdzenie w Moniti. Nie klikaj ponownie.');
     try {
       if (action === 'STOP' && processState?.active_process) {
         await api.write('mol-app-v3-process-stop', { request_id: api.requestId() });
       }
-      await api.write(action === 'START' ? 'mol-app-v3-attendance-start' : 'mol-app-v3-attendance-stop', { request_id: api.requestId() });
+      const path = action === 'START'
+        ? 'mol-app-v3-attendance-start'
+        : action === 'RESUME'
+          ? 'mol-app-v3-attendance-resume'
+          : 'mol-app-v3-attendance-stop';
+      await api.write(path, { request_id: api.requestId() });
       await loadState();
-      window.MOLMobileShow?.('process');
+      window.MOLMobileShow?.('home');
     } catch (error) {
       setStatus(error?.message || 'Operacja nie została potwierdzona.', 'error');
       try { await loadState(); } catch { /* retain last confirmed state */ }

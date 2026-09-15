@@ -14,10 +14,10 @@ const messages = read('mobile/stage5.js');
 assert.doesNotMatch(html, /Szybkie akcje/i, 'START nie może wrócić do legacy bloku Szybkie akcje');
 assert.doesNotMatch(html, /section-block notices|class=["'][^"']*notices/, 'START nie może renderować panelu komunikatów/alertów');
 assert.match(app, /worker-hero,\.work-status,\.home-actions-block,\.kpi-grid,\.performance-block/, 'dashboard START musi obejmować dedykowany host akcji');
-assert.match(app, /loadScript\(['"]\.\/start-actions\.js['"]\)/, 'mobile runtime musi ładować relokację akcji na START');
+assert.match(app, /loadScript\(['"]\.\/start-actions\.js['"]\)/, 'mobile runtime musi ładować akcje START');
 assert.doesNotMatch(app, /\.section-block,\.active-process|\.v3-comm/, 'dashboard nie może wciągać ekranów operacyjnych ani komunikatów');
 assert.match(startActions, /data-home-process-actions/, 'START musi mieć dedykowany host dla akcji pracy');
-assert.match(startActions, /processPanel\.querySelector\(['"]\[data-process-actions\]['"]\)/, 'akcje muszą być fizycznie przenoszone z PROCES na START');
+assert.match(startActions, /cloneNode\(true\)/, 'START musi renderować stabilną kopię kontrolek akcji');
 
 for (const label of [
   'MONITI Rozpocznij pracę',
@@ -29,6 +29,10 @@ for (const label of [
 ]) {
   assert.match(process, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `runtime V3 musi zachować akcję: ${label}`);
 }
+assert.match(process, /const canResume = !busy && state === ['"]CLOSED['"]/, 'Wznów pracę może być aktywne tylko po zamknięciu dnia');
+assert.match(process, /runAttendance\(['"]RESUME['"]\)/, 'Wznów pracę musi korzystać z handlera obecności');
+assert.match(process, /mol-app-v3-attendance-resume/, 'Wznów pracę musi używać endpointu V3');
+assert.doesNotMatch(process, /Backend V3 nie udostępnia jeszcze bezpiecznego wznowienia/, 'frontend nie może oznaczać wznowienia jako niedostępnego');
 assert.match(process, /removeAttribute\(['"]disabled['"]\)/, 'zakładka PROCES musi być dostępna niezależnie od stanu dnia');
 assert.match(process, /data-process-options/, 'PROCES musi zachować wybór procesu');
 assert.match(process, /mol-app-v3-attendance-start/, 'START musi używać istniejącego START V3');
