@@ -17,5 +17,5 @@ assert.match(corrections, /WAITING_ATTENDANCE/, 'korekta procesu musi czekać na
 assert.match(corrections, /corrected_by|Audyt/, 'historia korekt musi pokazywać audyt');
 assert.doesNotMatch(corrections, /mol-app-v2-(correction|corrections)|API CORRECTION/i, 'moduł V3 nie może używać starych endpointów korekt V2');
 assert.match(sw, /web\/corrections\.js/, 'moduł korekt musi być częścią cache PWA');
-assert.match(sw, /20260915\.6-attendance-resume/, 'Service Worker musi mieć aktualną wersję release V3');
+assert.match(sw, /20260915\.7-mobile-loading-fix/, 'Service Worker musi mieć aktualną wersję release V3');
 console.log('MOL App V3 full corrections regression: PASS');
