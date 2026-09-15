@@ -8,13 +8,16 @@ const read = (name) => fs.readFileSync(path.join(root, name), 'utf8');
 const html = read('mobile/index.html');
 const app = read('mobile/app.js');
 const process = read('mobile/stage3.js');
+const startActions = read('mobile/start-actions.js');
 const messages = read('mobile/stage5.js');
 
-assert.doesNotMatch(html, /Szybkie akcje/i, 'START nie może zawierać bloku Szybkie akcje');
-assert.doesNotMatch(html, /data-action=["'](?:start|stop|process|change-process|process-stop)["']/, 'START nie może renderować przycisków Moniti/proces');
+assert.doesNotMatch(html, /Szybkie akcje/i, 'START nie może wrócić do legacy bloku Szybkie akcje');
 assert.doesNotMatch(html, /section-block notices|class=["'][^"']*notices/, 'START nie może renderować panelu komunikatów/alertów');
-assert.match(app, /worker-hero,\.work-status,\.kpi-grid,\.performance-block/, 'dashboard START musi mieć zamkniętą listę sekcji');
+assert.match(app, /worker-hero,\.work-status,\.home-actions-block,\.kpi-grid,\.performance-block/, 'dashboard START musi obejmować dedykowany host akcji');
+assert.match(app, /loadScript\(['"]\.\/start-actions\.js['"]\)/, 'mobile runtime musi ładować relokację akcji na START');
 assert.doesNotMatch(app, /\.section-block,\.active-process|\.v3-comm/, 'dashboard nie może wciągać ekranów operacyjnych ani komunikatów');
+assert.match(startActions, /data-home-process-actions/, 'START musi mieć dedykowany host dla akcji pracy');
+assert.match(startActions, /processPanel\.querySelector\(['"]\[data-process-actions\]['"]\)/, 'akcje muszą być fizycznie przenoszone z PROCES na START');
 
 for (const label of [
   'MONITI Rozpocznij pracę',
@@ -24,14 +27,15 @@ for (const label of [
   'Zmień godziny pracy',
   'Wznów pracę'
 ]) {
-  assert.match(process, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `PROCES musi zawierać: ${label}`);
+  assert.match(process, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `runtime V3 musi zachować akcję: ${label}`);
 }
 assert.match(process, /removeAttribute\(['"]disabled['"]\)/, 'zakładka PROCES musi być dostępna niezależnie od stanu dnia');
-assert.match(process, /data-process-options/, 'PROCES musi zachować istniejący wybór procesu');
-assert.match(process, /mol-app-v3-attendance-start/, 'PROCES musi używać istniejącego START V3');
-assert.match(process, /mol-app-v3-attendance-stop/, 'PROCES musi używać istniejącego STOP V3');
-assert.match(process, /mol-app-v3-process-change/, 'PROCES musi używać istniejącej zmiany procesu V3');
-assert.match(process, /mol-app-v3-process-stop/, 'PROCES musi używać istniejącego zakończenia procesu V3');
+assert.match(process, /data-process-options/, 'PROCES musi zachować wybór procesu');
+assert.match(process, /mol-app-v3-attendance-start/, 'START musi używać istniejącego START V3');
+assert.match(process, /mol-app-v3-attendance-stop/, 'START musi używać istniejącego STOP V3');
+assert.match(process, /mol-app-v3-process-change/, 'zmiana procesu musi używać istniejącego V3');
+assert.match(process, /mol-app-v3-process-stop/, 'zakończenie procesu musi używać istniejącego V3');
+assert.match(startActions, /MOLMobileShow\?\.\(['"]process['"]\)/, 'Zmień proces na START musi otwierać ekran wyboru procesu');
 
 assert.match(html, /data-panel=["']messages["']/, 'KOMUNIKATY muszą mieć dedykowany panel');
 assert.match(messages, /data-comm-ack/, 'KOMUNIKATY muszą zachować ACK');
