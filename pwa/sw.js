@@ -1,4 +1,4 @@
-const VERSION = "mol-pwa-test-20260915.2-full-corrections";
+const VERSION = "mol-pwa-test-20260915.3-mobile-navigation";
 const SHELL = [
   "./",
   "./offline.html",

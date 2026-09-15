@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD = '20260914.2';
+  const BUILD = '20260915.3';
   window.MOL_BUILD = BUILD;
   const shell = document.querySelector('.worker-shell');
   if (!shell) return;
@@ -13,24 +13,25 @@
   const panelLabel = document.getElementById('mobilePanelLabel');
 
   if (roleChip) roleChip.textContent = hintedRole;
-  if (panelLabel) panelLabel.textContent = `${capabilities.managerMobile ? 'Panel mobilny' : 'Panel pracownika'} · TEST · build ${BUILD}`;
+  if (panelLabel) panelLabel.textContent = `${capabilities.managerMobile ? 'Panel mobilny' : 'Panel pracownika'} · V3 · build ${BUILD}`;
   if (managerNav) managerNav.hidden = !capabilities.managerMobile;
   bottomNav?.classList.toggle('has-manager', capabilities.managerMobile);
 
   const panels = () => [...document.querySelectorAll('[data-panel]')];
-  const dashboard = () => [...document.querySelectorAll('.worker-hero,.work-status,.kpi-grid,.section-block,.active-process,.v3-comm')];
+  const dashboard = () => [...document.querySelectorAll('.worker-hero,.work-status,.kpi-grid,.performance-block')];
   function show(requested) {
     const screen = requested === 'team' && !capabilities.managerMobile ? 'home' : requested;
     shell.dataset.screen = screen;
     document.querySelectorAll('[data-nav]').forEach((button) => button.classList.toggle('is-active', button.dataset.nav === screen));
     dashboard().forEach((node) => { node.hidden = screen !== 'home'; });
     panels().forEach((panel) => { panel.hidden = panel.dataset.panel !== screen; });
+    const liveStatus = document.querySelector('[data-live-integration-status]');
+    if (liveStatus) liveStatus.hidden = !['home', 'process'].includes(screen);
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
   window.MOLMobileShow = show;
 
   document.querySelectorAll('[data-nav]').forEach((button) => button.addEventListener('click', () => show(button.dataset.nav)));
-  document.querySelectorAll('[data-action="process"],[data-action="change-process"]').forEach((button) => button.addEventListener('click', () => show('process')));
   document.querySelectorAll('[data-norm-period]').forEach((drawer) => drawer.addEventListener('toggle', () => {
     if (!drawer.open) return;
     document.querySelectorAll('[data-norm-period]').forEach((other) => { if (other !== drawer) other.open = false; });
