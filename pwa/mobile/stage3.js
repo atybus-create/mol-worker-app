@@ -112,12 +112,13 @@
   function workStateLabel(state) {
     if (state === 'OPEN') return 'W PRACY';
     if (state === 'CLOSED') return 'DZIEŃ ZAKOŃCZONY';
+    if (state === 'UNAVAILABLE') return 'DANE CHWILOWO NIEDOSTĘPNE';
     return 'NIE ROZPOCZĘTO';
   }
 
   function renderProcessPanel() {
     if (!processPanel) return;
-    const state = String(attendanceState?.attendance?.state || 'NOT_STARTED').toUpperCase();
+    const state = String(attendanceState?.attendance?.state || 'UNAVAILABLE').toUpperCase();
     const active = processState?.active_process || null;
     const catalog = Array.isArray(processState?.process_catalog) ? processState.process_catalog : [];
     const sessions = Array.isArray(processState?.process_sessions) ? processState.process_sessions : [];
@@ -147,7 +148,7 @@
       </section>
       <div class="section-title process-actions-title"><h2>Akcje</h2><span>backend V3</span></div>
       <div class="action-grid process-actions" data-process-actions>
-        <button type="button" class="mol-button mol-button--primary" data-process-action="attendance-start" ${canStart ? '' : 'disabled'}><span><strong>MONITI Rozpocznij pracę</strong><small>${state === 'NOT_STARTED' ? 'Rozpocznij dzisiejszy dzień' : state === 'OPEN' ? 'Praca już trwa' : 'Dzień został zakończony'}</small></span></button>
+        <button type="button" class="mol-button mol-button--primary" data-process-action="attendance-start" ${canStart ? '' : 'disabled'}><span><strong>MONITI Rozpocznij pracę</strong><small>${state === 'NOT_STARTED' ? 'Rozpocznij dzisiejszy dzień' : state === 'OPEN' ? 'Praca już trwa' : state === 'CLOSED' ? 'Dzień został zakończony' : 'Czekamy na dane czasu pracy'}</small></span></button>
         <button type="button" class="mol-button mol-button--danger" data-process-action="attendance-stop" ${canStop ? '' : 'disabled'}><span><strong>MONITI Zakończ pracę</strong><small>${working ? 'Zakończ dzisiejszy dzień' : 'Dostępne podczas pracy'}</small></span></button>
         <button type="button" class="mol-button" data-process-action="change-process" ${canChange ? '' : 'disabled'}><span><strong>Zmień proces</strong><small>${active ? `Aktywny: ${processName(active.process_code)}` : working ? 'Wybierz proces poniżej' : 'Najpierw rozpocznij pracę'}</small></span></button>
         <button type="button" class="mol-button mol-button--danger" data-process-action="process-stop" ${canEndProcess ? '' : 'disabled'}><span><strong>Zakończ proces</strong><small>${active ? 'Zakończ aktywny proces bez kończenia pracy' : 'Brak aktywnego procesu'}</small></span></button>
@@ -217,8 +218,8 @@
   }
 
   function render() {
-    const att = attendanceState?.attendance || { state: 'NOT_STARTED', start_at: null, stop_at: null };
-    const state = String(att.state || 'NOT_STARTED').toUpperCase();
+    const att = attendanceState?.attendance || { state: 'UNAVAILABLE', start_at: null, stop_at: null };
+    const state = String(att.state || 'UNAVAILABLE').toUpperCase();
     const active = processState?.active_process || null;
     const title = document.querySelector('.work-status h2');
     const chip = document.querySelector('.work-status .status-head .mol-chip');
@@ -226,7 +227,7 @@
     const kpis = document.querySelectorAll('.kpi-grid article strong');
     if (title) title.textContent = workStateLabel(state);
     if (chip) {
-      chip.textContent = state === 'OPEN' ? 'MONITI · OPEN' : state === 'CLOSED' ? 'MONITI · CLOSED' : 'MONITI';
+      chip.textContent = state === 'OPEN' ? 'MONITI · OPEN' : state === 'CLOSED' ? 'MONITI · CLOSED' : state === 'UNAVAILABLE' ? 'V3 · OFFLINE DATA' : 'MONITI';
       chip.className = `mol-chip ${state === 'OPEN' ? 'mol-chip--success' : state === 'CLOSED' ? 'mol-chip--info' : 'mol-chip--warning'}`;
     }
     if (stats[0]) stats[0].textContent = clock(att.start_at);
@@ -241,14 +242,34 @@
   }
 
   async function loadState() {
-    setStatus('Sprawdzam czas pracy i aktywny proces…');
-    const [attendance, process] = await Promise.all([
-      api.read('mol-app-v3-worker-status'),
-      api.read('mol-app-v3-process-status')
+    setStatus('Ładuję dane pracy…');
+    const [attendanceResult, processResult] = await Promise.allSettled([
+      api.request('mol-app-v3-worker-status', { timeoutMs: 6000 }),
+      api.request('mol-app-v3-process-status', { timeoutMs: 6000 })
     ]);
-    attendanceState = attendance || {};
-    processState = { ...(process || {}), _snapshot_at: new Date().toISOString() };
+
+    attendanceState = attendanceResult.status === 'fulfilled'
+      ? (attendanceResult.value || {})
+      : { attendance: { state: 'UNAVAILABLE', start_at: null, stop_at: null }, _load_error: attendanceResult.reason };
+    processState = processResult.status === 'fulfilled'
+      ? { ...(processResult.value || {}), _snapshot_at: new Date().toISOString() }
+      : { active_process: null, process_catalog: [], process_sessions: [], process_seconds: 0, no_process_seconds: 0, _snapshot_at: new Date().toISOString(), _load_error: processResult.reason };
+
     render();
+
+    if (attendanceResult.status === 'rejected' && processResult.status === 'rejected') {
+      setStatus('Nie udało się odczytać danych pracy. Aplikacja pozostaje dostępna; spróbuj ponownie za chwilę.', 'error');
+      return;
+    }
+    if (attendanceResult.status === 'rejected') {
+      setStatus('Czas pracy chwilowo niedostępny. Pozostałe dane aplikacji zostały załadowane.', 'error');
+      return;
+    }
+    if (processResult.status === 'rejected') {
+      setStatus('Dane procesu chwilowo niedostępne. Czas pracy został załadowany.', 'error');
+      return;
+    }
+
     const state = String(attendanceState?.attendance?.state || 'NOT_STARTED').toUpperCase();
     if (state === 'OPEN' && processState.active_process) setStatus(`Praca trwa. Aktywny proces: ${processName(processState.active_process.process_code)}.`, 'ok');
     else if (state === 'OPEN') setStatus('Praca trwa. Wybierz proces; czas bez procesu jest liczony.', 'ok');
