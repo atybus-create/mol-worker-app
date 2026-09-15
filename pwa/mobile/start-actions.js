@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD = '20260915.5';
+  const BUILD = '20260915.6';
   const processPanel = document.querySelector('[data-panel="process"]');
   const workStatus = document.querySelector('.work-status');
   if (!processPanel || !workStatus) return;
