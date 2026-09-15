@@ -1,6 +1,7 @@
 (() => {
   'use strict';
 
+  const BUILD = '20260915.4';
   const processPanel = document.querySelector('[data-panel="process"]');
   const workStatus = document.querySelector('.work-status');
   if (!processPanel || !workStatus) return;
@@ -23,11 +24,28 @@
     if (title) host.append(title);
     host.append(actions);
     host.hidden = document.querySelector('.worker-shell')?.dataset.screen !== 'home';
+
+    const processHelp = processPanel.querySelector('.process-screen-head small');
+    if (processHelp) processHelp.textContent = 'Tu wybierasz i przeglądasz bieżący proces.';
+    const label = document.getElementById('mobilePanelLabel');
+    if (label) label.textContent = `MOL App V3 · build ${BUILD}`;
   }
 
-  const observer = new MutationObserver(() => moveActionsToStart());
+  function correctStatusCopy() {
+    const bar = document.querySelector('[data-live-integration-status]');
+    if (bar && /zakładce Proces/.test(bar.textContent || '')) {
+      bar.textContent = (bar.textContent || '').replace('w zakładce Proces', 'na ekranie Start');
+    }
+  }
+
+  const observer = new MutationObserver(() => {
+    moveActionsToStart();
+    correctStatusCopy();
+  });
   observer.observe(processPanel, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
   moveActionsToStart();
+  correctStatusCopy();
 
   document.addEventListener('click', (event) => {
     const button = event.target.closest('[data-home-process-actions] [data-process-action="change-process"]');
