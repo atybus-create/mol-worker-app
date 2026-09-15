@@ -3,6 +3,8 @@ on:
   push:
     branches: [main, fix-v3-worktime-corrections-20260915]
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   validate-v3:
     runs-on: ubuntu-latest
@@ -11,6 +13,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Remove legacy V2 communication hooks if present
+        run: |
+          if grep -Eq 'data-message-recipients|data-message-status|data-message-send|mol-app-v2-leader-message-recipients' pwa/web/live.js; then
+            node tools/apply-v3-comm-live-cleanup.mjs
+          fi
       - name: Check V3 JavaScript syntax
         run: |
           node --check pwa/web/app.js
@@ -27,3 +34,12 @@ jobs:
             echo "Running $test"
             node "$test"
           done
+      - name: Commit validated cleanup when needed
+        run: |
+          if ! git diff --quiet -- pwa/web/live.js; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add pwa/web/live.js
+            git commit -m 'Remove legacy V2 communication hooks from V3 live runtime'
+            git push
+          fi
