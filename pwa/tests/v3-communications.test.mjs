@@ -17,11 +17,12 @@ assert.doesNotMatch(mobile, /render\(data\);\s*await\s+markShown\(/, 'poll nie m
 assert.match(mobile, /IntersectionObserver/, 'MOBILE musi oznaczać SHOWN na podstawie realnej widoczności karty');
 assert.match(mobile, /\[data-panel=["']messages["']\]/, 'MOBILE musi używać dedykowanego panelu komunikatów');
 assert.match(mobile, /removeAttribute\(['"]disabled['"]\)/, 'nawigacja Komunikaty w MOBILE musi być aktywna');
-assert.match(mobile, /MOLMobileShow\?\.\(['"]messages['"]\)/, 'MOBILE musi umożliwiać przejście z podsumowania do pełnej skrzynki');
+assert.doesNotMatch(mobile, /const\s+home\s*=|data-v3comm-open|v3-comm-home-actions|homeList|homeCount|anchor\?\.after\(home\)/, 'komunikaty MOBILE nie mogą renderować panelu na ekranie głównym');
 assert.match(mobile, /data-v3comm-filter/, 'dedykowany ekran MOBILE musi mieć filtry komunikatów');
 assert.match(mobile, /Do potwierdzenia/, 'dedykowany ekran MOBILE musi pokazywać komunikaty wymagające ACK');
 assert.match(mobile, /Aktywne alerty/, 'dedykowany ekran MOBILE musi pokazywać liczbę aktywnych alertów');
 assert.match(mobile, /limit:\s*100/, 'dedykowany ekran MOBILE musi pobierać pełną historię do limitu 100 rekordów');
+assert.match(mobile, /navBadge/, 'dolna nawigacja MOBILE musi zachować badge niepotwierdzonych komunikatów');
 assert.match(web, /IntersectionObserver/, 'WWW musi oznaczać SHOWN na podstawie realnej widoczności karty');
 assert.match(web, /employee_id:person\.value|employee_id\s*:\s*person\.value/, 'historia lidera musi wysyłać employee_id');
 assert.match(web, /limit:100/, 'historia WWW musi pobierać minimum 100 rekordów');
