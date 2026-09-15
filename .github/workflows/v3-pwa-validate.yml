@@ -1,7 +1,7 @@
 name: Validate V3 PWA
 on:
   push:
-    branches: [main, fix-v3-worktime-corrections-20260915, feat-v3-full-corrections-20260915, fix-v3-mobile-navigation-cleanup-20260915]
+    branches: [main, fix-v3-worktime-corrections-20260915, feat-v3-full-corrections-20260915, fix-v3-mobile-navigation-cleanup-20260915, fix-v3-start-actions-dedupe-20260915]
   workflow_dispatch:
 permissions:
   contents: write
@@ -31,6 +31,7 @@ jobs:
           node --check pwa/web/stage5.js
           node --check pwa/mobile/app.js
           node --check pwa/mobile/stage3.js
+          node --check pwa/mobile/start-actions.js
           node --check pwa/mobile/stage4.js
           node --check pwa/mobile/stage5.js
           node --check pwa/sw.js
