@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD = '20260915.7';
+  const BUILD = '20260915.8';
   const processPanel = document.querySelector('[data-panel="process"]');
   const workStatus = document.querySelector('.work-status');
   if (!processPanel || !workStatus) return;
@@ -15,7 +15,9 @@
     workStatus.insertAdjacentElement('afterend', host);
   }
 
+  let scheduled = false;
   function renderStartActions() {
+    scheduled = false;
     const source = processPanel.querySelector('[data-process-actions]');
     if (!source) return;
 
@@ -30,13 +32,17 @@
     host.replaceChildren(title, actions);
     host.hidden = document.querySelector('.worker-shell')?.dataset.screen !== 'home';
 
-    const processHelp = processPanel.querySelector('.process-screen-head small');
-    if (processHelp) processHelp.textContent = 'Tu wybierasz i przeglądasz bieżący proces.';
     const label = document.getElementById('mobilePanelLabel');
     if (label) label.textContent = `MOL App V3 · build ${BUILD}`;
   }
 
-  const observer = new MutationObserver(() => renderStartActions());
+  function scheduleRender() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(renderStartActions);
+  }
+
+  const observer = new MutationObserver(scheduleRender);
   observer.observe(processPanel, { childList: true, subtree: true });
   renderStartActions();
 

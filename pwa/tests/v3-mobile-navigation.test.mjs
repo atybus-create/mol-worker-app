@@ -18,6 +18,8 @@ assert.match(app, /loadScript\(['"]\.\/start-actions\.js['"]\)/, 'mobile runtime
 assert.doesNotMatch(app, /\.section-block,\.active-process|\.v3-comm/, 'dashboard nie może wciągać ekranów operacyjnych ani komunikatów');
 assert.match(startActions, /data-home-process-actions/, 'START musi mieć dedykowany host dla akcji pracy');
 assert.match(startActions, /cloneNode\(true\)/, 'START musi renderować stabilną kopię kontrolek akcji');
+assert.match(startActions, /requestAnimationFrame\(renderStartActions\)/, 'odświeżanie akcji musi być scalane do jednej klatki');
+assert.doesNotMatch(startActions, /processPanel\.querySelector\(['"]\.process-screen-head small['"]\)[\s\S]{0,120}textContent/, 'observer START nie może modyfikować obserwowanego processPanel i zapętlać renderu');
 
 for (const label of [
   'MONITI Rozpocznij pracę',
