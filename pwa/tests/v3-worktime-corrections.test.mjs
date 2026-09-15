@@ -2,14 +2,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (name) => fs.readFileSync(path.join(root, name), 'utf8');
-
 const worktime = read('web/worktime.js');
 const app = read('web/app.js');
 const sw = read('sw.js');
-
 assert.match(worktime, /BRAK STOP/, 'worktime must expose missing STOP state');
 assert.match(worktime, /mol-app-v3-attendance-correction/, 'worktime must use V3 correction endpoint');
 assert.match(worktime, /Zatwierdź godzinę STOP/, 'worktime must expose explicit correction confirmation');
@@ -17,9 +14,8 @@ assert.match(worktime, /data-worktime-incomplete/, 'worktime must show incomplet
 assert.match(worktime, /worktime-incomplete/, 'incomplete worktime rows must be styled separately');
 assert.match(worktime, /value="\$\{today\(\)\}"/, 'worktime must default to today');
 assert.match(app, /20260915\.2/, 'web runtime build must include full corrections release');
-assert.match(sw, /20260915\.2-full-corrections/, 'service worker cache must include full corrections release');
+assert.match(sw, /20260915\.3-mobile-navigation/, 'service worker cache must include current V3 release');
 assert.match(sw, /web\/worktime\.js/, 'worktime runtime must be in service worker cache');
 assert.match(sw, /endsWith\('\/web\/worktime\.js'\)/, 'worktime runtime must be network-fresh');
 assert.match(sw, /endsWith\('\/web\/live\.js'\)/, 'live runtime must be network-fresh');
-
 console.log('MOL App V3 worktime corrections regression: PASS');
