@@ -11,10 +11,17 @@ const live = read('web/live.js');
 const sw = read('sw.js');
 const api = read('shared/api.js');
 
-assert.match(mobile, /ack_required\s*&&\s*!x\.ack_at|ack_required===true&&![a-zA-Z0-9_.]+ack_at/, 'MANUAL wymagający ACK musi liczyć się bez cause_status OPEN');
+assert.match(mobile, /ack_required\s*&&\s*!x\.ack_at|ack_required===true&&![a-zA-Z0-9_.]+ack_at|ack_required\s*===\s*true\s*&&\s*!m\.ack_at/, 'MANUAL wymagający ACK musi liczyć się bez cause_status OPEN');
 assert.doesNotMatch(mobile, /cause_status\s*===\s*['"]OPEN['"]\s*&&\s*\(!x\.ack_required\|\|!x\.ack_at\)/, 'licznik nie może wymagać OPEN dla MANUAL');
 assert.doesNotMatch(mobile, /render\(data\);\s*await\s+markShown\(/, 'poll nie może automatycznie oznaczać wszystkich pobranych wiadomości jako SHOWN');
 assert.match(mobile, /IntersectionObserver/, 'MOBILE musi oznaczać SHOWN na podstawie realnej widoczności karty');
+assert.match(mobile, /\[data-panel=["']messages["']\]/, 'MOBILE musi używać dedykowanego panelu komunikatów');
+assert.match(mobile, /removeAttribute\(['"]disabled['"]\)/, 'nawigacja Komunikaty w MOBILE musi być aktywna');
+assert.match(mobile, /MOLMobileShow\?\.\(['"]messages['"]\)/, 'MOBILE musi umożliwiać przejście z podsumowania do pełnej skrzynki');
+assert.match(mobile, /data-v3comm-filter/, 'dedykowany ekran MOBILE musi mieć filtry komunikatów');
+assert.match(mobile, /Do potwierdzenia/, 'dedykowany ekran MOBILE musi pokazywać komunikaty wymagające ACK');
+assert.match(mobile, /Aktywne alerty/, 'dedykowany ekran MOBILE musi pokazywać liczbę aktywnych alertów');
+assert.match(mobile, /limit:\s*100/, 'dedykowany ekran MOBILE musi pobierać pełną historię do limitu 100 rekordów');
 assert.match(web, /IntersectionObserver/, 'WWW musi oznaczać SHOWN na podstawie realnej widoczności karty');
 assert.match(web, /employee_id:person\.value|employee_id\s*:\s*person\.value/, 'historia lidera musi wysyłać employee_id');
 assert.match(web, /limit:100/, 'historia WWW musi pobierać minimum 100 rekordów');
