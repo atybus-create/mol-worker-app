@@ -14,7 +14,7 @@ assert.match(worktime, /data-worktime-incomplete/, 'worktime must show incomplet
 assert.match(worktime, /worktime-incomplete/, 'incomplete worktime rows must be styled separately');
 assert.match(worktime, /value="\$\{today\(\)\}"/, 'worktime must default to today');
 assert.match(app, /20260915\.2/, 'web runtime build must include full corrections release');
-assert.match(sw, /20260915\.4-start-actions-dedupe/, 'service worker cache must include current V3 release');
+assert.match(sw, /20260915\.6-attendance-resume/, 'service worker cache must include current V3 release');
 assert.match(sw, /web\/worktime\.js/, 'worktime runtime must be in service worker cache');
 assert.match(sw, /endsWith\('\/web\/worktime\.js'\)/, 'worktime runtime must be network-fresh');
 assert.match(sw, /endsWith\('\/web\/live\.js'\)/, 'live runtime must be network-fresh');
