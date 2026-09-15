@@ -177,7 +177,6 @@
     const subtitle = document.querySelector('.team-card .card-head span');
     if (subtitle) subtitle.textContent = `${items.length} osób · dane z backendu V3`;
     populateReportPeople(items);
-    populateMessageRecipients(items.filter((row) => row.attendance?.state === 'OPEN'));
     if (!currentEmployee && items[0]) selectEmployee(items[0]);
   }
 
@@ -260,16 +259,6 @@
     syncReportCounts();
   }
 
-  function populateMessageRecipients(items) {
-    const view = document.querySelector('[data-view="leader-messages"]');
-    const grid = view?.querySelector('[data-message-recipients]');
-    if (!grid) return;
-    grid.innerHTML = items.map((item, index) => `<label class="message-recipient"><input type="checkbox" value="${esc(item.employee.employee_id)}" ${index === 0 ? 'checked' : ''} disabled><span><b>${esc(item.employee.display_name)}</b><small>${esc(item.employee.employee_id)} · OPEN · ${esc(item.process?.process_code || 'brak procesu')}</small></span></label>`).join('');
-    const status = view.querySelector('[data-message-status]');
-    const send = view.querySelector('[data-message-send]');
-    if (status) status.textContent = 'Odbiorcy są pobierani z backendu. Wysyłka będzie dostępna po wczytaniu sekcji.';
-    if (send) { send.disabled = true; send.title = 'Akcja będzie dostępna po wczytaniu sekcji.'; }
-  }
 
   const selectedIds = (view) => [...view.querySelectorAll('.report-people-grid input:checked')].map((input) => input.value);
   function syncReportCounts() {
@@ -481,19 +470,6 @@
     return { items: [] };
   }
 
-  async function lockAndPopulateMessages() {
-    const view = await waitFor('[data-view="leader-messages"]');
-    if (!view) return null;
-    let recipients = null;
-    try { recipients = await api.read('mol-app-v2-leader-message-recipients'); } catch { /* team fallback */ }
-    const items = recipients?.items || (teamData?.items || []).filter((row) => row.attendance?.state === 'OPEN').map((row) => ({ employee_id: row.employee.employee_id, display_name: row.employee.display_name }));
-    const grid = view.querySelector('[data-message-recipients]');
-    if (grid) grid.innerHTML = items.map((person, index) => `<label class="message-recipient"><input type="checkbox" value="${esc(person.employee_id)}" ${index === 0 ? 'checked' : ''} disabled><span><b>${esc(person.display_name)}</b><small>${esc(person.employee_id)} · OPEN</small></span></label>`).join('');
-    view.querySelectorAll('textarea,input,button').forEach((node) => { if (!node.matches('[data-section]')) node.disabled = true; });
-    const status = view.querySelector('[data-message-status]');
-    if (status) status.textContent = 'Odbiorcy są pobierani z backendu. Wysyłka będzie dostępna po wczytaniu sekcji.';
-    return recipients;
-  }
 
   function bindGlobal() {
     const dateInput = document.querySelector('[data-view="team"] .date-chip input');
@@ -534,12 +510,11 @@
 
       await waitFor('[data-view="reports"] .report-people-grid');
       await waitFor('[data-view="worktime"] .report-people-grid');
-      await waitFor('[data-view="leader-messages"] [data-message-recipients]');
       removeEstylLogo();
       bindGlobal();
       bindReports();
       await loadTeam();
-      await Promise.all([loadUsers(), loadCorrections(), loadAudit(), lockAndPopulateMessages()]);
+      await Promise.all([loadUsers(), loadCorrections(), loadAudit()]);
       document.documentElement.dataset.liveReadsReady = 'true';
       setStatus('Panel V3 gotowy: zespół, wydajność i czas pracy są podłączone do backendu V3.', 'ok');
     } catch (error) {

@@ -1,0 +1,49 @@
+name: Validate V3 PWA
+on:
+  push:
+    branches: [main, fix-v3-worktime-corrections-20260915]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  validate-v3:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Apply pending V3 runtime cleanup
+        run: |
+          if grep -Eq 'data-message-recipients|data-message-status|data-message-send|mol-app-v2-leader-message-recipients' pwa/web/live.js; then
+            node tools/apply-v3-comm-live-cleanup.mjs
+          fi
+          if grep -q "const BUILD = '20260914.1';" pwa/shared/api.js; then
+            sed -i "s/const BUILD = '20260914.1';/const BUILD = '20260914.2';/" pwa/shared/api.js
+          fi
+      - name: Check V3 JavaScript syntax
+        run: |
+          node --check pwa/shared/api.js
+          node --check pwa/web/app.js
+          node --check pwa/web/worktime.js
+          node --check pwa/web/live.js
+          node --check pwa/web/stage5.js
+          node --check pwa/mobile/app.js
+          node --check pwa/mobile/stage5.js
+          node --check pwa/sw.js
+      - name: Run V3 regression tests
+        run: |
+          set -e
+          for test in pwa/tests/*.test.mjs; do
+            echo "Running $test"
+            node "$test"
+          done
+      - name: Commit validated cleanup when needed
+        run: |
+          if ! git diff --quiet -- pwa/web/live.js pwa/shared/api.js; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add pwa/web/live.js pwa/shared/api.js
+            git commit -m 'Finalize V3 runtime cleanup'
+            git push
+          fi

@@ -3,7 +3,7 @@
 
   const BASE = 'https://n8n.estyl.team/webhook/';
   const SESSION_KEY = 'mol.v3.session';
-  const BUILD = '20260914.1';
+  const BUILD = '20260914.2';
   const ROUTE_OVERRIDES = Object.freeze({
     'mol-app-health': 'mol-app-v3-health',
     'mol-app-v2-auth-login': 'mol-app-v3-auth-login',
