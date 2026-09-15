@@ -1,9 +1,18 @@
 (() => {
   'use strict';
 
-  const host = document.querySelector('[data-home-process-actions]');
   const processPanel = document.querySelector('[data-panel="process"]');
-  if (!host || !processPanel) return;
+  const workStatus = document.querySelector('.work-status');
+  if (!processPanel || !workStatus) return;
+
+  let host = document.querySelector('[data-home-process-actions]');
+  if (!host) {
+    host = document.createElement('section');
+    host.className = 'section-block home-actions-block';
+    host.dataset.homeProcessActions = 'true';
+    host.setAttribute('aria-label', 'Akcje pracy');
+    workStatus.insertAdjacentElement('afterend', host);
+  }
 
   function moveActionsToStart() {
     const title = processPanel.querySelector('.process-actions-title');
@@ -13,7 +22,7 @@
     host.replaceChildren();
     if (title) host.append(title);
     host.append(actions);
-    host.hidden = false;
+    host.hidden = document.querySelector('.worker-shell')?.dataset.screen !== 'home';
   }
 
   const observer = new MutationObserver(() => moveActionsToStart());
