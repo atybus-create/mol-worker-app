@@ -11,7 +11,7 @@ const mobile = read('mobile/login.html');
 const web = read('web/login.html');
 const sw = read('sw.js');
 
-assert.match(api, /20260914\.1/, 'klient API musi używać aktualnego builda V3');
+assert.match(api, /20260914\.2/, 'klient API musi używać aktualnego builda V3');
 assert.match(api, /'mol-app-health': 'mol-app-v3-health'/, 'health musi być przełączony centralnie na V3');
 assert.match(api, /'mol-app-v2-leader-team': 'mol-app-v3-leader-team'/, 'panel zespołu musi używać endpointu V3');
 assert.match(api, /'mol-app-v2-report-performance': 'mol-app-v3-report-performance'/, 'raport wydajności musi używać endpointu V3');
