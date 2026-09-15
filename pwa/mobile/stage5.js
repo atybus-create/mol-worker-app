@@ -7,21 +7,19 @@
 
   const style = document.createElement('style');
   style.textContent = `
-    .v3-comm{margin:12px 16px}
-    .v3-comm-head,.v3-comm-screen-head{display:flex;justify-content:space-between;gap:12px;align-items:center}
-    .v3-comm-list,.v3-comm-screen-list{display:grid;gap:10px;margin-top:10px}
-    .v3-msg{padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.04)}
+    .v3-comm-screen{padding:4px 0 20px}
+    .v3-comm-screen-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px}
+    .v3-comm-screen-head h2{margin:5px 0 4px;font-size:30px}.v3-comm-screen-head p{margin:0}.v3-comm-screen-head small{display:block;color:var(--mol-text-muted);line-height:1.45}
+    .v3-comm-screen-count{min-width:46px;min-height:46px;display:grid;place-items:center;border-radius:14px;border:1px solid rgba(18,200,255,.28);background:rgba(18,200,255,.08);color:var(--mol-cyan);font-size:18px;font-weight:900}
+    .v3-comm-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.v3-comm-summary article{padding:14px}.v3-comm-summary small,.v3-comm-summary strong{display:block}.v3-comm-summary small{color:var(--mol-text-muted);font-size:11px}.v3-comm-summary strong{margin-top:5px;font-size:22px}.v3-comm-summary article:first-child strong{color:var(--mol-yellow)}
+    .v3-comm-filters{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}.v3-comm-filters::-webkit-scrollbar{display:none}.v3-comm-filter{flex:0 0 auto;border:1px solid var(--mol-border);border-radius:999px;background:rgba(255,255,255,.035);color:var(--mol-text-muted);padding:9px 12px;font:700 12px system-ui;cursor:pointer}.v3-comm-filter.is-active{border-color:rgba(18,200,255,.55);background:rgba(18,200,255,.11);color:var(--mol-cyan)}
+    .v3-comm-screen-list{display:grid;gap:10px;margin-top:6px}.v3-msg{padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.04)}
     .v3-msg[data-open="true"]{border-color:rgba(255,188,64,.55)}
     .v3-msg[data-pending="true"]{box-shadow:inset 3px 0 0 rgba(255,188,64,.8)}
     .v3-msg h3{font-size:14px;margin:0 0 5px}.v3-msg p{margin:0 0 8px;font-size:13px;line-height:1.4}.v3-msg small{opacity:.72}.v3-msg button{margin-top:9px;width:100%}
     .v3-comm-empty{opacity:.7;font-size:13px;line-height:1.5}
-    .v3-comm-home-actions{display:flex;justify-content:flex-end;margin-top:10px}.v3-comm-home-actions .text-button{color:var(--mol-cyan);font-weight:700}
-    .v3-comm-screen{padding:4px 0 20px}.v3-comm-screen-head{align-items:flex-start;margin-bottom:16px}.v3-comm-screen-head h2{margin:5px 0 4px;font-size:30px}.v3-comm-screen-head p{margin:0}.v3-comm-screen-head small{display:block;color:var(--mol-text-muted);line-height:1.45}
-    .v3-comm-screen-count{min-width:46px;min-height:46px;display:grid;place-items:center;border-radius:14px;border:1px solid rgba(18,200,255,.28);background:rgba(18,200,255,.08);color:var(--mol-cyan);font-size:18px;font-weight:900}
-    .v3-comm-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.v3-comm-summary article{padding:14px}.v3-comm-summary small,.v3-comm-summary strong{display:block}.v3-comm-summary small{color:var(--mol-text-muted);font-size:11px}.v3-comm-summary strong{margin-top:5px;font-size:22px}.v3-comm-summary article:first-child strong{color:var(--mol-yellow)}
-    .v3-comm-filters{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}.v3-comm-filters::-webkit-scrollbar{display:none}.v3-comm-filter{flex:0 0 auto;border:1px solid var(--mol-border);border-radius:999px;background:rgba(255,255,255,.035);color:var(--mol-text-muted);padding:9px 12px;font:700 12px system-ui;cursor:pointer}.v3-comm-filter.is-active{border-color:rgba(18,200,255,.55);background:rgba(18,200,255,.11);color:var(--mol-cyan)}
-    .v3-comm-screen-list{margin-top:6px}.v3-msg-meta{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:7px}.v3-msg-type{font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:var(--mol-cyan)}.v3-msg-status{font-size:10px;font-weight:800;padding:4px 7px;border-radius:999px;background:rgba(255,255,255,.06);color:var(--mol-text-muted)}.v3-msg-status.is-pending{background:rgba(255,188,64,.12);color:var(--mol-yellow)}.v3-msg-status.is-ok{background:rgba(34,210,162,.1);color:var(--mol-green)}
-    @media(max-width:390px){.v3-comm{margin-left:0;margin-right:0}.v3-comm-screen-head h2{font-size:26px}}
+    .v3-msg-meta{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:7px}.v3-msg-type{font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:var(--mol-cyan)}.v3-msg-status{font-size:10px;font-weight:800;padding:4px 7px;border-radius:999px;background:rgba(255,255,255,.06);color:var(--mol-text-muted)}.v3-msg-status.is-pending{background:rgba(255,188,64,.12);color:var(--mol-yellow)}.v3-msg-status.is-ok{background:rgba(34,210,162,.1);color:var(--mol-green)}
+    @media(max-width:390px){.v3-comm-screen-head h2{font-size:26px}}
   `;
   document.head.append(style);
 
@@ -35,12 +33,6 @@
     MANUAL: 'Komunikat lidera'
   };
 
-  const home = document.createElement('section');
-  home.className = 'mol-card v3-comm';
-  home.innerHTML = '<div class="v3-comm-head"><div><p class="mol-kicker">Komunikacja</p><h2>Alerty i komunikaty</h2></div><span class="mol-chip mol-chip--info" data-v3comm-count>0</span></div><div class="v3-comm-list" data-v3comm-list><p class="v3-comm-empty">Ładowanie…</p></div><div class="v3-comm-home-actions"><button class="text-button" type="button" data-v3comm-open>Otwórz wszystkie komunikaty →</button></div>';
-  const anchor = document.querySelector('.work-status') || document.querySelector('.worker-hero');
-  anchor?.after(home);
-
   const panel = document.querySelector('[data-panel="messages"]');
   if (!panel) return;
   panel.classList.add('v3-comm-screen');
@@ -49,8 +41,6 @@
   const navButton = document.querySelector('.bottom-nav [data-nav="messages"]');
   navButton?.removeAttribute('disabled');
   const navBadge = navButton?.querySelector('.badge');
-  const homeList = home.querySelector('[data-v3comm-list]');
-  const homeCount = home.querySelector('[data-v3comm-count]');
   const screenList = panel.querySelector('[data-v3comm-screen-list]');
   const screenCount = panel.querySelector('[data-v3comm-screen-count]');
   const pendingCount = panel.querySelector('[data-v3comm-pending]');
@@ -111,14 +101,11 @@
         if (entry.isIntersecting && entry.intersectionRatio >= 0.5) markShown(entry.target.dataset.messageId, entry.target);
       }
     }, {threshold: [0.5]});
-    document.querySelectorAll('.v3-msg[data-shown="false"]').forEach((node) => observer.observe(node));
+    panel.querySelectorAll('.v3-msg[data-shown="false"]').forEach((node) => observer.observe(node));
   }
 
-  function card(m, compact = false) {
+  function card(m) {
     const button = m.ack_required && !m.ack_at ? `<button class="mol-button mol-button--primary" type="button" data-comm-ack="${esc(m.message_id)}">Potwierdzam</button>` : '';
-    if (compact) {
-      return `<article class="v3-msg" data-message-id="${esc(m.message_id)}" data-shown="${!!m.shown_at}" data-open="${relevant(m)}" data-pending="${pending(m)}"><h3>${esc(TYPE[m.type] || m.type)}</h3><p>${esc(m.content)}</p><small>${esc(statusText(m))} · ${esc(new Date(m.sent_at).toLocaleString('pl-PL'))}</small>${button}</article>`;
-    }
     return `<article class="v3-msg" data-message-id="${esc(m.message_id)}" data-shown="${!!m.shown_at}" data-open="${relevant(m)}" data-pending="${pending(m)}"><div class="v3-msg-meta"><span class="v3-msg-type">${esc(TYPE[m.type] || m.type)}</span><span class="v3-msg-status ${statusClass(m)}">${esc(statusText(m))}</span></div><p>${esc(m.content)}</p><small>${esc(new Date(m.sent_at).toLocaleString('pl-PL'))}</small>${button}</article>`;
   }
 
@@ -129,11 +116,7 @@
     return items;
   }
 
-  function renderLists(items) {
-    const openItems = items.filter(relevant);
-    const homeItems = [...openItems].sort((a, b) => Date.parse(b.sent_at || 0) - Date.parse(a.sent_at || 0)).slice(0, 3);
-    homeList.innerHTML = homeItems.length ? homeItems.map((m) => card(m, true)).join('') : '<p class="v3-comm-empty">Brak aktywnych komunikatów.</p>';
-
+  function renderList(items) {
     const shownItems = filtered(items);
     screenList.innerHTML = shownItems.length ? shownItems.map((m) => card(m)).join('') : '<p class="v3-comm-empty">Brak komunikatów w tym widoku.</p>';
     observeCards();
@@ -144,7 +127,6 @@
     lastItems = items;
     const awaiting = items.filter(pending).length;
     const active = items.filter(activeAuto).length;
-    homeCount.textContent = String(awaiting);
     screenCount.textContent = String(awaiting);
     pendingCount.textContent = String(awaiting);
     activeCount.textContent = String(active);
@@ -152,7 +134,7 @@
       navBadge.textContent = String(awaiting);
       navBadge.hidden = awaiting < 1;
     }
-    renderLists(items);
+    renderList(items);
   }
 
   async function poll() {
@@ -165,9 +147,7 @@
         stopped = true;
         return;
       }
-      const error = `<p class="v3-comm-empty">${esc(e.message || 'Błąd komunikacji')}</p>`;
-      homeList.innerHTML = error;
-      screenList.innerHTML = error;
+      screenList.innerHTML = `<p class="v3-comm-empty">${esc(e.message || 'Błąd komunikacji')}</p>`;
     }
   }
 
@@ -183,18 +163,6 @@
     }
   }
 
-  home.addEventListener('click', (event) => {
-    const ack = event.target.closest('[data-comm-ack]');
-    if (ack) {
-      acknowledge(ack);
-      return;
-    }
-    if (event.target.closest('[data-v3comm-open]')) {
-      window.MOLMobileShow?.('messages');
-      poll();
-    }
-  });
-
   panel.addEventListener('click', (event) => {
     const ack = event.target.closest('[data-comm-ack]');
     if (ack) {
@@ -205,7 +173,7 @@
     if (!filter) return;
     currentFilter = filter.dataset.v3commFilter || 'ALL';
     panel.querySelectorAll('[data-v3comm-filter]').forEach((button) => button.classList.toggle('is-active', button === filter));
-    renderLists(lastItems);
+    renderList(lastItems);
   });
 
   navButton?.addEventListener('click', () => {
