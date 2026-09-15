@@ -13,13 +13,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Remove legacy V2 communication hooks if present
+      - name: Apply pending V3 runtime cleanup
         run: |
           if grep -Eq 'data-message-recipients|data-message-status|data-message-send|mol-app-v2-leader-message-recipients' pwa/web/live.js; then
             node tools/apply-v3-comm-live-cleanup.mjs
           fi
+          if grep -q "const BUILD = '20260914.1';" pwa/shared/api.js; then
+            sed -i "s/const BUILD = '20260914.1';/const BUILD = '20260914.2';/" pwa/shared/api.js
+          fi
       - name: Check V3 JavaScript syntax
         run: |
+          node --check pwa/shared/api.js
           node --check pwa/web/app.js
           node --check pwa/web/worktime.js
           node --check pwa/web/live.js
@@ -36,10 +40,10 @@ jobs:
           done
       - name: Commit validated cleanup when needed
         run: |
-          if ! git diff --quiet -- pwa/web/live.js; then
+          if ! git diff --quiet -- pwa/web/live.js pwa/shared/api.js; then
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add pwa/web/live.js
-            git commit -m 'Remove legacy V2 communication hooks from V3 live runtime'
+            git add pwa/web/live.js pwa/shared/api.js
+            git commit -m 'Finalize V3 runtime cleanup'
             git push
           fi
