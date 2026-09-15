@@ -1,4 +1,4 @@
-const VERSION = "mol-pwa-test-20260915.4-start-actions-dedupe";
+const VERSION = "mol-pwa-test-20260915.6-attendance-resume";
 const SHELL = [
   "./",
   "./offline.html",
