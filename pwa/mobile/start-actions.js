@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD = '20260915.4';
+  const BUILD = '20260915.5';
   const processPanel = document.querySelector('[data-panel="process"]');
   const workStatus = document.querySelector('.work-status');
   if (!processPanel || !workStatus) return;
@@ -15,14 +15,19 @@
     workStatus.insertAdjacentElement('afterend', host);
   }
 
-  function moveActionsToStart() {
-    const title = processPanel.querySelector('.process-actions-title');
-    const actions = processPanel.querySelector('[data-process-actions]');
-    if (!actions) return;
+  function renderStartActions() {
+    const source = processPanel.querySelector('[data-process-actions]');
+    if (!source) return;
 
-    host.replaceChildren();
-    if (title) host.append(title);
-    host.append(actions);
+    const title = document.createElement('div');
+    title.className = 'section-title process-actions-title';
+    title.innerHTML = '<h2>Akcje</h2><span>backend V3</span>';
+
+    const actions = source.cloneNode(true);
+    actions.dataset.homeProcessActionsGrid = 'true';
+    actions.removeAttribute('data-process-actions');
+
+    host.replaceChildren(title, actions);
     host.hidden = document.querySelector('.worker-shell')?.dataset.screen !== 'home';
 
     const processHelp = processPanel.querySelector('.process-screen-head small');
@@ -31,16 +36,24 @@
     if (label) label.textContent = `MOL App V3 · build ${BUILD}`;
   }
 
-  const observer = new MutationObserver(() => moveActionsToStart());
+  const observer = new MutationObserver(() => renderStartActions());
   observer.observe(processPanel, { childList: true, subtree: true });
-  moveActionsToStart();
+  renderStartActions();
 
   document.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-home-process-actions] [data-process-action="change-process"]');
-    if (!button) return;
-    window.MOLMobileShow?.('process');
-    requestAnimationFrame(() => {
-      processPanel.querySelector('[data-process-options]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }, true);
+    const button = event.target.closest('[data-home-process-actions] [data-process-action]');
+    if (!button || button.disabled) return;
+    const action = button.dataset.processAction;
+
+    if (action === 'change-process') {
+      window.MOLMobileShow?.('process');
+      requestAnimationFrame(() => {
+        processPanel.querySelector('[data-process-options]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      return;
+    }
+
+    const original = processPanel.querySelector(`[data-process-action="${action}"]`);
+    if (original && !original.disabled) original.click();
+  });
 })();
