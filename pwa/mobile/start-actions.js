@@ -31,21 +31,9 @@
     if (label) label.textContent = `MOL App V3 · build ${BUILD}`;
   }
 
-  function correctStatusCopy() {
-    const bar = document.querySelector('[data-live-integration-status]');
-    if (bar && /zakładce Proces/.test(bar.textContent || '')) {
-      bar.textContent = (bar.textContent || '').replace('w zakładce Proces', 'na ekranie Start');
-    }
-  }
-
-  const observer = new MutationObserver(() => {
-    moveActionsToStart();
-    correctStatusCopy();
-  });
+  const observer = new MutationObserver(() => moveActionsToStart());
   observer.observe(processPanel, { childList: true, subtree: true });
-  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
   moveActionsToStart();
-  correctStatusCopy();
 
   document.addEventListener('click', (event) => {
     const button = event.target.closest('[data-home-process-actions] [data-process-action="change-process"]');
