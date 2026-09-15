@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD = '20260915.7';
+  const BUILD = '20260915.9';
   window.MOL_BUILD = BUILD;
   const shell = document.querySelector('.worker-shell');
   if (!shell) return;
@@ -52,6 +52,7 @@
     await loadScript('../shared/api.js');
     await loadScript('../shared/regression-guards.js');
     await loadScript('./stage3.js');
+    await loadScript('./worktime-change.js');
     await loadScript('./start-actions.js');
     await loadScript('./stage4.js');
     await loadScript('./stage5.js');
