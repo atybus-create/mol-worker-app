@@ -1,4 +1,4 @@
-const VERSION = "mol-pwa-test-20260915.1-worktime-corrections";
+const VERSION = "mol-pwa-test-20260915.2-full-corrections";
 const SHELL = [
   "./",
   "./offline.html",
@@ -34,6 +34,7 @@ const SHELL = [
   "./mobile/worker-details.js",
   "./web/app.css",
   "./web/app.js",
+  "./web/corrections.js",
   "./web/details.css",
   "./web/details.js",
   "./web/leader-message-history.js",
@@ -86,7 +87,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  const criticalFresh = url.pathname.endsWith('/shared/auth.js') || url.pathname.endsWith('/shared/api.js') || url.pathname.endsWith('/mobile/app.js') || url.pathname.endsWith('/mobile/stage3.js') || url.pathname.endsWith('/mobile/stage4.js') || url.pathname.endsWith('/mobile/stage5.js') || url.pathname.endsWith('/web/app.js') || url.pathname.endsWith('/web/live.js') || url.pathname.endsWith('/web/worktime.js') || url.pathname.endsWith('/web/stage5.js') || url.pathname.endsWith('/pwa-register.js');
+  const criticalFresh = url.pathname.endsWith('/shared/auth.js') || url.pathname.endsWith('/shared/api.js') || url.pathname.endsWith('/mobile/app.js') || url.pathname.endsWith('/mobile/stage3.js') || url.pathname.endsWith('/mobile/stage4.js') || url.pathname.endsWith('/mobile/stage5.js') || url.pathname.endsWith('/web/app.js') || url.pathname.endsWith('/web/corrections.js') || url.pathname.endsWith('/web/live.js') || url.pathname.endsWith('/web/worktime.js') || url.pathname.endsWith('/web/stage5.js') || url.pathname.endsWith('/pwa-register.js');
   if (criticalFresh) {
     event.respondWith(
       fetch(request)
