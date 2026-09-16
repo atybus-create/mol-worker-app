@@ -59,7 +59,7 @@
         <label>Status<select data-corr-status><option value="PENDING">Do korekty</option><option value="RESOLVED">Historia</option><option value="REQUIRES_ADMIN">Wymaga admina</option><option value="ALL">Wszystkie</option></select></label>
         <label>Rodzaj<select data-corr-type><option value="ALL">Wszystkie</option><option value="ATTENDANCE">Czas pracy</option><option value="PROCESS">Procesy</option></select></label>
         <label>Szukaj<input type="search" data-corr-search placeholder="Nazwisko / MOL..." autocomplete="off"></label>
-        <button class="mol-button mol-button--primary" type="button" data-corr-refresh>Odśwież</button>
+        <button class="mol-button mol-button--primary" type="button" data-corr-refresh>Odśwież</button><button class="mol-button corr-worktime-change" type="button" data-corr-worktime-change>＋ Zmień godziny pracy</button>
       </div>
       <div class="corr-kpis">
         <article class="mol-card"><small>Do korekty</small><strong data-corr-pending>—</strong></article>
@@ -194,6 +194,24 @@
     }
   });
 
+  view.querySelector('[data-corr-worktime-change]')?.addEventListener('click', async (event) => {
+    const trigger = event.currentTarget;
+    const helper = window.MOLWorktimeChange;
+    if (!helper?.open) { caption.textContent = 'Moduł zmiany godzin jest jeszcze ładowany. Spróbuj ponownie.'; return; }
+    trigger.disabled = true;
+    try {
+      await helper.open({
+        pastOnly: true,
+        requireStop: true,
+        reason: 'Korekta godzin przez lidera',
+        onSaved: async () => { await refresh(); }
+      });
+    } catch (error) {
+      caption.textContent = error?.message || 'Nie udało się otworzyć zmiany godzin.';
+    } finally {
+      trigger.disabled = false;
+    }
+  });
   view.querySelector('[data-corr-refresh]')?.addEventListener('click', () => refresh().catch(() => {}));
   view.querySelector('[data-corr-status]')?.addEventListener('change', () => refresh().catch(() => {}));
   view.querySelector('[data-corr-type]')?.addEventListener('change', () => refresh().catch(() => {}));
