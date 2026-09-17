@@ -7,7 +7,7 @@
   const buildLabel=document.getElementById('webBuildLabel');if(buildLabel)buildLabel.textContent=`TEST · build ${BUILD}`;
   const hintedRole=window.MOLRoles.normalizeRole(new URLSearchParams(location.search).get('role')||'LEADER');
   const capabilities=window.MOLRoles.get(hintedRole);
-  if(!capabilities?.web){document.body.innerHTML='<main style="min-height:100vh;display:grid;place-items:center;background:#050b12;color:#f4f8fb;font-family:system-ui'><section><h1>Panel WWW niedostępny dla WORKER</h1><p>Użyj aplikacji mobilnej.</p></section></main>';return;}
+  if(!capabilities?.web){document.body.innerHTML='<main style="min-height:100vh;display:grid;place-items:center;background:#050b12;color:#f4f8fb;font-family:system-ui"><section><h1>Panel WWW niedostępny dla WORKER</h1><p>Użyj aplikacji mobilnej.</p></section></main>';return;}
   const sidebar=document.querySelector('.sidebar nav');const reportsButton=sidebar?.querySelector('[data-section="reports"]');
   const addNav=(name,label,icon,after)=>{let b=sidebar?.querySelector(`[data-section="${name}"]`);if(!b&&sidebar){b=document.createElement('button');b.dataset.section=name;b.innerHTML=`${icon} <span>${label}</span>`;after?.after(b);}return b;};
   const worktimeButton=addNav('worktime','Czas pracy','◷',reportsButton);addNav('leader-messages','Komunikaty','✉',worktimeButton);const content=document.querySelector('.content');
