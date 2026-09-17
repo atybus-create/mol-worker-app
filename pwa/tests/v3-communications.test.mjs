@@ -31,6 +31,12 @@ assert.match(web, /2000/, 'limit treści 2000 znaków musi pozostać w UI');
 assert.doesNotMatch(live, /data-message-recipients|data-message-status|data-message-send|mol-app-v2-leader-message-recipients/, 'live.js nie może zależeć od starego UI komunikatów V2');
 assert.match(sw, /mobile\/stage5\.js/, 'mobile stage5 musi być criticalFresh');
 assert.match(sw, /web\/stage5\.js/, 'web stage5 musi być criticalFresh');
-assert.match(api, /20260914\.2/, 'BUILD API musi być 20260914.2');
+assert.match(api, /20260917\.6-v3-cutover/, 'BUILD API musi wskazywać aktualny V3 backend cutover');
+assert.match(api, /request\(['"]mol-app-v3-auth-login['"]/, 'login musi wołać bezpośrednio V3 AUTH');
+assert.match(api, /request\(['"]mol-app-v3-auth-session['"]/, 'sesja musi wołać bezpośrednio V3 AUTH');
+assert.match(api, /request\(['"]mol-app-v3-auth-logout['"]/, 'logout musi wołać bezpośrednio V3 AUTH');
+assert.match(live, /mol-app-v3-leader-team/, 'WWW musi używać V3 leader-team');
+assert.match(live, /mol-app-v3-report-performance/, 'WWW musi używać V3 report-performance');
+assert.match(live, /mol-app-v3-report-attendance/, 'WWW musi używać V3 report-attendance');
 
 console.log('MOL App V3 communications regression: PASS');
