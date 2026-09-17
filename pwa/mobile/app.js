@@ -1,21 +1,19 @@
 (() => {
   'use strict';
-  const BUILD = '20260915.9';
+  const BUILD = '20260917.1';
   window.MOL_BUILD = BUILD;
   const shell = document.querySelector('.worker-shell');
   if (!shell) return;
   const params = new URLSearchParams(location.search);
   const hintedRole = window.MOLRoles.normalizeRole(params.get('role') || 'WORKER');
   const capabilities = window.MOLRoles.get(hintedRole) || window.MOLRoles.get('WORKER');
-  const managerNav = document.getElementById('managerMobileNav');
   const bottomNav = document.querySelector('.bottom-nav');
   const roleChip = document.getElementById('mobileRoleChip');
   const panelLabel = document.getElementById('mobilePanelLabel');
 
   if (roleChip) roleChip.textContent = hintedRole;
   if (panelLabel) panelLabel.textContent = `${capabilities.managerMobile ? 'Panel mobilny' : 'Panel pracownika'} · V3 · build ${BUILD}`;
-  if (managerNav) managerNav.hidden = !capabilities.managerMobile;
-  bottomNav?.classList.toggle('has-manager', capabilities.managerMobile);
+  bottomNav?.classList.remove('has-manager');
 
   const panels = () => [...document.querySelectorAll('[data-panel]')];
   const dashboard = () => [...document.querySelectorAll('.worker-hero,.work-status,.home-actions-block,.kpi-grid,.performance-block')];
@@ -26,7 +24,7 @@
     dashboard().forEach((node) => { node.hidden = screen !== 'home'; });
     panels().forEach((panel) => { panel.hidden = panel.dataset.panel !== screen; });
     const liveStatus = document.querySelector('[data-live-integration-status]');
-    if (liveStatus) liveStatus.hidden = !['home', 'process'].includes(screen);
+    if (liveStatus) liveStatus.hidden = screen !== 'home';
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
   window.MOLMobileShow = show;
@@ -56,6 +54,7 @@
     await loadScript('./start-actions.js');
     await loadScript('./stage4.js');
     await loadScript('./stage5.js');
+    await loadScript('./mobile-ui-cleanup.js');
   };
   loadSupport().catch((error) => {
     console.error(error);
