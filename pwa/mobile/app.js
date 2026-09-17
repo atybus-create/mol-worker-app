@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD = '20260917.2';
+  const BUILD = '20260917.4-mobile-logout';
   window.MOL_BUILD = BUILD;
   const shell = document.querySelector('.worker-shell');
   if (!shell) return;
@@ -10,6 +10,7 @@
   const bottomNav = document.querySelector('.bottom-nav');
   const roleChip = document.getElementById('mobileRoleChip');
   const panelLabel = document.getElementById('mobilePanelLabel');
+  const logoutButton = document.querySelector('[data-mobile-logout]');
 
   if (roleChip) roleChip.textContent = hintedRole;
   if (panelLabel) panelLabel.textContent = `${capabilities.managerMobile ? 'Panel mobilny' : 'Panel pracownika'} · V3 · build ${BUILD}`;
@@ -34,6 +35,26 @@
     if (!drawer.open) return;
     document.querySelectorAll('[data-norm-period]').forEach((other) => { if (other !== drawer) other.open = false; });
   }));
+
+  async function logoutMobile() {
+    if (!logoutButton || logoutButton.disabled) return;
+    logoutButton.disabled = true;
+    logoutButton.textContent = 'Wylogowanie…';
+    try {
+      if (window.MOLApi?.logout) {
+        await window.MOLApi.logout({ clearOnFailure: true });
+      } else {
+        try { sessionStorage.removeItem('mol.v3.session'); } catch {}
+      }
+    } catch (error) {
+      console.warn('Backend nie potwierdził wylogowania; sesja lokalna zostanie usunięta.', error);
+      try { window.MOLApi?.clearToken?.(); } catch {}
+      try { sessionStorage.removeItem('mol.v3.session'); } catch {}
+    } finally {
+      location.replace(`./login.html?reason=logout&v=${encodeURIComponent(BUILD)}`);
+    }
+  }
+  logoutButton?.addEventListener('click', logoutMobile);
 
   const versioned = (src) => `${src}${src.includes('?') ? '&' : '?'}v=${BUILD}`;
   const loadScript = (src) => new Promise((resolve, reject) => {
