@@ -248,9 +248,15 @@
   function populateReportPeople(items) {
     const reports = document.querySelector('[data-view="reports"]');
     const worktime = document.querySelector('[data-view="worktime"]');
-    const html = (withOutput) => items.map((item, index) => {
+    const directory = Array.isArray(window.MOLUsers?.items) ? window.MOLUsers.items : [];
+    const liveById = new Map((items || []).map((item) => [item.employee.employee_id, item]));
+    const source = directory.length ? directory.map((user) => liveById.get(user.employee_id) || { employee: user, norm: {}, monthly_norm: {} }) : items;
+    const selected = new Set([...document.querySelectorAll('.report-people-grid input:checked')].map((input) => input.value));
+    const html = (withOutput) => source.map((item, index) => {
       const m = item.monthly_norm || item.norm || {};
-      return `<label class="report-person"><input type="checkbox" value="${esc(item.employee.employee_id)}" ${index < 3 ? 'checked' : ''}><span><b>${esc(item.employee.display_name)}</b><small>${esc(item.employee.employee_id)}</small></span>${withOutput ? `<span class="report-person-output" title="Wynik ważony: PAK + PICK ÷ 3"><i>Ważone <strong>${number(m.total_combined_units, 1)}</strong></i><i>Do normy <strong>${number(m.eligible_combined_units, 1)}</strong></i><i>Poza normą <strong>${number(m.outside_combined_units, 1)}</strong></i></span>` : ''}</label>`;
+      const inactive = item.employee.active === false;
+      const checked = selected.size ? selected.has(item.employee.employee_id) : index < 3;
+      return `<label class="report-person"><input type="checkbox" value="${esc(item.employee.employee_id)}" ${checked ? 'checked' : ''}><span><b>${esc(item.employee.display_name)}</b><small>${esc(item.employee.employee_id)}${inactive ? ' · NIEAKTYWNY' : ''}</small></span>${withOutput ? `<span class="report-person-output" title="Wynik ważony: PAK + PICK ÷ 3"><i>Ważone <strong>${number(m.total_combined_units, 1)}</strong></i><i>Do normy <strong>${number(m.eligible_combined_units, 1)}</strong></i><i>Poza normą <strong>${number(m.outside_combined_units, 1)}</strong></i></span>` : ''}</label>`;
     }).join('');
     const reportGrid = reports?.querySelector('.report-people-grid');
     const workGrid = worktime?.querySelector('.report-people-grid');
@@ -534,5 +540,6 @@
     if (!document.hidden && initialised) loadTeam(true).catch(() => {});
   });
 
+  window.MOLRefreshReportPeople = () => populateReportPeople(teamData?.items || []);
   window.MOLLiveReady = init();
 })();
