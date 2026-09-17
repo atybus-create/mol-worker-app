@@ -5,7 +5,7 @@
   const script = document.currentScript;
   const scriptUrl = new URL(script.src, location.href);
   const scopeUrl = new URL("./", scriptUrl);
-  const workerUrl = new URL("./sw.js?v=20260915.8-start-actions-loop", scriptUrl);
+  const workerUrl = new URL("./sw.js?v=20260917.4-mobile-logout", scriptUrl);
   let reloadAfterUpdate = false;
 
   function showUpdate(registration) {
