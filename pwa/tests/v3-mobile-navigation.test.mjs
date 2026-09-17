@@ -33,6 +33,13 @@ assert.match(css, /grid-template-columns:\s*repeat\(3,/, 'dolna nawigacja musi m
 assert.match(css, /overflow-x:\s*hidden/, 'strona mobile musi blokować poziomy scroll dokumentu');
 assert.match(css, /padding-bottom:\s*calc\(70px \+ env\(safe-area-inset-bottom\)\)/, 'treść musi mieć zapas nad dolną nawigacją');
 
+assert.match(html, /data-mobile-logout/, 'mobile musi mieć widoczny przycisk wylogowania');
+assert.match(app, /MOLApi\?\.logout|MOLApi\.logout/, 'wylogowanie mobile musi używać istniejącego API sesji V3');
+assert.match(app, /clearOnFailure:\s*true/, 'mobile musi usunąć sesję lokalną także przy braku potwierdzenia backendu');
+assert.match(app, /sessionStorage\.removeItem\(['"]mol\.v3\.session['"]\)/, 'mobile musi mieć bezpieczny fallback czyszczenia sesji');
+assert.match(app, /login\.html\?reason=logout/, 'po wylogowaniu mobile musi wracać do ekranu logowania');
+assert.match(css, /\.mobile-logout\s*\{/, 'przycisk wylogowania musi mieć styl mobile');
+
 for (const label of [
   'MONITI Rozpocznij pracę',
   'MONITI Zakończ pracę',
