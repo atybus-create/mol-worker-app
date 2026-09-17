@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD = '20260917.4-mobile-logout';
+  const BUILD = '20260917.6-v3-cutover';
   window.MOL_BUILD = BUILD;
   const shell = document.querySelector('.worker-shell');
   if (!shell) return;

@@ -170,7 +170,7 @@
     if (kpis[1]) kpis[1].textContent = String(open.filter((row) => row.process?.state !== 'ACTIVE').length);
     if (kpis[2]) kpis[2].textContent = String(items.reduce((total, row) => total + Number(row.active_alert_count || 0), 0));
     if (kpis[4]) kpis[4].textContent = document.querySelector('[data-live-correction-pending]')?.dataset.count || '—';
-    api.read('mol-app-v2-report-performance', { date_from: data.work_date || today(), date_to: data.work_date || today() }).then((report) => {
+    api.read('mol-app-v3-report-performance', { date_from: data.work_date || today(), date_to: data.work_date || today() }).then((report) => {
       if (kpis[3]) kpis[3].textContent = percent(report?.summary?.combined_percent);
     }).catch(() => { if (kpis[3]) kpis[3].textContent = '—'; });
 
@@ -239,7 +239,7 @@
     if (!silent) setStatus('Odczytuję monitoring zespołu…');
     const dateInput = document.querySelector('[data-view="team"] .date-chip input');
     if (dateInput) { if (!dateInput.value || dateInput.value === '2026-09-07') dateInput.value = today(); dateInput.max = today(); }
-    const data = await api.read('mol-app-v2-leader-team', { work_date: dateInput?.value || today() });
+    const data = await api.read('mol-app-v3-leader-team', { work_date: dateInput?.value || today() });
     renderTeam(data);
     if (!silent) setStatus('Monitoring zespołu potwierdzony przez backend.', 'ok');
     return data;
@@ -359,7 +359,7 @@
     const ids = selectedIds(view);
     if (!ids.length) return;
     setStatus('Generuję raport wydajności z backendu…');
-    const data = await api.read('mol-app-v2-report-performance', { date_from: view.querySelector('[data-report-from]')?.value, date_to: view.querySelector('[data-report-to]')?.value, employee_ids: ids });
+    const data = await api.read('mol-app-v3-report-performance', { date_from: view.querySelector('[data-report-from]')?.value, date_to: view.querySelector('[data-report-to]')?.value, employee_ids: ids });
     renderPerformance(view, data);
     setStatus('Raport wydajności: live backend, agregacja ważona.', 'ok');
   }
@@ -413,7 +413,7 @@
     if (!ids.length) return;
     const status = view.querySelector('[data-worktime-status]')?.value || 'ALL';
     setStatus('Generuję raport czasu pracy z backendu…');
-    const data = await api.read('mol-app-v2-report-attendance', { date_from: view.querySelector('[data-worktime-from]')?.value, date_to: view.querySelector('[data-worktime-to]')?.value, employee_ids: ids, status: status === 'ALL' ? null : status });
+    const data = await api.read('mol-app-v3-report-attendance', { date_from: view.querySelector('[data-worktime-from]')?.value, date_to: view.querySelector('[data-worktime-to]')?.value, employee_ids: ids, status: status === 'ALL' ? null : status });
     renderAttendance(view, data);
     setStatus('Raport czasu pracy potwierdzony przez backend.', 'ok');
   }
