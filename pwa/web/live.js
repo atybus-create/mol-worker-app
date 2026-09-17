@@ -416,6 +416,35 @@
     setStatus('Raport czasu pracy potwierdzony przez backend.', 'ok');
   }
 
+  async function exportReport(reportType, format, view) {
+    const ids = selectedIds(view);
+    if (!ids.length) return;
+    const isAttendance = reportType === 'attendance';
+    const from = view.querySelector(isAttendance ? '[data-worktime-from]' : '[data-report-from]')?.value;
+    const to = view.querySelector(isAttendance ? '[data-worktime-to]' : '[data-report-to]')?.value;
+    const status = isAttendance ? (view.querySelector('[data-worktime-status]')?.value || 'ALL') : 'ALL';
+    const buttons = [...view.querySelectorAll(isAttendance ? '[data-worktime-export]' : '[data-report-export]')];
+    buttons.forEach((button) => { button.disabled = true; });
+    setStatus(`Generuję ${format} — ${isAttendance ? 'czas pracy' : 'wydajność'}…`);
+    try {
+      const fallback = `MOL_${isAttendance ? 'czas_pracy' : 'wydajnosc'}_${from}_${to}.${String(format).toLowerCase()}`;
+      const filename = await api.download('mol-app-v3-report-export', {
+        report_type: reportType,
+        format: String(format).toLowerCase(),
+        date_from: from,
+        date_to: to,
+        employee_ids: ids,
+        ...(isAttendance && status !== 'ALL' ? { status } : {}),
+      }, fallback);
+      setStatus(`Pobrano plik ${filename}.`, 'ok');
+    } catch (error) {
+      setStatus(error.message || 'Nie udało się pobrać raportu.', 'error');
+      throw error;
+    } finally {
+      syncReportCounts();
+    }
+  }
+
   function bindReports() {
     const reports = document.querySelector('[data-view="reports"]');
     const worktime = document.querySelector('[data-view="worktime"]');
@@ -428,7 +457,7 @@
       reports.querySelector('[data-report-generate]')?.addEventListener('click', (event) => { event.preventDefault(); event.stopImmediatePropagation(); generatePerformance().catch((error) => setStatus(error.message, 'error')); }, true);
       reports.querySelectorAll('[data-report-export]').forEach((button) => button.addEventListener('click', (event) => {
         event.preventDefault(); event.stopImmediatePropagation();
-        setStatus('Eksport CSV/XLSX nie jest jeszcze częścią odebranych endpointów V3.', 'info');
+        exportReport('performance', button.dataset.reportExport, reports).catch(() => {});
       }, true));
     }
     if (worktime) {
@@ -439,7 +468,10 @@
       if (from && (from.value === '2026-09-01' || !from.value)) from.value = monthStart();
       if (to && (to.value === '2026-09-07' || !to.value)) to.value = today();
       worktime.querySelector('[data-worktime-generate]')?.addEventListener('click', (event) => { event.preventDefault(); event.stopImmediatePropagation(); generateAttendance().catch((error) => setStatus(error.message, 'error')); }, true);
-      worktime.querySelectorAll('[data-worktime-export]').forEach((button) => button.addEventListener('click', (event) => { event.preventDefault(); event.stopImmediatePropagation(); setStatus('Eksport CSV/XLSX nie jest jeszcze częścią odebranych endpointów V3.', 'info'); }, true));
+      worktime.querySelectorAll('[data-worktime-export]').forEach((button) => button.addEventListener('click', (event) => {
+        event.preventDefault(); event.stopImmediatePropagation();
+        exportReport('attendance', button.dataset.worktimeExport, worktime).catch(() => {});
+      }, true));
       worktime.querySelector('[data-worktime-status]')?.addEventListener('change', () => generateAttendance().catch(() => {}));
     }
   }
