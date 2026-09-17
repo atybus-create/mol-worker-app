@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD='20260917.1-user-admin';
+  const BUILD='20260917.2-report-export';
   window.MOL_BUILD=BUILD;
   const shell=document.querySelector('.web-shell'); if(!shell)return;
   const buildLabel=document.getElementById('webBuildLabel');if(buildLabel)buildLabel.textContent=`TEST · build ${BUILD}`;
