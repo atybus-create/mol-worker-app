@@ -8,6 +8,36 @@ html, body {
   overflow-x: clip;
 }
 
+.mobile-header-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-logout {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 117, 128, .35);
+  border-radius: 10px;
+  background: rgba(255, 65, 80, .09);
+  color: #ff9da5;
+  font: 700 11px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.mobile-logout:hover,
+.mobile-logout:focus-visible {
+  border-color: rgba(255, 117, 128, .68);
+  background: rgba(255, 65, 80, .16);
+  outline: none;
+}
+
+.mobile-logout:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
 .bottom-nav {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 5px 8px max(6px, env(safe-area-inset-bottom));
@@ -102,6 +132,25 @@ html, body {
 @media (max-width: 390px) {
   .worker-shell {
     padding-bottom: calc(68px + env(safe-area-inset-bottom));
+  }
+
+  .brand-row {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .mobile-header-actions {
+    gap: 0;
+  }
+
+  .mobile-header-actions .role-chip {
+    display: none;
+  }
+
+  .mobile-logout {
+    min-height: 32px;
+    padding: 6px 8px;
+    font-size: 10px;
   }
 
   .bottom-nav {
