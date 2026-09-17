@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const BUILD='20260917.3-global-audit';
+  const BUILD='20260917.5-report-selection';
   window.MOL_BUILD=BUILD;
   const shell=document.querySelector('.web-shell'); if(!shell)return;
   const buildLabel=document.getElementById('webBuildLabel');if(buildLabel)buildLabel.textContent=`TEST · build ${BUILD}`;
