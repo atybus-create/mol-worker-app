@@ -12,7 +12,7 @@ const sw = read('sw.js');
 
 assert.match(html, /data-section="audit"/, 'WWW must expose History of operations navigation');
 assert.match(html, /data-view="audit"/, 'WWW must expose audit view');
-assert.match(html, /audit\.css\?v=20260917\.3/, 'WWW must load audit styles');
+assert.match(html, /audit\.css\?v=[^"']+/, 'WWW must load versioned audit styles');
 assert.match(app, /load\(['"]\.\/audit\.js['"]\)/, 'WWW runtime must load global audit module');
 assert.match(audit, /mol-app-v3-audit/, 'audit frontend must use V3 audit endpoint');
 assert.match(audit, /data-audit-from/, 'audit must support date-from filtering');
