@@ -39,6 +39,9 @@ class SessionStore(context: Context) {
     fun promptedFullScreen(): Boolean = prefs.getBoolean("fsi_prompted", false)
     fun markFullScreenPrompted() = prefs.edit().putBoolean("fsi_prompted", true).apply()
 
+    fun promptedFullScreenV2(): Boolean = prefs.getBoolean("fsi_prompted_v2", false)
+    fun markFullScreenPromptedV2() = prefs.edit().putBoolean("fsi_prompted_v2", true).apply()
+
     fun promptedBattery(): Boolean = prefs.getBoolean("battery_prompted", false)
     fun markBatteryPrompted() = prefs.edit().putBoolean("battery_prompted", true).apply()
 }

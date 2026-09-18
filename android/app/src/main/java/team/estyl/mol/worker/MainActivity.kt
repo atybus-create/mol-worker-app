@@ -99,8 +99,8 @@ class MainActivity : Activity() {
     }
 
     private fun requestCriticalAlertAccessIfNeeded() {
-        if (Build.VERSION.SDK_INT >= 34 && !store.promptedFullScreen()) {
-            store.markFullScreenPrompted()
+        if (Build.VERSION.SDK_INT >= 34 && !store.promptedFullScreenV2()) {
+            store.markFullScreenPromptedV2()
             val nm = getSystemService(NotificationManager::class.java)
             if (!nm.canUseFullScreenIntent()) {
                 runCatching {

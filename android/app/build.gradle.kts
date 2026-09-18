@@ -11,8 +11,8 @@ android {
         applicationId = "team.estyl.mol.worker"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "3.0.0-internal.1"
+        versionCode = 2
+        versionName = "3.0.0-internal.2"
     }
 
     compileOptions {

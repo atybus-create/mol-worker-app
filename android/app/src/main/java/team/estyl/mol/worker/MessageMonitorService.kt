@@ -8,11 +8,10 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
-import android.net.Uri
+import android.media.RingtoneManager
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
-import android.provider.Settings
 import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
@@ -26,7 +25,7 @@ class MessageMonitorService : Service() {
     companion object {
         private const val API = "https://n8n.estyl.team/webhook/"
         private const val BACKGROUND_CHANNEL = "mol_v3_background"
-        private const val ALERT_CHANNEL = "mol_v3_critical_messages"
+        private const val ALERT_CHANNEL = "mol_v3_critical_messages_v2"
         private const val FOREGROUND_ID = 73001
 
         fun start(context: Context) {
@@ -139,45 +138,57 @@ class MessageMonitorService : Service() {
     }
 
     private fun notifyMessage(id: String, title: String, content: String) {
-        wakeScreenBriefly()
+        wakeScreenStrong()
 
-        val open = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        val alertIntent = Intent(this, AlertActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("wake", true)
             putExtra("openMessages", true)
             putExtra("messageId", id)
+            putExtra("title", title)
+            putExtra("content", content)
         }
-        val pending = PendingIntent.getActivity(
+
+        val fullScreenPending = PendingIntent.getActivity(
             this,
             id.hashCode(),
-            open,
+            alertIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val notification = Notification.Builder(this, ALERT_CHANNEL)
-            .setSmallIcon(android.R.drawable.ic_dialog_email)
-            .setContentTitle(title)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle("!  $title")
             .setContentText(content)
             .setStyle(Notification.BigTextStyle().bigText(content))
-            .setContentIntent(pending)
-            .setFullScreenIntent(pending, true)
+            .setContentIntent(fullScreenPending)
+            .setFullScreenIntent(fullScreenPending, true)
             .setAutoCancel(true)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
-            .setCategory(Notification.CATEGORY_MESSAGE)
+            .setCategory(Notification.CATEGORY_ALARM)
             .setPriority(Notification.PRIORITY_MAX)
             .build()
 
         getSystemService(NotificationManager::class.java)
             .notify(74000 + (id.hashCode() and 0x7fff), notification)
+
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        if (!pm.isInteractive) {
+            runCatching { startActivity(alertIntent) }
+        }
     }
 
-    private fun wakeScreenBriefly() {
-        @Suppress("DEPRECATION")
+    @Suppress("DEPRECATION")
+    private fun wakeScreenStrong() {
         val lock = (getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(
-            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-            "MOLV3:MessageWake"
+            PowerManager.FULL_WAKE_LOCK or
+                PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                PowerManager.ON_AFTER_RELEASE,
+            "MOLV3:CriticalMessageWake"
         )
-        runCatching { lock.acquire(5000L) }
+        runCatching { lock.acquire(15000L) }
     }
 
     private fun createChannels() {
@@ -196,19 +207,22 @@ class MessageMonitorService : Service() {
         }
 
         if (nm.getNotificationChannel(ALERT_CHANNEL) == null) {
-            val sound: Uri = Settings.System.DEFAULT_NOTIFICATION_URI
+            val sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             val attrs = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
             nm.createNotificationChannel(
                 NotificationChannel(
                     ALERT_CHANNEL,
-                    "MOL V3 — wiadomości pilne",
+                    "MOL V3 — ALARM wiadomości",
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {
-                    description = "Wiadomości lidera i aktywne alerty"
+                    description = "Pełnoekranowe wiadomości lidera i aktywne alerty"
                     enableVibration(true)
-                    vibrationPattern = longArrayOf(0, 500, 250, 500, 250, 700)
+                    vibrationPattern = longArrayOf(0, 700, 250, 700, 250, 1100)
+                    enableLights(true)
+                    lightColor = android.graphics.Color.RED
                     setSound(sound, attrs)
                     lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 }
