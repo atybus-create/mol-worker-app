@@ -14,12 +14,13 @@
     'mol-app-v2-report-attendance': 'mol-app-v3-report-attendance',
   });
   const FEATURES = Object.freeze({ health: true, auth: true });
-  const state = { token: '' };
-  try { state.token = sessionStorage.getItem(SESSION_KEY) || ''; } catch {}
+  const nativeToken=()=>{try{return String(globalThis.MOLNative?.getSessionToken?.()||'')}catch{return ''}};
+  const state = { token: nativeToken() };
+  if(!state.token){try { state.token = sessionStorage.getItem(SESSION_KEY) || ''; } catch {}}
   class MOLApiError extends Error { constructor(message,{status=0,code='',retryable=false,details=null}={}){super(message);this.name='MOLApiError';this.status=status;this.code=code;this.retryable=retryable;this.details=details;} }
   const requestId=()=>globalThis.crypto?.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16);});
   const todayISO=()=>{const p=new Intl.DateTimeFormat('en',{timeZone:'Europe/Warsaw',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const m=Object.fromEntries(p.map(x=>[x.type,x.value]));return `${m.year}-${m.month}-${m.day}`;};
-  const setToken=t=>{state.token=String(t||'');try{state.token?sessionStorage.setItem(SESSION_KEY,state.token):sessionStorage.removeItem(SESSION_KEY);}catch{}};
+  const setToken=t=>{state.token=String(t||'');try{state.token?sessionStorage.setItem(SESSION_KEY,state.token):sessionStorage.removeItem(SESSION_KEY);}catch{}try{globalThis.MOLNative?.setSessionToken?.(state.token);}catch{}};
   const clearToken=()=>setToken(''); const getToken=()=>state.token;
   const endpoint=path=>{const n=String(path||'').replace(/^\/+/, '');if(ROUTE_OVERRIDES[n])return ROUTE_OVERRIDES[n];if(n==='mol-app-v2-message-send')return'mol-app-v2-leader-message';return n;};
   const readQuery=(path,query)=>{const n=endpoint(path),q=query&&typeof query==='object'&&!Array.isArray(query)?{...query}:{},d=todayISO();if(n==='mol-app-v2-worker-status'&&!q.work_date)q.work_date=d;if(n==='mol-app-v3-leader-team'&&!q.work_date)q.work_date=d;if(n==='mol-app-v2-norms-daily'&&!q.date&&!q.work_date)q.date=d;if(n==='mol-app-v2-norms-monthly'&&!q.month)q.month=d.slice(0,7);return q;};
