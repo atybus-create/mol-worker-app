@@ -10,9 +10,9 @@ android {
     defaultConfig {
         applicationId = "team.estyl.mol.worker"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 2
-        versionName = "3.0.0-internal.2"
+        targetSdk = 33
+        versionCode = 3
+        versionName = "3.0.0-internal.3"
     }
 
     compileOptions {

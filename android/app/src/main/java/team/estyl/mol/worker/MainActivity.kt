@@ -67,6 +67,13 @@ class MainActivity : Activity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (::store.isInitialized && store.token().isNotBlank()) {
+            requestCriticalAlertAccessIfNeeded()
+        }
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -99,8 +106,7 @@ class MainActivity : Activity() {
     }
 
     private fun requestCriticalAlertAccessIfNeeded() {
-        if (Build.VERSION.SDK_INT >= 34 && !store.promptedFullScreenV2()) {
-            store.markFullScreenPromptedV2()
+        if (Build.VERSION.SDK_INT >= 34) {
             val nm = getSystemService(NotificationManager::class.java)
             if (!nm.canUseFullScreenIntent()) {
                 runCatching {
@@ -109,18 +115,17 @@ class MainActivity : Activity() {
                             .setData(Uri.parse("package:$packageName"))
                     )
                 }
+                return
             }
         }
-        if (!store.promptedBattery()) {
-            val pm = getSystemService(PowerManager::class.java)
-            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                store.markBatteryPrompted()
-                runCatching {
-                    startActivity(
-                        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                            .setData(Uri.parse("package:$packageName"))
-                    )
-                }
+
+        val pm = getSystemService(PowerManager::class.java)
+        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+            runCatching {
+                startActivity(
+                    Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                        .setData(Uri.parse("package:$packageName"))
+                )
             }
         }
     }
